@@ -1,0 +1,30 @@
+title: 你的新博客名称
+email: xjxnnd@example.com
+description: >-
+  这是你的 Minimal Mistakes 博客描述。
+  用于记录你的想法、学习和生活。
+baseurl: "" # 保持为空
+url: "https://xxyzyh-code.github.io" # 替换为你的实际地址
+
+# 激活 Minimal Mistakes 主题
+remote_theme: "mmistakes/minimal-mistakes"
+
+# 博客的核心设置
+minimal_mistakes_skin: "default" # 可选：air, aqua, contrast, dark, neon, mint, solarized, warm, default
+locale: "zh-CN" # 设置语言为中文
+timezone: "Asia/Shanghai" # 设置你的时区
+
+# 禁用默认插件（推荐保持）
+plugins:
+  - jekyll-feed
+  - jekyll-sitemap
+  - jekyll-paginate
+  - jekyll-archives
+
+# 启用 Minimal Mistakes 的功能
+include:
+  - _pages
+
+# 分页设置
+paginate: 5
+paginate_path: /page:num/
