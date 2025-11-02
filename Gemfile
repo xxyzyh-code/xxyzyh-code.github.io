@@ -20,8 +20,6 @@ group :jekyll_plugins do
   gem "jekyll-feed"
   gem "jekyll-sitemap"
   gem "jekyll-paginate"
-  # 如果您使用了 jekyll-archives，请取消注释下一行
-  # gem "jekyll-archives"
   
   # 推荐添加 Bundler 依赖，有助于确保构建稳定
   gem "bundler", "~> 2.0" 
