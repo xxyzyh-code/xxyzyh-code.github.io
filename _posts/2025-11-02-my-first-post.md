@@ -11,6 +11,7 @@ tags:
   - 博客搭建
 permalink: /my-first-post/
 author: xxyzyh
+author_profile: true
 toc: true
 toc_label: "文章目录"
 toc_icon: "list"
