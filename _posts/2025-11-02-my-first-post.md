@@ -31,3 +31,8 @@ Hello, World — This is my first blog post.
 - `_posts/`：存放你的 Markdown 格式文章  
 
 > 小贴士：写完一篇新文章后，记得命名规则要是 `YYYY-MM-DD-文章名.md`。
+
+<!-- 文章访问量 -->
+<div style="text-align: center; margin-top: 30px;">
+  <img src="https://visitor-badge.laobi.icu/badge?page_id=xxyzyh-code.my-first-post" alt="Visitor Count">
+</div>
