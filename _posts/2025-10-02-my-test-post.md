@@ -6,6 +6,8 @@ last_modified_at: 2025-10-02
 layout: single
 categories:
   - 诗歌
+  - 中国
+  - 外国
 tags:
   - 测试
   - 文学创作
