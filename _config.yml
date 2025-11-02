@@ -50,6 +50,8 @@ navigation:
       url: /categories/
     - title: "存档"
       url: /archives/
+    - title: "搜索"
+      url: /search/
 
 defaults:
   - scope:
