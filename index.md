@@ -15,7 +15,7 @@ classes: wide
   <p style="font-size:1.1em; color:#ccc;">这里是我的写作与思考空间，你可以在下方找到不同主题的内容。</p>
 </div>
 
-<!-- ====== 全站統計資訊（穩定版） ====== -->
+<!-- ====== 全站統計資訊（與 single.html 同步版） ====== -->
 <div id="site-stats" style="text-align:center; margin:60px auto; padding:30px; border-top:1px solid #ddd;">
   <h3>📊 全站統計資訊</h3>
 
@@ -23,13 +23,17 @@ classes: wide
 {% assign post_count = site.posts | size %}
 
 {% for post in site.posts %}
-  {% assign content_clean = post.content | strip_html | replace: "\r", "" | replace: "\n", "" | replace: "\t", "" | replace: " ", "" | replace: "&nbsp;", "" %}
-  {% assign content_length = content_clean | size %}
+  {% assign text_to_count = post.content | strip_html | strip_newlines | replace: "&nbsp;", " " %}
+  {% assign text_clean = text_to_count | remove: " " | remove: "	" %}
+  {% assign text_clean = text_clean | remove: "*" | remove: "-" | remove: "`" | remove: ">" | remove: "#" %}
+  {% assign text_clean = text_clean | remove: "，" | remove: "。" | remove: "：" | remove: "；" | remove: "？" | remove: "！" | remove: "、" | remove: "（" | remove: "）" | remove: "《" | remove: "》" %}
+  {% assign text_clean = text_clean | remove: "," | remove: "." | remove: ":" | remove: ";" | remove: "?" | remove: "!" | remove: "&" | remove: "(" | remove: ")" | remove: "—" %}
+  {% assign text_clean = text_clean | remove: "🎉" | remove: "/" %}
+  {% assign content_length = text_clean | size %}
   {% assign total_words = total_words | plus: content_length %}
 {% endfor %}
 
   {% assign total_categories = site.categories | size %}
-
   {% assign sorted_posts = site.posts | sort: "date" %}
   {% assign last_post = sorted_posts | last %}
   {% assign last_updated = last_post.last_modified_at | default: last_post.date | date: "%Y-%m-%d" %}
