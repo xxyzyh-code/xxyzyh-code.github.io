@@ -3,11 +3,10 @@ layout: default
 ---
 
 <div id="main" role="main">
-  {% include sidebar.html %} 
-
   <div class="archive">
     <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
       {% include page__hero.html %}
+
       <div class="page__inner-wrap">
         {% unless page.header.overlay_color or page.header.overlay_image %}
           <header>
@@ -56,8 +55,6 @@ layout: default
         {% include post_pagination.html %}
         
       </div>
-      {% include author_profile.html %}
-
-    </article>
+      </article>
   </div>
 </div>
