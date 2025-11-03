@@ -38,11 +38,11 @@ classes: wide
 </div>
 
 <script>
-  // 收集文章分类数据
   const posts = [
     {% for post in site.posts %}
       {
         url: "{{ post.url }}",
+        title: "{{ post.title | escape }}",
         categories: [{% for cat in post.categories %}"{{ cat }}"{% if forloop.last == false %}, {% endif %}{% endfor %}],
         subcategories: [{% for subcat in post.subcategories %}"{{ subcat }}"{% if forloop.last == false %}, {% endif %}{% endfor %}]
       }{% if forloop.last == false %}, {% endif %}
@@ -55,25 +55,64 @@ classes: wide
     post.categories.forEach(cat => {
       if (!catMap[cat]) catMap[cat] = {};
       post.subcategories.forEach(subcat => {
-        if (!catMap[cat][subcat]) catMap[cat][subcat] = 0;
-        catMap[cat][subcat]++;
+        if (!catMap[cat][subcat]) catMap[cat][subcat] = [];
+        catMap[cat][subcat].push({title: post.title, url: post.url});
       });
     });
   });
 
-  // 生成 HTML
   const container = document.getElementById('cat-subcat-list');
   for (const cat in catMap) {
     const catDiv = document.createElement('div');
-    catDiv.style.marginBottom = '15px';
+    catDiv.style.marginBottom = '20px';
+    
     const catTitle = document.createElement('strong');
-    catTitle.textContent = cat;
+    const catLink = document.createElement('a');
+    catLink.href = `/categories/${cat.toLowerCase().replace(/\s+/g,'-')}/`;
+    catLink.textContent = cat;
+    catLink.style.color = '#333';
+    catLink.style.textDecoration = 'none';
+    catLink.onmouseover = () => catLink.style.color = '#007ACC';
+    catLink.onmouseout = () => catLink.style.color = '#333';
+    
+    catTitle.appendChild(catLink);
     catDiv.appendChild(catTitle);
 
     const subUl = document.createElement('ul');
     for (const subcat in catMap[cat]) {
       const li = document.createElement('li');
-      li.textContent = `${subcat} (${catMap[cat][subcat]})`;
+      li.style.position = 'relative';
+      li.style.cursor = 'pointer';
+      li.textContent = `${subcat} (${catMap[cat][subcat].length})`;
+
+      // 创建 hover 弹窗显示文章列表
+      const tooltip = document.createElement('div');
+      tooltip.style.position = 'absolute';
+      tooltip.style.left = '100%';
+      tooltip.style.top = '0';
+      tooltip.style.background = '#fff';
+      tooltip.style.border = '1px solid #ccc';
+      tooltip.style.padding = '8px';
+      tooltip.style.whiteSpace = 'nowrap';
+      tooltip.style.display = 'none';
+      tooltip.style.zIndex = '100';
+      tooltip.style.boxShadow = '0 2px 6px rgba(0,0,0,0.2)';
+      
+      catMap[cat][subcat].forEach(post => {
+        const postLink = document.createElement('a');
+        postLink.href = post.url;
+        postLink.textContent = post.title;
+        postLink.style.display = 'block';
+        postLink.style.color = '#007ACC';
+        postLink.style.textDecoration = 'none';
+        postLink.onmouseover = () => postLink.style.textDecoration = 'underline';
+        postLink.onmouseout = () => postLink.style.textDecoration = 'none';
+        tooltip.appendChild(postLink);
+      });
+
+      li.appendChild(tooltip);
+      li.onmouseover = () => tooltip.style.display = 'block';
+      li.onmouseout = () => tooltip.style.display = 'none';
       subUl.appendChild(li);
     }
 
