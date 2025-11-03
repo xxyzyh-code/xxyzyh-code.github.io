@@ -31,24 +31,25 @@ classes: wide
   });
 </script>
 
-<!-- 🔹 全站统计（Liquid 精确统计） -->
+<!-- 🔹 全站精确统计（静态 Liquid 计算总字数） -->
 <div id="site-stats" style="text-align:center; margin-bottom:30px; font-size:1.1em; color:#888; background:#f5f5f5; padding:15px 10px; border-radius:10px;">
   {% assign total_words = 0 %}
   {% assign post_count = site.posts | size %}
   {% assign cat_set = "" | split: "," %}
   {% assign subcat_set = "" | split: "," %}
   {% assign last_update = "" %}
-  
+
   {% for post in site.posts %}
-    {% assign ct = post.content | strip_html | replace: "\r", "" | replace: "\n", "" | replace: "\t", "" | replace: " ", "" %}
-    {% assign total_words = total_words | plus: ct | size %}
-    
+    {% assign content_clean = post.content | strip_html | replace: "\r", "" | replace: "\n", "" | replace: "\t", "" %}
+    {% assign content_clean = content_clean | replace: " ", "" %}
+    {% assign content_length = content_clean | size %}
+    {% assign total_words = total_words | plus: content_length %}
+
     {% for cat in post.categories %}
       {% unless cat_set contains cat %}
         {% assign cat_set = cat_set | push: cat %}
       {% endunless %}
     {% endfor %}
-    
     {% for subcat in post.subcategories %}
       {% unless subcat_set contains subcat %}
         {% assign subcat_set = subcat_set | push: subcat %}
