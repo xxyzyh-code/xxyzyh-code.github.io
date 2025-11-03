@@ -52,10 +52,11 @@ classes: wide
     gap: 5px;
     user-select: none;
   }
-  .cat-header span.arrow {
+  #cat-subcat-list .cat-header span.arrow {
     transition: transform 0.3s ease-in-out;
     color: #222 !important;            /* 強制覆蓋主題顏色 */
     font-weight: bold !important;      /* 增加視覺厚度 */
+    font-size: 1.1em; /* 視覺更清晰 */
   }
   .subcat-list li {
     cursor: pointer;
