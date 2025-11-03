@@ -15,35 +15,36 @@ classes: wide
   <p style="font-size:1.1em; color:#ccc;">这里是我的写作与思考空间，你可以在下方找到不同主题的内容。</p>
 </div>
 
-<!-- 🔹 全站統計（精準字數計算版） -->
-<div id="site-stats" style="text-align:center; margin-bottom:30px; font-size:1.1em; color:#888; background:#f5f5f5; padding:15px 10px; border-radius:10px;">
-  <p>📊 全站写作统计：</p>
+<!-- ====== 全站統計資訊（精確版） ====== -->
+<div id="site-stats" style="text-align:center; margin:30px auto; padding:20px; background:#f5f5f5; border-radius:10px;">
+  <h3>📊 全站统计</h3>
+
   {% assign total_words = 0 %}
   {% assign total_posts = site.posts | size %}
-  {% assign cat_set = "" | split: "" %}
-  {% assign subcat_set = "" | split: "" %}
-  {% assign latest_update = "" %}
 
   {% for post in site.posts %}
-    {% assign ct = post.content | strip_html | replace: "&nbsp;", " " | replace: "　", " " | replace: "\r","" | replace: "\n","" | replace: "\t","" | replace: " ","" %}
+    {%- assign ct = post.content | strip_html | replace: "&nbsp;", " " | replace: "　", " " -%}
+    {%- assign ct = ct | replace: "\r", "" | replace: "\n", "" | replace: "\t", "" -%}
+    {%- assign ct = ct | replace: " ", "" -%}
     {% assign total_words = total_words | plus: ct | size %}
-    {% assign latest_update = post.last_modified_at | default: post.date %}
-    {% for cat in post.categories %}
-      {% unless cat_set contains cat %}{% assign cat_set = cat_set | push: cat %}{% endunless %}
-    {% endfor %}
-    {% for subcat in post.subcategories %}
-      {% unless subcat_set contains subcat %}{% assign subcat_set = subcat_set | push: subcat %}{% endunless %}
-    {% endfor %}
   {% endfor %}
 
-  {% assign avg_words = total_posts > 0 ? total_words | divided_by: total_posts : 0 %}
+  {% assign total_categories = site.categories | size %}
+
+  {% assign sorted_posts = site.posts | sort: "date" %}
+  {% assign last_post = sorted_posts | last %}
+  {% assign last_updated = last_post.last_modified_at | default: last_post.date | date: "%Y-%m-%d" %}
 
   <p style="margin:5px 0; color:#666;">📝 文章总数：<strong>{{ total_posts }}</strong> 篇</p>
   <p style="margin:5px 0; color:#666;">✍️ 全站总字数：<strong>{{ total_words }}</strong> 字</p>
-  <p style="margin:5px 0; color:#666;">📈 平均每篇文章字数：<strong>{{ avg_words | round }}</strong> 字</p>
-  <p style="margin:5px 0; color:#666;">📂 一级分类数：<strong>{{ cat_set | size }}</strong> 个</p>
-  <p style="margin:5px 0; color:#666;">📂 二级分类数：<strong>{{ subcat_set | size }}</strong> 个</p>
-  <p style="margin:5px 0; color:#666;">🕒 最近更新：<strong>{{ latest_update | date: "%Y-%m-%d" }}</strong></p>
+  {% if total_posts > 0 %}
+    {% assign avg_words = total_words | divided_by: total_posts %}
+  {% else %}
+    {% assign avg_words = 0 %}
+  {% endif %}
+  <p style="margin:5px 0; color:#666;">📈 平均每篇文章字数：<strong>{{ avg_words }}</strong> 字</p>
+  <p style="margin:5px 0; color:#666;">📂 分类数：<strong>{{ total_categories }}</strong> 个</p>
+  <p style="margin:5px 0; color:#666;">🕒 最近更新：<strong>{{ last_updated }}</strong></p>
 </div>
 
 <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:20px; margin-bottom:50px;">
