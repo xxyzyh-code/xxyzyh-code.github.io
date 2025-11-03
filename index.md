@@ -26,6 +26,19 @@ classes: wide
 .nav-btn:hover {
   background:#666;
 }
+.subcategory-list {
+  margin-top:5px;
+  font-size:0.9em;
+  color:#ccc;
+}
+.subcategory-list a {
+  color:#ccc;
+  text-decoration:none;
+  margin-right:8px;
+}
+.subcategory-list a:hover {
+  color:#fff;
+}
 </style>
 
 <!-- 🔹 顶部欢迎语 -->
@@ -44,6 +57,34 @@ classes: wide
   <a href="/categories/" class="nav-btn">分类</a>
   <a href="/subcategories/" class="nav-btn">二级分类</a>
   <a href="/archives/" class="nav-btn">存档</a>
+</div>
+
+<!-- 🔹 一级分类 + 二级分类显示 -->
+<div style="text-align:center; margin-bottom:50px;">
+  <h3>📂 分类总览</h3>
+  <ul style="list-style:none; padding:0; display:flex; flex-wrap:wrap; justify-content:center; gap:30px;">
+    {% assign cat_map = {} %}
+    {% for post in site.posts %}
+      {% for cat in post.categories %}
+        {% assign cat_map[cat] = cat_map[cat] | default: "" | append: post.subcategories | uniq %}
+      {% endfor %}
+    {% endfor %}
+
+    {% for category in site.categories %}
+      <li>
+        <a href="{{ category[0] | slugify | prepend: '/categories/' }}" style="color:#fff; text-decoration:none; font-weight:bold;">
+          {{ category[0] }}
+        </a>
+        <div class="subcategory-list">
+          {% for post in category[1] %}
+            {% for subcat in post.subcategories %}
+              <a href="{{ subcat | slugify | prepend: '/subcategories/' }}">{{ subcat }}</a>
+            {% endfor %}
+          {% endfor %}
+        </div>
+      </li>
+    {% endfor %}
+  </ul>
 </div>
 
 ---
@@ -70,4 +111,4 @@ classes: wide
 <div style="text-align: center; margin-top: 60px;">
   <p style="font-size:0.9em; color:#888;">本站访问统计：</p>
   <img src="https://visitor-badge.laobi.icu/badge?page_id=xxyzyh-code.xxyzyh-code" alt="Visitor Count">
-</div>>
+</div>
