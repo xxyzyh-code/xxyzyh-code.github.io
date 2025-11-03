@@ -31,7 +31,7 @@ classes: wide
   });
 </script>
 
-<!-- 🔹 分类与二级分类展示（带箭头动画） -->
+<!-- 🔹 分类与二级分类展示（自动高度动画） -->
 <div id="category-subcategory" style="margin:40px auto;">
   <h3>📂 分类与二级分类（按文章数统计）</h3>
   <div id="cat-subcat-list"></div>
@@ -55,16 +55,15 @@ classes: wide
     transform: rotate(90deg);
   }
   .subcat-list {
-    max-height: 0;
     overflow: hidden;
-    transition: max-height 0.3s ease, opacity 0.3s ease;
+    transition: height 0.3s ease, opacity 0.3s ease;
+    height: 0;
     opacity: 0;
-    margin: 5px 0 15px 20px;
+    margin: 0 0 15px 20px;
     padding-left: 0;
   }
   .subcat-list.show {
     opacity: 1;
-    max-height: 500px; /* 可根据内容调整 */
   }
 </style>
 
@@ -120,10 +119,25 @@ classes: wide
     catDiv.appendChild(subUl);
     container.appendChild(catDiv);
 
-    // 點擊展開/收起 + 箭頭動畫
+    // 點擊展開/收起 + 箭頭動畫（自動高度）
     catTitle.addEventListener('click', () => {
+      const isOpen = subUl.classList.contains('show');
+      if (isOpen) {
+        subUl.style.height = subUl.scrollHeight + 'px'; // 固定高度
+        requestAnimationFrame(() => { subUl.style.height = '0'; });
+      } else {
+        subUl.style.height = subUl.scrollHeight + 'px';
+      }
       subUl.classList.toggle('show');
       arrow.classList.toggle('open');
+
+      // 點擊後動畫完成自動清除行內高度
+      subUl.addEventListener('transitionend', function handler() {
+        if (subUl.classList.contains('show')) {
+          subUl.style.height = 'auto';
+        }
+        subUl.removeEventListener('transitionend', handler);
+      });
     });
   }
 </script>
