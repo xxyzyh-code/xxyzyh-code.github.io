@@ -15,7 +15,7 @@ classes: wide
   <p style="font-size:1.1em; color:#ccc;">这里是我的写作与思考空间，你可以在下方找到不同主题的内容。</p>
 </div>
 
-<!-- ====== 全站統計資訊（與 single.html 同步版） ====== -->
+<!-- ====== 全站統計資訊（精準版） ====== -->
 <div id="site-stats" style="text-align:center; margin:60px auto; padding:30px; border-top:1px solid #ddd;">
   <h3>📊 全站統計資訊</h3>
 
@@ -24,30 +24,33 @@ classes: wide
 
 {% for post in site.posts %}
   {% assign text_to_count = post.content | strip_html | strip_newlines | replace: "&nbsp;", " " %}
-  {% assign text_clean = text_to_count | remove: " " | remove: "	" %}
-  {% assign text_clean = text_clean | remove: "*" | remove: "-" | remove: "`" | remove: ">" | remove: "#" %}
-  {% assign text_clean = text_clean | remove: "，" | remove: "。" | remove: "：" | remove: "；" | remove: "？" | remove: "！" | remove: "、" | remove: "（" | remove: "）" | remove: "《" | remove: "》" %}
-  {% assign text_clean = text_clean | remove: "," | remove: "." | remove: ":" | remove: ";" | remove: "?" | remove: "!" | remove: "&" | remove: "(" | remove: ")" | remove: "—" %}
-  {% assign text_clean = text_clean | remove: "🎉" | remove: "/" %}
+  {% assign text_clean = text_to_count 
+    | remove: " " | remove: "	"
+    | remove: "*" | remove: "-" | remove: "`" | remove: ">" | remove: "#" 
+    | remove: "，" | remove: "。" | remove: "：" | remove: "；" | remove: "？" | remove: "！" | remove: "、" | remove: "（" | remove: "）" | remove: "《" | remove: "》"
+    | remove: "," | remove: "." | remove: ":" | remove: ";" | remove: "?" | remove: "!" | remove: "&" | remove: "(" | remove: ")" | remove: "—" 
+    | remove: "🎉" | remove: "/" %}
   {% assign content_length = text_clean | size %}
   {% assign total_words = total_words | plus: content_length %}
 {% endfor %}
 
-  {% assign total_categories = site.categories | size %}
-  {% assign sorted_posts = site.posts | sort: "date" %}
-  {% assign last_post = sorted_posts | last %}
-  {% assign last_updated = last_post.last_modified_at | default: last_post.date | date: "%Y-%m-%d" %}
+{% assign total_categories = site.categories | size %}
+{% assign sorted_posts = site.posts | sort: "date" %}
+{% assign last_post = sorted_posts | last %}
+{% assign last_updated = last_post.last_modified_at | default: last_post.date | date: "%Y-%m-%d" %}
+{% assign total_read_time = total_words | divided_by: 350.0 | ceil %}
 
-  <p style="margin:5px 0; color:#666;">📝 文章总数：<strong>{{ post_count }}</strong> 篇</p>
-  <p style="margin:5px 0; color:#666;">✍️ 全站总字数：<strong>{{ total_words | number_with_delimiter }}</strong> 字</p>
+<p style="margin:5px 0; color:#666;">📝 文章总数：<strong>{{ post_count }}</strong> 篇</p>
+<p style="margin:5px 0; color:#666;">✍️ 全站总字数：<strong>{{ total_words | number_with_delimiter }}</strong> 字</p>
 
-  {% if post_count > 0 %}
-    {% assign avg_words = total_words | divided_by: post_count %}
-    <p style="margin:5px 0; color:#666;">📈 平均每篇文章字数：<strong>{{ avg_words | round }}</strong> 字</p>
-  {% endif %}
+{% if post_count > 0 %}
+  {% assign avg_words = total_words | divided_by: post_count %}
+  <p style="margin:5px 0; color:#666;">📈 平均每篇文章字数：<strong>{{ avg_words | round }}</strong> 字</p>
+{% endif %}
 
-  <p style="margin:5px 0; color:#666;">📂 分类数：<strong>{{ total_categories }}</strong> 个</p>
-  <p style="margin:5px 0; color:#666;">🕒 最近更新：<strong>{{ last_updated }}</strong></p>
+<p style="margin:5px 0; color:#666;">⏱️ 全站总阅读时间：约 <strong>{{ total_read_time }}</strong> 分钟</p>
+<p style="margin:5px 0; color:#666;">📂 分类数：<strong>{{ total_categories }}</strong> 个</p>
+<p style="margin:5px 0; color:#666;">🕒 最近更新：<strong>{{ last_updated }}</strong></p>
 </div>
 <!-- ====== End 全站統計資訊 ====== -->
 
