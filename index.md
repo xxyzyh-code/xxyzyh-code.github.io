@@ -10,37 +10,6 @@ entries_layout: list
 classes: wide
 ---
 
-<!-- 🔹 样式统一 -->
-<style>
-.nav-btn {
-  flex:1 1 150px;
-  max-width:200px;
-  text-align:center;
-  padding:15px;
-  background:#444;
-  color:#fff;
-  text-decoration:none;
-  border-radius:8px;
-  transition:0.3s;
-}
-.nav-btn:hover {
-  background:#666;
-}
-.subcategory-list {
-  margin-top:5px;
-  font-size:0.9em;
-  color:#ccc;
-}
-.subcategory-list a {
-  color:#ccc;
-  text-decoration:none;
-  margin-right:8px;
-}
-.subcategory-list a:hover {
-  color:#fff;
-}
-</style>
-
 <!-- 🔹 顶部欢迎语 -->
 <div style="text-align:center; margin-bottom:40px;">
   <h2>👋 欢迎来到我的个人博客</h2>
@@ -51,34 +20,48 @@ classes: wide
 
 <!-- 🔹 导航按钮区 -->
 <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:20px; margin-bottom:50px;">
-  <a href="/about/" class="nav-btn">关于我</a>
-  <a href="/contact/" class="nav-btn">联系我</a>
-  <a href="/tags/" class="nav-btn">标签</a>
-  <a href="/categories/" class="nav-btn">分类</a>
-  <a href="/subcategories/" class="nav-btn">二级分类</a>
-  <a href="/archives/" class="nav-btn">存档</a>
+  <a href="/about/" style="flex:1 1 150px; max-width:200px; text-align:center; padding:15px; background:#444; color:#fff; text-decoration:none; border-radius:8px; transition:0.3s;">关于我</a>
+  <a href="/contact/" style="flex:1 1 150px; max-width:200px; text-align:center; padding:15px; background:#444; color:#fff; text-decoration:none; border-radius:8px; transition:0.3s;">联系我</a>
+  <a href="/tags/" style="flex:1 1 150px; max-width:200px; text-align:center; padding:15px; background:#444; color:#fff; text-decoration:none; border-radius:8px; transition:0.3s;">标签</a>
+  <a href="/categories/" style="flex:1 1 150px; max-width:200px; text-align:center; padding:15px; background:#444; color:#fff; text-decoration:none; border-radius:8px; transition:0.3s;">分类</a>
+  <a href="/subcategories/" style="flex:1 1 150px; max-width:200px; text-align:center; padding:15px; background:#444; color:#fff; text-decoration:none; border-radius:8px; transition:0.3s;">二级分类</a>
+  <a href="/archives/" style="flex:1 1 150px; max-width:200px; text-align:center; padding:15px; background:#444; color:#fff; text-decoration:none; border-radius:8px; transition:0.3s;">存档</a>
 </div>
 
-<!-- 🔹 一级分类 + 二级分类显示 -->
-<div style="text-align:center; margin-bottom:50px;">
-  <h3>📂 分类总览</h3>
-  <ul style="list-style:none; padding:0; display:flex; flex-wrap:wrap; justify-content:center; gap:30px;">
-    {% for category in site.categories %}
+<script>
+  // 按钮悬停高亮
+  document.querySelectorAll('a').forEach(a => {
+    a.addEventListener('mouseenter', () => a.style.background = '#666');
+    a.addEventListener('mouseleave', () => a.style.background = '#444');
+  });
+</script>
+
+---
+
+<!-- 🔹 分类与二级分类 -->
+<div style="margin:40px auto;">
+  <h3>📂 分类与二级分类</h3>
+  {% assign cats = site.categories %}
+  <ul>
+    {% for cat in cats %}
       <li>
-        <a href="{{ category[0] | slugify | prepend: '/categories/' }}" style="color:#fff; text-decoration:none; font-weight:bold;">
-          {{ category[0] }}
-        </a>
-        <div class="subcategory-list">
-          {% assign subcats = "" | split: "," %}
-          {% for post in category[1] %}
-            {% for subcat in post.subcategories %}
-              {% unless subcats contains subcat %}
-                <a href="{{ subcat | slugify | prepend: '/subcategories/' }}">{{ subcat }}</a>
-                {% assign subcats = subcats | push: subcat %}
-              {% endunless %}
-            {% endfor %}
+        <strong>{{ cat[0] }}</strong>
+        {% assign subcats_map = {} %}
+        {% for post in cat[1] %}
+          {% for subcat in post.subcategories %}
+            {% if subcats_map[subcat] %}
+              {% assign subcats_map = subcats_map | merge: {{ subcat | jsonify }}: subcats_map[subcat] | plus: 1 %}
+            {% else %}
+              {% assign subcats_map = subcats_map | merge: {{ subcat | jsonify }}: 1 %}
+            {% endif %}
           {% endfor %}
-        </div>
+        {% endfor %}
+        {% assign sorted_subcats = subcats_map | sort_natural: "last" | reverse %}
+        <ul>
+          {% for subcat in sorted_subcats %}
+            <li><a href="/subcategories/{{ subcat[0] | slugify }}/">{{ subcat[0] }}</a> ({{ subcat[1] }})</li>
+          {% endfor %}
+        </ul>
       </li>
     {% endfor %}
   </ul>
@@ -90,16 +73,6 @@ classes: wide
 <div style="text-align:center; margin:40px auto;">
   <h3>📝 最新发布</h3>
   <p style="color:#aaa;">以下是我最近的博客文章，更多内容请查看各个分类。</p>
-  <ul style="list-style:none; padding:0;">
-    {% for post in site.posts limit:5 %}
-      <li style="margin:10px 0;">
-        <a href="{{ post.url }}" style="color:#fff; text-decoration:none;">
-          {{ post.title }} 
-          <span style="color:#aaa; font-size:0.9em;">({{ post.date | date: "%Y-%m-%d" }})</span>
-        </a>
-      </li>
-    {% endfor %}
-  </ul>
 </div>
 
 ---
