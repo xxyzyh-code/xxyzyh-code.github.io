@@ -15,39 +15,44 @@ classes: wide
   <p style="font-size:1.1em; color:#ccc;">这里是我的写作与思考空间，你可以在下方找到不同主题的内容。</p>
 </div>
 
-<!-- ====== 全站統計資訊（穩定版） ====== -->
 <div id="site-stats" style="text-align:center; margin:60px auto; padding:30px; border-top:1px solid #ddd;">
   <h3>📊 全站統計資訊</h3>
 
 {% assign total_words = 0 %}
 {% assign post_count = site.posts | size %}
+{% assign all_posts = site.posts | reverse %}
 
-{% for post in site.posts %}
-  {% assign content_clean = post.content | strip_html | replace: "\r", "" | replace: "\n", "" | replace: "\t", "" | replace: " ", "" | replace: "&nbsp;", "" %}
-  {% assign content_length = content_clean | size %}
+{% for post in all_posts %}
+  {% comment %} 移除所有 HTML 標籤、換行符、製表符和多餘空格 {% endcomment %}
+  {% assign text_to_count = post.content | strip_html | strip_newlines | replace: "\t", "" | replace: "&nbsp;", " " %}
+  
+  {% comment %} 移除所有標點符號、括號等非文字字符，只保留中英文字符以計數 {% endcomment %}
+  {% assign text_clean = text_to_count | remove: " " | remove: "*" | remove: "-" | remove: "`" | remove: ">" | remove: "#" %}
+  {% assign text_clean = text_clean | remove: "，" | remove: "。" | remove: "：" | remove: "；" | remove: "？" | remove: "！" | remove: "、" | remove: "（" | remove: "）" | remove: "《" | remove: "》" %}
+  {% assign text_clean = text_clean | remove: "," | remove: "." | remove: ":" | remove: ";" | remove: "?" | remove: "!" | remove: "&" | remove: "(" | remove: ")" | remove: "—" %}
+  {% assign text_clean = text_clean | remove: "🎉" | remove: "/" %}
+
+  {% assign content_length = text_clean | size %}
   {% assign total_words = total_words | plus: content_length %}
 {% endfor %}
 
   {% assign total_categories = site.categories | size %}
 
-  {% assign sorted_posts = site.posts | sort: "date" %}
-  {% assign last_post = sorted_posts | last %}
-  {% assign last_updated = last_post.last_modified_at | default: last_post.date | date: "%Y-%m-%d" %}
+  {% comment %} 獲取最新更新日期：檢查 last_modified_at，否則使用 date {% endcomment %}
+  {% assign recent_post = site.posts | sort: "last_modified_at" | reverse | first %}
+  {% assign last_updated = recent_post.last_modified_at | default: recent_post.date | date: "%Y-%m-%d" %}
 
   <p style="margin:5px 0; color:#666;">📝 文章总数：<strong>{{ post_count }}</strong> 篇</p>
   <p style="margin:5px 0; color:#666;">✍️ 全站总字数：<strong>{{ total_words | number_with_delimiter }}</strong> 字</p>
 
   {% if post_count > 0 %}
-    {% assign avg_words = total_words | divided_by: post_count %}
-    <p style="margin:5px 0; color:#666;">📈 平均每篇文章字数：<strong>{{ avg_words | round }}</strong> 字</p>
+    {% assign avg_words = total_words | divided_by: post_count | round %}
+    <p style="margin:5px 0; color:#666;">📈 平均每篇文章字数：<strong>{{ avg_words }}</strong> 字</p>
   {% endif %}
 
   <p style="margin:5px 0; color:#666;">📂 分类数：<strong>{{ total_categories }}</strong> 个</p>
   <p style="margin:5px 0; color:#666;">🕒 最近更新：<strong>{{ last_updated }}</strong></p>
 </div>
-<!-- ====== End 全站統計資訊 ====== -->
-
-
 <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:20px; margin-bottom:50px;">
   <a href="/about/" style="flex:1 1 150px; max-width:200px; text-align:center; padding:15px; background:#444; color:#fff; text-decoration:none; border-radius:8px; transition:0.3s;">关于我</a>
   <a href="/contact/" style="flex:1 1 150px; max-width:200px; text-align:center; padding:15px; background:#444; color:#fff; text-decoration:none; border-radius:8px; transition:0.3s;">联系我</a>
@@ -64,7 +69,6 @@ classes: wide
   });
 </script>
 
-<!-- 🔹 分类与二级分类展示（前端 JS + 高级动画 + 可折叠文章列表） -->
 <div id="category-subcategory" style="margin:40px auto;">
   <h3>📂 分类与二级分类（按文章数统计）</h3>
   <div id="cat-subcat-list"></div>
@@ -85,16 +89,28 @@ classes: wide
 <script>
 const posts = [
   {% for post in site.posts %}
-  { url:"{{ post.url }}", title:"{{ post.title | escape }}", categories:[{% for cat in post.categories %}"{{ cat }}"{% unless forloop.last == true %},{% endunless %}{% endfor %}], subcategories:[{% for subcat in post.subcategories %}"{{ subcat }}"{% unless forloop.last == true %},{% endunless %}{% endfor %}] }
+  { 
+    url:"{{ post.url }}", 
+    title:"{{ post.title | escape }}", 
+    categories: [{% for cat in post.categories %}"{{ cat }}"{% unless forloop.last %},{% endunless %}{% endfor %}], 
+    subcategories: [{% for subcat in post.subcategories %}"{{ subcat }}"{% unless forloop.last %},{% endunless %}{% endfor %}]
+  }
   {% unless forloop.last %},{% endunless %}
   {% endfor %}
 ];
 
 const catMap={};
 posts.forEach(post=>{
-  post.categories.forEach(cat=>{
+  // 确保 categories 是一個陣列，即使它在 Front Matter 中缺失或為空
+  const categories = Array.isArray(post.categories) && post.categories.length > 0 ? post.categories : ['未分類'];
+
+  categories.forEach(cat=>{
     if(!catMap[cat]) catMap[cat]={};
-    post.subcategories.forEach(subcat=>{
+    
+    // 確保 subcategories 是一個陣列，即使它在 Front Matter 中缺失或為空
+    const subcategories = Array.isArray(post.subcategories) && post.subcategories.length > 0 ? post.subcategories : ['主要分類'];
+
+    subcategories.forEach(subcat=>{
       if(!catMap[cat][subcat]) catMap[cat][subcat]=[];
       catMap[cat][subcat].push(post);
     });
@@ -115,7 +131,7 @@ for(const cat in catMap){
   catHeader.appendChild(arrow);
 
   const titleSpan=document.createElement('strong');
-  titleSpan.textContent=cat;
+  titleSpan.textContent=`${cat} (${Object.values(catMap[cat]).flat().length})`; // 顯示該主分類下的文章總數
   catHeader.appendChild(titleSpan);
   catDiv.appendChild(catHeader);
 
@@ -133,17 +149,22 @@ for(const cat in catMap){
       e.stopPropagation();
       const existing=document.getElementById('subcat-posts'); if(existing) existing.remove();
       const postList=document.createElement('ul'); postList.id='subcat-posts';
+      postList.style.listStyle='none'; // 移除多餘的項目符號
+
       const maxShow=5; const postsArr=catMap[cat][subcat];
       postsArr.forEach((p,i)=>{
         const pLi=document.createElement('li'); if(i>=maxShow)pLi.style.display='none';
-        const a=document.createElement('a'); a.href=p.url; a.textContent=p.title; a.style.textDecoration='underline'; a.style.color='#06f'; pLi.appendChild(a); postList.appendChild(pLi);
+        const a=document.createElement('a'); a.href=p.url; a.textContent=p.title; a.style.textDecoration='underline'; a.style.color:'#06f'; pLi.appendChild(a); postList.appendChild(pLi);
       });
+      
+      const targetDiv = catDiv.parentNode.querySelector('.cat-header') === catHeader ? catDiv : catHeader.parentNode;
+      targetDiv.appendChild(postList);
+
       if(postsArr.length>maxShow){
         const toggle=document.createElement('div'); toggle.className='more-toggle'; toggle.textContent='显示更多...';
         toggle.addEventListener('click',()=>{ postList.querySelectorAll('li[style*="display: none"]').forEach(li=>li.style.display='list-item'); toggle.remove(); });
         postList.appendChild(toggle);
       }
-      catDiv.appendChild(postList);
     });
     subUl.appendChild(li);
   }
@@ -151,19 +172,20 @@ for(const cat in catMap){
   catDiv.appendChild(subUl);
 
   catHeader.addEventListener('click',()=>{
-    const allLists=document.querySelectorAll('.subcat-list');
-    const allArrows=document.querySelectorAll('.cat-header .arrow');
+    const isCollapsed=subUl.style.maxHeight==='' || subUl.style.maxHeight==='0px';
     const openPosts=document.getElementById('subcat-posts'); if(openPosts) openPosts.remove();
 
-    allLists.forEach((ul,i)=>{ if(ul!==subUl){ ul.style.maxHeight='0'; ul.style.opacity='0'; allArrows[i].style.transform='rotate(0deg)'; } });
-
-    const isCollapsed=subUl.style.maxHeight==='' || subUl.style.maxHeight==='0px';
     if(isCollapsed){
-      subUl.style.maxHeight=subUl.scrollHeight+'px'; subUl.style.opacity='1'; arrow.style.transform='rotate(90deg)';
+      // 展開邏輯
+      subUl.style.maxHeight=subUl.scrollHeight + 100 + 'px'; // 稍微多加一些高度確保展開
+      subUl.style.opacity='1'; 
+      arrow.style.transform='rotate(90deg)';
       arrow.animate([{transform:'rotate(0deg)'},{transform:'rotate(110deg)'},{transform:'rotate(90deg)'}],{duration:300,easing:'ease-out'});
     }else{
-      subUl.style.maxHeight='0'; subUl.style.opacity='0'; arrow.style.transform='rotate(0deg)'; 
-      const openPosts2=document.getElementById('subcat-posts'); if(openPosts2) openPosts2.remove();
+      // 收起邏輯
+      subUl.style.maxHeight='0'; 
+      subUl.style.opacity='0'; 
+      arrow.style.transform='rotate(0deg)'; 
     }
   });
 
@@ -173,10 +195,12 @@ for(const cat in catMap){
 
 <div style="text-align:center; margin:40px auto;">
   <h3>📝 最新发布</h3>
-  <p style="color:#aaa;">以下是我最近的博客文章，更多内容请查看各个分类。</p>
+  <p style="color:#aaa;">以下是我最近的博客文章，更多内容請查看各個分類。</p>
 </div>
 
-<div style="text-align: center; margin-top: 60px;">
+{% include_list posts %}
+
+<div style="text-align:center; margin:60px auto;">
   <p style="font-size:0.9em; color:#888;">本站访问统计：</p>
   <img src="https://visitor-badge.laobi.icu/badge?page_id=xxyzyh-code.xxyzyh-code" alt="Visitor Count">
 </div>
