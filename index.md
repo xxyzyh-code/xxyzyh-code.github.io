@@ -19,12 +19,14 @@ classes: wide
 <div id="site-stats" style="text-align:center; margin:60px auto; padding:30px; border-top:1px solid #ddd;">
   <h3>📊 全站統計資訊</h3>
 
-  {% if post_count > 0 %}
-  {% assign avg_words = total_words | divided_by: post_count %}
-  <p>平均字數: {{ avg_words | round }}</p>
-{% else %}
-  <p>平均字數: 0</p>
-{% endif %}
+{% assign total_words = 0 %}
+{% assign post_count = site.posts | size %}
+
+{% for post in site.posts %}
+  {% assign content_clean = post.content | strip_html | replace: "\r", "" | replace: "\n", "" | replace: "\t", "" | replace: " ", "" | replace: "&nbsp;", "" %}
+  {% assign content_length = content_clean | size %}
+  {% assign total_words = total_words | plus: content_length %}
+{% endfor %}
 
   {% assign total_categories = site.categories | size %}
 
