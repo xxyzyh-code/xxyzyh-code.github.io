@@ -31,30 +31,40 @@ classes: wide
   });
 </script>
 
-<!-- 🔹 分类与二级分类展示（前端 JS 生成 + 流畅展开/收起动画） -->
+<!-- 🔹 分类与二级分类展示（带箭头动画） -->
 <div id="category-subcategory" style="margin:40px auto;">
   <h3>📂 分类与二级分类（按文章数统计）</h3>
   <div id="cat-subcat-list"></div>
 </div>
 
 <style>
+  .cat-title {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    margin: 10px 0 5px;
+    font-weight: bold;
+    user-select: none;
+  }
+  .cat-title .arrow {
+    display: inline-block;
+    margin-right: 8px;
+    transition: transform 0.3s ease;
+  }
+  .cat-title .arrow.open {
+    transform: rotate(90deg);
+  }
   .subcat-list {
     max-height: 0;
     overflow: hidden;
     transition: max-height 0.3s ease, opacity 0.3s ease;
     opacity: 0;
-    margin: 5px 0 15px 15px;
+    margin: 5px 0 15px 20px;
     padding-left: 0;
   }
   .subcat-list.show {
     opacity: 1;
-    max-height: 500px; /* 根據內容長度調整 */
-  }
-  .cat-title {
-    cursor: pointer;
-    display: block;
-    margin: 10px 0 5px;
-    font-weight: bold;
+    max-height: 500px; /* 可根据内容调整 */
   }
 </style>
 
@@ -87,8 +97,17 @@ classes: wide
     const catDiv = document.createElement('div');
 
     const catTitle = document.createElement('span');
-    catTitle.textContent = cat;
     catTitle.className = 'cat-title';
+
+    const arrow = document.createElement('span');
+    arrow.textContent = '▶';
+    arrow.className = 'arrow';
+    catTitle.appendChild(arrow);
+
+    const catName = document.createElement('span');
+    catName.textContent = cat;
+    catTitle.appendChild(catName);
+
     catDiv.appendChild(catTitle);
 
     const subUl = document.createElement('ul');
@@ -98,12 +117,14 @@ classes: wide
       li.innerHTML = `<a href="/categories/${cat}/subcategories/${subcat}/">${subcat} (${catMap[cat][subcat]})</a>`;
       subUl.appendChild(li);
     }
-
     catDiv.appendChild(subUl);
     container.appendChild(catDiv);
 
-    // 點擊展開/收起
-    catTitle.addEventListener('click', () => subUl.classList.toggle('show'));
+    // 點擊展開/收起 + 箭頭動畫
+    catTitle.addEventListener('click', () => {
+      subUl.classList.toggle('show');
+      arrow.classList.toggle('open');
+    });
   }
 </script>
 
