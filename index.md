@@ -10,25 +10,65 @@ entries_layout: list
 classes: wide
 ---
 
-<div style="text-align:center; margin-bottom:40px;">
+<div style="text-align:center; margin-bottom:20px;">
   <h2>👋 欢迎来到我的个人博客</h2>
   <p style="font-size:1.1em; color:#ccc;">这里是我的写作与思考空间，你可以在下方找到不同主题的内容。</p>
 </div>
 
-<div style="display:flex; flex-wrap:wrap; justify-content:center; gap:20px; margin-bottom:50px;">
-  <a href="/about/" style="flex:1 1 150px; max-width:200px; text-align:center; padding:15px; background:#444; color:#fff; text-decoration:none; border-radius:8px; transition:0.3s;">关于我</a>
-  <a href="/contact/" style="flex:1 1 150px; max-width:200px; text-align:center; padding:15px; background:#444; color:#fff; text-decoration:none; border-radius:8px; transition:0.3s;">联系我</a>
-  <a href="/tags/" style="flex:1 1 150px; max-width:200px; text-align:center; padding:15px; background:#444; color:#fff; text-decoration:none; border-radius:8px; transition:0.3s;">标签</a>
-  <a href="/categories/" style="flex:1 1 150px; max-width:200px; text-align:center; padding:15px; background:#444; color:#fff; text-decoration:none; border-radius:8px; transition:0.3s;">分类</a>
-  <a href="/subcategories/" style="flex:1 1 150px; max-width:200px; text-align:center; padding:15px; background:#444; color:#fff; text-decoration:none; border-radius:8px; transition:0.3s;">二级分类</a>
-  <a href="/archives/" style="flex:1 1 150px; max-width:200px; text-align:center; padding:15px; background:#444; color:#fff; text-decoration:none; border-radius:8px; transition:0.3s;">存档</a>
+<!-- 🔹 全站统计（升级版） -->
+<div id="site-stats" style="text-align:center; margin-bottom:30px; font-size:1.1em; color:#888; background:#f5f5f5; padding:15px 10px; border-radius:10px;">
+  <p>📊 全站写作统计：</p>
+  <p>
+    总文章数：<span id="total-posts">0</span> | 
+    总字数：<span id="total-words">0</span> | 
+    平均每篇字数：<span id="avg-words">0</span><br>
+    一级分类数：<span id="total-cats">0</span> | 
+    二级分类数：<span id="total-subcats">0</span> | 
+    最后更新：<span id="latest-update">N/A</span>
+  </p>
 </div>
 
 <script>
-  document.querySelectorAll('a').forEach(a => {
-    a.addEventListener('mouseenter', () => a.style.background = '#666');
-    a.addEventListener('mouseleave', () => a.style.background = '#444');
-  });
+const postsData = [
+  {% for post in site.posts %}
+  {
+    content: `{{ post.content | strip_html | escape }}`,
+    categories: [{% for cat in post.categories %}"{{ cat }}"{% if forloop.last == false %}, {% endif %}{% endfor %}],
+    subcategories: [{% for subcat in post.subcategories %}"{{ subcat }}"{% if forloop.last == false %}, {% endif %}{% endfor %}],
+    date: "{{ post.date | date: '%Y-%m-%d' }}",
+    last_modified: "{{ post.last_modified_at | default: post.date | date: '%Y-%m-%d' }}"
+  }{% if forloop.last == false %}, {% endif %}
+  {% endfor %}
+];
+
+// 总文章数
+const totalPosts = postsData.length;
+
+// 总字数 & 平均字数
+let totalWords = 0;
+postsData.forEach(p=>{
+  const clean = p.content.replace(/\s+/g,"");
+  totalWords += clean.length;
+});
+const avgWords = totalPosts>0 ? Math.round(totalWords/totalPosts) : 0;
+
+// 分类统计
+const catSet = new Set();
+const subcatSet = new Set();
+let latestUpdate = "";
+postsData.forEach(p=>{
+  p.categories.forEach(c=>catSet.add(c));
+  p.subcategories.forEach(sc=>subcatSet.add(sc));
+  if(!latestUpdate || p.last_modified > latestUpdate) latestUpdate = p.last_modified;
+});
+
+// 更新页面
+document.getElementById("total-posts").textContent = totalPosts;
+document.getElementById("total-words").textContent = totalWords;
+document.getElementById("avg-words").textContent = avgWords;
+document.getElementById("total-cats").textContent = catSet.size;
+document.getElementById("total-subcats").textContent = subcatSet.size;
+document.getElementById("latest-update").textContent = latestUpdate;
 </script>
 
 <!-- 🔹 分类与二级分类展示（前端 JS + 高级动画 + 可折叠文章列表） -->
