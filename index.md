@@ -31,7 +31,7 @@ classes: wide
   });
 </script>
 
-<!-- 🔹 分类与二级分类展示（自动高度动画） -->
+<!-- 🔹 分类与二级分类展示（单开+流畅动画） -->
 <div id="category-subcategory" style="margin:40px auto;">
   <h3>📂 分类与二级分类（按文章数统计）</h3>
   <div id="cat-subcat-list"></div>
@@ -119,11 +119,24 @@ classes: wide
     catDiv.appendChild(subUl);
     container.appendChild(catDiv);
 
-    // 點擊展開/收起 + 箭頭動畫（自動高度）
+    // 點擊展開/收起 + 單開功能 + 箭頭動畫
     catTitle.addEventListener('click', () => {
       const isOpen = subUl.classList.contains('show');
+
+      // 先關閉其它已展開分類
+      document.querySelectorAll('.subcat-list.show').forEach(other => {
+        if (other !== subUl) {
+          other.style.height = other.scrollHeight + 'px';
+          requestAnimationFrame(() => { other.style.height = '0'; });
+          other.classList.remove('show');
+          const otherArrow = other.previousElementSibling.querySelector('.arrow');
+          if (otherArrow) otherArrow.classList.remove('open');
+        }
+      });
+
+      // 展開/收起當前分類
       if (isOpen) {
-        subUl.style.height = subUl.scrollHeight + 'px'; // 固定高度
+        subUl.style.height = subUl.scrollHeight + 'px';
         requestAnimationFrame(() => { subUl.style.height = '0'; });
       } else {
         subUl.style.height = subUl.scrollHeight + 'px';
@@ -131,7 +144,7 @@ classes: wide
       subUl.classList.toggle('show');
       arrow.classList.toggle('open');
 
-      // 點擊後動畫完成自動清除行內高度
+      // 動畫結束後自動清除行內高度
       subUl.addEventListener('transitionend', function handler() {
         if (subUl.classList.contains('show')) {
           subUl.style.height = 'auto';
