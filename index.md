@@ -54,6 +54,8 @@ classes: wide
   }
   .cat-header span.arrow {
     transition: transform 0.3s ease-in-out;
+    color: #333;            /* 讓箭頭在白底更清晰 */
+    font-weight: bold;      /* 增加視覺厚度 */
   }
   .subcat-list li {
     cursor: pointer;
