@@ -10,15 +10,11 @@ entries_layout: list
 classes: wide
 ---
 
-<!-- 🔹 顶部欢迎语 -->
 <div style="text-align:center; margin-bottom:40px;">
   <h2>👋 欢迎来到我的个人博客</h2>
   <p style="font-size:1.1em; color:#ccc;">这里是我的写作与思考空间，你可以在下方找到不同主题的内容。</p>
 </div>
 
----
-
-<!-- 🔹 导航按钮区 -->
 <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:20px; margin-bottom:50px;">
   <a href="/about/" style="flex:1 1 150px; max-width:200px; text-align:center; padding:15px; background:#444; color:#fff; text-decoration:none; border-radius:8px; transition:0.3s;">关于我</a>
   <a href="/contact/" style="flex:1 1 150px; max-width:200px; text-align:center; padding:15px; background:#444; color:#fff; text-decoration:none; border-radius:8px; transition:0.3s;">联系我</a>
@@ -29,37 +25,46 @@ classes: wide
 </div>
 
 <script>
-  // 按钮悬停高亮
   document.querySelectorAll('a').forEach(a => {
     a.addEventListener('mouseenter', () => a.style.background = '#666');
     a.addEventListener('mouseleave', () => a.style.background = '#444');
   });
 </script>
 
----
-
-<!-- 🔹 分类与二级分类 -->
 <div style="margin:40px auto;">
-  <h3>📂 分类与二级分类</h3>
-  {% assign cats = site.categories %}
+  <h3>📂 分类与二级分类（按文章数排序）</h3>
   <ul>
-    {% for cat in cats %}
+    {% for category in site.categories %}
       <li>
-        <strong>{{ cat[0] }}</strong>
-        {% assign subcats_map = {} %}
-        {% for post in cat[1] %}
-          {% for subcat in post.subcategories %}
-            {% if subcats_map[subcat] %}
-              {% assign subcats_map = subcats_map | merge: {{ subcat | jsonify }}: subcats_map[subcat] | plus: 1 %}
-            {% else %}
-              {% assign subcats_map = subcats_map | merge: {{ subcat | jsonify }}: 1 %}
-            {% endif %}
-          {% endfor %}
-        {% endfor %}
-        {% assign sorted_subcats = subcats_map | sort_natural: "last" | reverse %}
+        <strong>{{ category[0] }}</strong>
         <ul>
-          {% for subcat in sorted_subcats %}
-            <li><a href="/subcategories/{{ subcat[0] | slugify }}/">{{ subcat[0] }}</a> ({{ subcat[1] }})</li>
+          {% assign subcats_counts = "" %}
+          {% for post in category[1] %}
+            {% for subcat in post.subcategories %}
+              {% assign found = false %}
+              {% assign temp_list = subcats_counts | split: "|" %}
+              {% for item in temp_list %}
+                {% if item contains subcat %}
+                  {% assign parts = item | split: ":" %}
+                  {% assign count = parts[1] | plus: 1 %}
+                  {% assign subcats_counts = subcats_counts | replace: item, subcat | append: ":" | append: count %}
+                  {% assign found = true %}
+                {% endif %}
+              {% endfor %}
+              {% unless found %}
+                {% if subcats_counts == "" %}
+                  {% assign subcats_counts = subcat | append: ":1" %}
+                {% else %}
+                  {% assign subcats_counts = subcats_counts | append: "|" | append: subcat | append: ":1" %}
+                {% endif %}
+              {% endunless %}
+            {% endfor %}
+          {% endfor %}
+          {% assign subcats_array = subcats_counts | split: "|" %}
+          {% assign sorted_subcats = subcats_array | sort_natural %}
+          {% for subcat_item in sorted_subcats %}
+            {% assign parts = subcat_item | split: ":" %}
+            <li><a href="/subcategories/{{ parts[0] | slugify }}/">{{ parts[0] }}</a> ({{ parts[1] }})</li>
           {% endfor %}
         </ul>
       </li>
@@ -67,17 +72,11 @@ classes: wide
   </ul>
 </div>
 
----
-
-<!-- 🔹 最新动态区 -->
 <div style="text-align:center; margin:40px auto;">
   <h3>📝 最新发布</h3>
   <p style="color:#aaa;">以下是我最近的博客文章，更多内容请查看各个分类。</p>
 </div>
 
----
-
-<!-- 🔹 首页访问统计 -->
 <div style="text-align: center; margin-top: 60px;">
   <p style="font-size:0.9em; color:#888;">本站访问统计：</p>
   <img src="https://visitor-badge.laobi.icu/badge?page_id=xxyzyh-code.xxyzyh-code" alt="Visitor Count">
