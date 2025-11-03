@@ -31,7 +31,7 @@ classes: wide
   });
 </script>
 
-<!-- 🔹 分类与二级分类展示（前端 JS + 动画 + 完整修复：切换分类时清除文章列表） -->
+<!-- 🔹 分类与二级分类展示（前端 JS + 高级动画 + 可折叠文章列表） -->
 <div id="category-subcategory" style="margin:40px auto;">
   <h3>📂 分类与二级分类（按文章数统计）</h3>
   <div id="cat-subcat-list"></div>
@@ -42,7 +42,7 @@ classes: wide
     overflow: hidden;
     max-height: 0;
     opacity: 0;
-    transition: max-height 0.5s cubic-bezier(0.77, 0, 0.175, 1), opacity 0.3s ease-in-out;
+    transition: max-height 0.5s cubic-bezier(0.77,0,0.175,1), opacity 0.3s ease-in-out;
     margin: 5px 0 0 20px;
   }
   .cat-header {
@@ -54,14 +54,29 @@ classes: wide
   }
   .cat-header span.arrow {
     transition: transform 0.3s ease-in-out;
+    display: inline-block;
+  }
+  .cat-header:hover {
+    opacity: 0.8;
   }
   .subcat-list li {
     cursor: pointer;
+    transition: background 0.2s;
+  }
+  .subcat-list li:hover {
+    background: rgba(0,0,0,0.05);
   }
   #subcat-posts {
     margin-top: 10px;
     padding-left: 20px;
     animation: fadeIn 0.4s ease-in-out;
+  }
+  .more-toggle {
+    cursor: pointer;
+    color: #06f;
+    text-decoration: underline;
+    font-size: 0.9em;
+    margin-top: 5px;
   }
   @keyframes fadeIn {
     from { opacity: 0; transform: translateY(-5px); }
@@ -123,14 +138,18 @@ for (const cat in catMap) {
     li.textContent = `${subcat} (${catMap[cat][subcat].length})`;
 
     li.addEventListener('click', (e) => {
-      e.stopPropagation(); // 防止點擊冒泡
+      e.stopPropagation(); // 防止冒泡
       const existing = document.getElementById('subcat-posts');
       if (existing) existing.remove();
 
       const postList = document.createElement('ul');
       postList.id = 'subcat-posts';
-      catMap[cat][subcat].forEach(p => {
+
+      const maxShow = 5;
+      const postsArr = catMap[cat][subcat];
+      postsArr.forEach((p,i) => {
         const pLi = document.createElement('li');
+        if(i >= maxShow) pLi.style.display = 'none';
         const a = document.createElement('a');
         a.href = p.url;
         a.textContent = p.title;
@@ -139,6 +158,20 @@ for (const cat in catMap) {
         pLi.appendChild(a);
         postList.appendChild(pLi);
       });
+
+      // 如果超過 maxShow，增加 "更多" 按鈕
+      if(postsArr.length > maxShow){
+        const toggle = document.createElement('div');
+        toggle.className = 'more-toggle';
+        toggle.textContent = '显示更多...';
+        toggle.addEventListener('click', () => {
+          const hiddenLis = postList.querySelectorAll('li[style*="display: none"]');
+          hiddenLis.forEach(li => li.style.display = 'list-item');
+          toggle.remove();
+        });
+        postList.appendChild(toggle);
+      }
+
       catDiv.appendChild(postList);
     });
     subUl.appendChild(li);
@@ -151,33 +184,37 @@ for (const cat in catMap) {
     const allLists = document.querySelectorAll('.subcat-list');
     const allArrows = document.querySelectorAll('.cat-header .arrow');
 
-    // 🧹 新增：每次切換分類前，清除現有文章列表
+    // 清除文章列表
     const openPosts = document.getElementById('subcat-posts');
     if (openPosts) openPosts.remove();
 
     // 收起其他分類
-    allLists.forEach((ul, i) => {
-      if (ul !== subUl) {
-        ul.style.maxHeight = '0';
-        ul.style.opacity = '0';
-        allArrows[i].style.transform = 'rotate(0deg)';
+    allLists.forEach((ul,i) => {
+      if(ul !== subUl){
+        ul.style.maxHeight='0';
+        ul.style.opacity='0';
+        allArrows[i].style.transform='rotate(0deg)';
       }
     });
 
     // 切換當前分類
-    const isCollapsed = subUl.style.maxHeight === '' || subUl.style.maxHeight === '0px';
-    if (isCollapsed) {
-      subUl.style.maxHeight = subUl.scrollHeight + 'px';
-      subUl.style.opacity = '1';
-      arrow.style.transform = 'rotate(90deg)';
-    } else {
-      subUl.style.maxHeight = '0';
-      subUl.style.opacity = '0';
-      arrow.style.transform = 'rotate(0deg)';
+    const isCollapsed = subUl.style.maxHeight==='' || subUl.style.maxHeight==='0px';
+    if(isCollapsed){
+      subUl.style.maxHeight = subUl.scrollHeight+'px';
+      subUl.style.opacity='1';
+      arrow.style.transform='rotate(90deg)';
 
-      // 再保險一次：確保收起時文章消失
+      // 小 bounce 動畫
+      arrow.animate([{transform:'rotate(0deg)'},{transform:'rotate(110deg)'},{transform:'rotate(90deg)'}],
+        {duration:300, easing:'ease-out'}
+      );
+    }else{
+      subUl.style.maxHeight='0';
+      subUl.style.opacity='0';
+      arrow.style.transform='rotate(0deg)';
+
       const openPosts2 = document.getElementById('subcat-posts');
-      if (openPosts2) openPosts2.remove();
+      if(openPosts2) openPosts2.remove();
     }
   });
 
