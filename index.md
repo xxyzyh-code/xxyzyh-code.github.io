@@ -15,15 +15,21 @@ classes: wide
   <p style="font-size:1.1em; color:#ccc;">这里是我的写作与思考空间，你可以在下方找到不同主题的内容。</p>
 </div>
 
-<!-- 🔹 全站文章总字数 -->
-<div style="text-align:center; margin:20px 0; color:#ccc;">
+<!-- ✅ 新增：全站統計資訊（字數、篇數、平均） -->
+<div style="text-align:center; margin:25px 0; color:#ccc; line-height:1.8;">
   {% assign total_words = 0 %}
+  {% assign post_count = site.posts | size %}
   {% for post in site.posts %}
     {% assign content_text = post.content | strip_html | strip_newlines | replace: "&nbsp;", " " %}
     {% assign word_count = content_text | size %}
     {% assign total_words = total_words | plus: word_count %}
   {% endfor %}
-  <p>📖 全站文章总字数：<strong>{{ total_words }}</strong> 字</p>
+  <p>📚 共 <strong>{{ post_count }}</strong> 篇文章</p>
+  <p>📖 全站总字数：<strong>{{ total_words }}</strong> 字</p>
+  {% if post_count > 0 %}
+    {% assign avg_words = total_words | divided_by: post_count %}
+    <p>✍️ 平均每篇文章字数：<strong>{{ avg_words }}</strong> 字</p>
+  {% endif %}
 </div>
 
 <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:20px; margin-bottom:50px;">
