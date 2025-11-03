@@ -35,14 +35,11 @@ Hello, World — This is my first blog post.
 > 小贴士：写完一篇新文章后，记得命名规则要是 `YYYY-MM-DD-文章名.md`。
 
 <!-- 🔹 写作成绩单：发布日期 + 正文字数 + 阅读时间 -->
-{% assign plain_text = page.content | strip_html | replace: "\r", "" | replace: "\n", "" | replace: "\t", "" | replace: " ", "" | replace: "&nbsp;", "" %}
-{% assign word_count = plain_text | size %}
-
-{% assign reading_time = word_count | divided_by:200 %}
-{% if word_count | modulo:200 > 0 %}
-  {% assign reading_time = reading_time | plus:1 %}
-{% endif %}
-
+{% assign plain_text = page.content | strip_html | strip_newlines | replace: "&nbsp;", " " %}
+{% assign text_without_spaces = plain_text | remove: " " | remove: "	" %}
+{% assign word_count = text_without_spaces | size %}
+{% assign reading_time = word_count | divided_by:350.0 | ceil %}
 <p style="color:#888; font-size:0.9em; margin-top: 20px;">
   📅 发布日期：{{ page.date | date: "%Y-%m-%d" }} &nbsp;|&nbsp; 📝 字数：{{ word_count }} 字 &nbsp;|&nbsp; ⏱️ 阅读时间：约 {{ reading_time }} 分钟
 </p>
+
