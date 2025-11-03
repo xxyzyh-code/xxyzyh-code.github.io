@@ -8,8 +8,6 @@ layout: default
   <div class="archive">
     <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
       {% include page__hero.html %}
-      {% include page__taxonomy.html %}
-
       <div class="page__inner-wrap">
         {% unless page.header.overlay_color or page.header.overlay_image %}
           <header>
@@ -50,8 +48,9 @@ layout: default
           </section>
 
         <footer class="page__meta">
-          {% include post__taxonomy.html %}
-          {% include page__date.html %}
+          {% if page.last_modified_at %}
+            <p>{{ site.data.ui-text[site.locale].last_modified_label | default: "Updated:" }} <time datetime="{{ page.last_modified_at | date: "%Y-%m-%d" }}">{{ page.last_modified_at | date: "%B %d, %Y" }}</time></p>
+          {% endif %}
         </footer>
 
         {% include post_pagination.html %}
