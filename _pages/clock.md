@@ -2,17 +2,28 @@
 title: "實時數字時鐘"
 permalink: /clock/
 layout: single
-author_profile: false
-header:
-  overlay_color: "#444"
-  overlay_image: /assets/images/contact-bg.jpg
-  
-# 程式夥伴：禁用頂部 Page Header/Hero 區域 (如果你想保持乾淨頁面，需要添加這兩行)
-# header: false 
-# show_title: false 
+author_profile: true
+header: false 
+show_title: false 
 ---
 
+<style>
+/* 程式夥伴：定義夜間模式的樣式 */
+/* 這些樣式會被 JavaScript 添加到 body 上 */
+body.night-mode {
+    background-color: #1a1a1a; /* 深黑背景 */
+    color: #cccccc;           /* 柔和的灰色文字 */
+}
+
+/* 確保時鐘本身也適應夜間模式 */
+body.night-mode #digital-clock {
+    color: #00ff66; /* 可選：夜間時鐘文字 */
+}
+</style>
+
 <div style="text-align: center;">
+
+<h1 style="text-align: center;">實時數字時鐘</h1>
 
 這是一個時鐘冥想訓練，放下生活瑣事，放空清潔心靈...
 
@@ -21,11 +32,26 @@ header:
 </div>
 
 </div> <script>
+// 程式夥伴：整合了時鐘更新和日夜模式切換邏輯
 function updateClock() {
     const now = new Date();
-    
-    // 獲取並格式化時間
-    let hours = now.getHours();
+    const currentHour = now.getHours(); // 獲取當前小時 (0-23)
+    const body = document.body;
+
+    // 定義白天時間範圍 (例如：早上 6 點到晚上 6 點前)
+    const isDayTime = currentHour >= 6 && currentHour < 18;
+
+    // 1. 日夜模式切換邏輯
+    if (isDayTime) {
+        // 白天模式：移除 night-mode 類別
+        body.classList.remove('night-mode');
+    } else {
+        // 夜間模式：添加 night-mode 類別
+        body.classList.add('night-mode');
+    }
+
+    // 2. 時鐘更新邏輯 (與之前相同)
+    let hours = currentHour; // 使用已獲取的 currentHour
     let minutes = now.getMinutes();
     let seconds = now.getSeconds();
 
