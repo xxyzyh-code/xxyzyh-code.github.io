@@ -1,6 +1,9 @@
 # 1. 彻底封锁所有遵守规范的爬虫 (所有搜索引擎和通用爬虫)
 User-agent: *
 Disallow: /
+# 确保封锁内容聚合的 Feed 文件（jekyll-feed插件生成）
+Disallow: /feed.xml 
+Disallow: /atom.xml 
 
 # 2. 针对性地列出并再次封锁已知的 AI/LLM 专有爬虫
 
