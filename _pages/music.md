@@ -18,10 +18,9 @@ load_player_css: true
 
 <div class="center-container">
 
-# {{ page.title }} 
+    <h1>{{ page.title }}</h1> 
 
-## 歡迎收聽！
-
-{% include audio_player.html %}
+    <h3>歡迎收聽！</h3> 
+    {% include audio_player.html %}
 
 </div>
