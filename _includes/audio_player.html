@@ -1,11 +1,11 @@
 <div id="custom-audio-player">
     <h3>我的音樂播放器</h3>
     
-<audio id="main-audio" controls src="{{ site.data.music[0].url }}">
+    <audio id="main-audio" controls src="{{ site.data.music[0].url }}">
         您的瀏覽器不支持 HTML5 音頻。
     </audio>
     
-<div id="player-controls">
+    <div id="player-controls">
         <span id="mode-button" onclick="togglePlayMode()">
             [ 模式: 順序 ]
         </span>
@@ -22,7 +22,7 @@
                 <span class="menu-item" onclick="clearSleepTimer()">取消定時</span>
             </div>
         </div>
-        </div>
+    </div>
     
     <div id="stats-bar">
         <span>總時長: <span id="total-listen-time">0 分鐘</span></span>
@@ -30,8 +30,6 @@
     </div>
     
     <ul id="playlist">
-
-
     {% for track in site.data.music %}
         <li data-url="{{ track.url }}" onclick="loadTrack('{{ track.url }}', '{{ track.title }}', {{ forloop.index0 }})">
             {{ track.title }} - {{ track.artist }}
@@ -63,6 +61,7 @@ const trackList = [
 ];
 
 let currentTrackIndex = 0; 
+// 播放模式：0=順序, 1=循環, 2=隨機, 3=自由(播完即停)
 let playMode = 0; 
 
 // 定時器狀態變數
@@ -77,9 +76,7 @@ let totalListenSeconds = 0;
 let listenIntervalId = null; // 用於每秒更新總時長的 Interval ID
 
 
-// --- 輔助函數 (playTrack, getNextRandomIndex, updatePlaylistHighlight 保持不變) ---
-
-// ... (playTrack, getNextRandomIndex, updatePlaylistHighlight 函數保持不變) ...
+// --- 輔助函數 ---
 
 // 載入並播放指定索引的歌曲
 function playTrack(index) {
@@ -93,7 +90,7 @@ function playTrack(index) {
         });
         updatePlaylistHighlight();
     } else if (index === trackList.length) {
-        // 播放到列表結束
+        // 播放到列表結束 (順序/隨機模式)
         audio.pause(); 
         playerTitle.textContent = "播放列表已結束";
         currentTrackIndex = -1; 
@@ -101,7 +98,7 @@ function playTrack(index) {
     }
 }
 
-// 新增隨機播放邏輯 (保持不變)
+// 獲取隨機索引 (避免重複播放當前歌曲)
 function getNextRandomIndex() {
     let newIndex;
     do {
@@ -111,7 +108,7 @@ function getNextRandomIndex() {
     return newIndex;
 }
 
-// 更新播放列表的高亮狀態 (保持不變)
+// 更新播放列表的高亮狀態
 function updatePlaylistHighlight() {
     playlistItems.forEach((item, index) => {
         item.classList.remove('playing');
@@ -122,7 +119,7 @@ function updatePlaylistHighlight() {
 }
 
 
-// --- 核心邏輯：控制播放順序/循環/隨機 (已修復/還原) ---
+// --- 核心邏輯：控制播放順序/循環/隨機/自由 ---
 
 audio.addEventListener('ended', () => {
     if (playMode === 1) {
@@ -133,6 +130,12 @@ audio.addEventListener('ended', () => {
         // 模式 2: 隨機播放
         const nextIndex = getNextRandomIndex();
         playTrack(nextIndex);
+    } else if (playMode === 3) {
+        // 模式 3: 自由模式 (播完即停)
+        audio.pause();
+        playerTitle.textContent = "自由模式下，當前歌曲播放完畢。";
+        currentTrackIndex = -1; 
+        updatePlaylistHighlight();
     } 
     else {
         // 模式 0: 順序播放 (預設)
@@ -146,10 +149,10 @@ audio.addEventListener('ended', () => {
 });
 
 
-// 模式切換函數 (已修復/還原)
+// 模式切換函數
 function togglePlayMode() {
-    // 在 0 (順序), 1 (循環), 和 2 (隨機) 之間切換
-    playMode = (playMode + 1) % 3; 
+    // 在 0 (順序), 1 (循環), 2 (隨機), 和 3 (自由) 之間切換
+    playMode = (playMode + 1) % 4; 
     
     let modeText;
     let titleMessage;
@@ -160,6 +163,9 @@ function togglePlayMode() {
     } else if (playMode === 2) {
         modeText = "[ 模式: 隨機 ]";
         titleMessage = "已切換到隨機播放模式";
+    } else if (playMode === 3) {
+        modeText = "[ 模式: 自由 ]";
+        titleMessage = "已切換到自由播放模式 (播完即停)";
     } else {
         modeText = "[ 模式: 順序 ]";
         titleMessage = "已切換到順序播放模式";
@@ -170,8 +176,7 @@ function togglePlayMode() {
 }
 
 
-
-// --- *** 新增 UI/定時器/統計邏輯 *** ---
+// --- 定時器/統計邏輯 ---
 
 // 展開/收縮定時器菜單
 function toggleTimerMenu() {
@@ -180,27 +185,25 @@ function toggleTimerMenu() {
 
 // 設置定時器 (Sleep Timer)
 function setSleepTimer(minutes) {
-    // 1. 清除舊的計時器和 Interval
     clearSleepTimer();
     toggleTimerMenu(); // 設置後收起菜單
 
     const delayMilliseconds = minutes * 60 * 1000;
     
-    // 設置狀態變數
     sleepTime = minutes * 60;
     endTime = Date.now() + delayMilliseconds;
 
-    // 2. 設置定時暫停
+    // 設置定時暫停
     sleepTimerId = setTimeout(() => {
         audio.pause(); 
         playerTitle.textContent = `定時器到期，已暫停播放 (${minutes} 分鐘)`;
-        clearSleepTimer(); // 清除自身
+        clearSleepTimer(); 
     }, delayMilliseconds);
     
-    // 3. 設置每秒倒數更新
+    // 設置每秒倒數更新
     countdownIntervalId = setInterval(updateTimerCountdown, 1000);
 
-    // 4. 更新 UI 提示
+    // 更新 UI 提示
     timerToggleButton.textContent = `定時 (${minutes} 分鐘)`;
     playerTitle.textContent = `定時器已設置：${minutes} 分鐘後自動關閉`;
 
@@ -227,7 +230,6 @@ function clearSleepTimer() {
     playerTitle.textContent = "已取消定時器";
 }
 
-
 // 更新剩餘時間倒數
 function updateTimerCountdown() {
     if (endTime > 0) {
@@ -248,14 +250,12 @@ function updateTimerCountdown() {
 
 // 播放/暫停事件：控制總時長統計
 audio.addEventListener('play', () => {
-    // 開始計時
     if (listenIntervalId === null) {
         listenIntervalId = setInterval(updateTotalListenTime, 1000);
     }
 });
 
 audio.addEventListener('pause', () => {
-    // 暫停計時
     if (listenIntervalId !== null) {
         clearInterval(listenIntervalId);
         listenIntervalId = null;
@@ -275,8 +275,17 @@ function updateTotalListenTime() {
 }
 
 
-// --- 外部呼叫函數 (保持不變) ---
-function loadTrack(url, title, index) { /* ... 邏輯保持不變 ... */ }
+// --- 外部呼叫函數 (來自列表點擊) ---
+
+function loadTrack(url, title, index) {
+    // 點擊列表後，自動切換到「自由模式」 (Mode 3)
+    if (playMode !== 3) {
+        playMode = 3;
+        modeButton.textContent = "[ 模式: 自由 ]";
+        playerTitle.textContent = "已切換到自由播放模式 (點擊列表)";
+    }
+    playTrack(index);
+}
 
 
 // 初始化
