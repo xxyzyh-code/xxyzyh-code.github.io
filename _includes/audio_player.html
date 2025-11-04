@@ -316,9 +316,19 @@ themeOptions.forEach(option => {
 
 // ** BONUS: 點擊頁面其他地方時，隱藏選單 **
 document.addEventListener('click', (e) => {
-    // 檢查點擊是否在按鈕或選單內部
+    // 1. 處理主題菜單 (保持原有邏輯)
     if (!themeMenu.contains(e.target) && !themeToggleBtn.contains(e.target)) {
         themeMenu.classList.add('hidden-menu');
+    }
+
+    // 2. ✅ 新增：處理定時器菜單
+    // 檢查點擊是否在定時器菜單或定時器按鈕內部
+    // 確保 timerMenu 和 timerToggleButton 在 DOM 元素範圍內
+    if (!timerMenu.contains(e.target) && !timerToggleButton.contains(e.target)) {
+        // 只有當菜單是展開狀態（即沒有 hidden-menu 類）時才需要強制關閉
+        if (!timerMenu.classList.contains('hidden-menu')) {
+            timerMenu.classList.add('hidden-menu');
+        }
     }
 });
 
