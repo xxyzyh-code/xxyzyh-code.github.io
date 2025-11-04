@@ -6,6 +6,11 @@
 <html lang="{{ site.locale | replace: "_", "-" | default: "en" }}" class="no-js">
   <head>
     {% include head.html %}
+    
+    {% if page.permalink == '/music/' %}
+    <link rel="stylesheet" href="/assets/css/theme.css">
+    <link rel="stylesheet" href="/assets/css/custom_player.css">
+    {% endif %}
     {% include head/custom.html %}
   </head>
 
