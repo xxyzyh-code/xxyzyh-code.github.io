@@ -1,5 +1,5 @@
 /* ------------------------------------------- */
-/* 檔案: assets/css/theme.css (第二次修正：強制應用背景變數) */
+/* 檔案: assets/css/theme.css (修正版) */
 /* ------------------------------------------- */
 
 /* 1. 預設主題定義：淺色 (如果 body 沒有類名，將應用此樣式) */
@@ -22,62 +22,110 @@ body.dark-theme {
     --border-color: #333333;
     --secondary-text: #b0b0b0;
     --hover-bg: #2a2a2a;
-    --playing-bg: #004d40; 
+    --playing-bg: #004d40; /* 深綠色 */
     --playing-text: #80cbc4;
 }
 
 /* 3. 夜間/灰色主題 (Grey Theme) 覆蓋變數 */
 body.grey-theme {
-    --bg-color: #36393f; 
+    --bg-color: #36393f; /* Discord 風格的深灰色 */
     --text-color: #f0f0f0;
     --card-bg: #2f3136;
     --border-color: #4f545c;
     --secondary-text: #b0b0b0;
     --hover-bg: #40444b;
-    --playing-bg: #4e342e; 
+    --playing-bg: #4e342e; /* 柔和的深棕色 */
     --playing-text: #ffccbc;
 }
 
-/* 4. 將變數應用到頁面主要元素 */
+/* 4. 將變數應用到頁面主要元素 (使用 :root 或 body 都可以) */
 
 body {
-    /* **** 修正: 強制應用變數，排除其他 CSS 影響 **** */
-    background-color: var(--bg-color) !important; 
+    /* 這裡使用變數，它會根據 body 上的類名自動繼承正確的變數定義 */
+    background-color: var(--bg-color);
     color: var(--text-color);
-    transition: background-color 0.5s, color 0.5s; 
+    transition: background-color 0.5s, color 0.5s; /* 平滑過渡 */
 }
 
 /* 應用到播放器和相關元素 */
 #custom-audio-player {
     background-color: var(--card-bg);
+    /* border-color: var(--border-color) !important; <-- 移除 !important，通常不建議 */
     border-color: var(--border-color); 
 }
-/* ... 剩下的 CSS 保持不變，因為它們在第一次修正中已經主題兼容 */
+
+/* 確保所有用到固定顏色的地方都改為變數 (custom_player.css 中可能還有固定顏色) */
+
 #custom-audio-player h3, #player-controls {
     color: var(--text-color);
     border-color: var(--border-color);
 }
-/* ... (為了簡潔，這裡省略了您 theme.css 中未變動的下半部分) ... */
-#playlist li { border-bottom-color: var(--border-color); }
-#playlist li:hover { background-color: var(--hover-bg); }
-#playlist li.playing { 
-    background-color: var(--playing-bg); 
+
+#playlist li {
+    border-bottom-color: var(--border-color);
+}
+
+#playlist li:hover {
+    background-color: var(--hover-bg);
+}
+
+#playlist li.playing {
+    background-color: var(--playing-bg);
     color: var(--playing-text);
     border-left-color: var(--playing-text);
 }
-#stats-bar { color: var(--secondary-text); }
-#theme-toggle-btn { 
+
+#stats-bar {
+    color: var(--secondary-text);
+}
+
+
+/* *** 新增主題切換按鈕樣式 *** */
+#theme-switcher {
+    position: relative;
+}
+
+#theme-toggle-btn {
+    padding: 5px 10px;
     background-color: var(--card-bg); 
     color: var(--text-color);
     border: 1px solid var(--border-color);
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: all 0.2s;
 }
-#theme-toggle-btn:hover { background-color: var(--hover-bg); }
-#theme-menu { 
+
+#theme-toggle-btn:hover {
+    background-color: var(--hover-bg);
+}
+
+#theme-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    z-index: 20;
+    min-width: 180px;
     background: var(--card-bg);
     border: 1px solid var(--border-color);
+    border-radius: 5px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    margin-top: 5px;
 }
-.theme-option { 
+
+.theme-option {
+    display: block;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 0.9em;
     color: var(--text-color);
     border-bottom: 1px solid var(--border-color);
 }
-.theme-option:hover { background-color: var(--hover-bg); }
+
+.theme-option:last-child {
+    border-bottom: none;
+}
+
+.theme-option:hover {
+    background-color: var(--hover-bg);
+}
