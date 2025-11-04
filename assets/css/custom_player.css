@@ -188,3 +188,13 @@
     margin-right: auto;
 }
 
+/* --- H1 標題字體大小覆蓋 (確保比 H3 大) --- */
+.center-container h1 {
+    font-size: 2.2em; /* 確保它比播放器內部的 h3 (~1.2em) 大得多 */
+    margin-bottom: 0.2em;
+}
+
+.center-container h3 {
+    font-size: 1.2em; /* 讓歡迎語句保持適中大小 */
+    color: var(--secondary-text); /* 使用主題次要文字顏色 */
+}
