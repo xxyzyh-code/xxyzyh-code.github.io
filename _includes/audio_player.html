@@ -63,7 +63,7 @@ const timerMenu = document.getElementById('timer-menu');
 const totalListenTimeSpan = document.getElementById('total-listen-time');
 const remainingTimerSpan = document.getElementById('remaining-timer');
 
-// *** 新增主題切換相關 DOM 元素 ***
+// *** 主題切換相關 DOM 元素 (頂層定義) ***
 const themeToggleBtn = document.getElementById('theme-toggle-btn');
 const themeMenu = document.getElementById('theme-menu');
 const currentThemeName = document.getElementById('current-theme-name');
@@ -184,12 +184,18 @@ function togglePlayMode() {
     modeButton.textContent = modeText;
     playerTitle.textContent = titleMessage;
 
-    // --- 主題切換邏輯 ---
+    // 儲存播放模式到 localStorage
+    saveSettings(); 
+}
+
+
+// --- *** 主題切換邏輯 (已移至頂層) *** ---
 
 const THEME_STORAGE_KEY = 'userThemePreference';
 const LIGHT_THEME = 'light';
 const DARK_THEME = 'dark';
 const GREY_THEME = 'grey';
+const AUTO_THEME_FLAG = 'auto'; // 新增一個標誌用於自動模式追蹤
 
 /**
  * 根據當地時間判斷應該使用淺色還是深色
@@ -203,42 +209,42 @@ function getSystemThemeBasedOnTime() {
 
 /**
  * 設置主題類名並更新按鈕顯示
- * @param {string} theme - 'light', 'dark', 'grey'
+ * @param {string} desiredTheme - 使用者手動選擇的意圖: 'light' (視為自動), 'dark', 'grey'
  */
-function applyTheme(theme) {
+function applyTheme(desiredTheme) {
     const body = document.body;
-    let actualTheme = theme;
+    let actualTheme;
     let displayName = '';
+    
+    // 儲存使用者的意圖
+    localStorage.setItem(THEME_STORAGE_KEY, desiredTheme);
 
     // 移除所有主題類名
     body.classList.remove(DARK_THEME + '-theme', GREY_THEME + '-theme');
 
-    // 判斷實際主題類名並設置顯示名稱
-    if (theme === DARK_THEME) {
+    // 根據意圖判斷實際應用哪個主題
+    if (desiredTheme === DARK_THEME) {
+        actualTheme = DARK_THEME;
         body.classList.add(DARK_THEME + '-theme');
-        displayName = '深色 (夜)';
-    } else if (theme === GREY_THEME) {
+        displayName = '深色 (手動)';
+    } else if (desiredTheme === GREY_THEME) {
+        actualTheme = GREY_THEME;
         body.classList.add(GREY_THEME + '-theme');
-        displayName = '夜間 (灰)';
-    } else {
-        // Light theme (預設，不加類名)
-        const autoTheme = getSystemThemeBasedOnTime();
-        if (autoTheme === DARK_THEME) {
-             // 如果當前時間是晚上，但用戶點擊 'light'，則視為回到自動模式
-            actualTheme = autoTheme;
+        displayName = '夜間 (手動)';
+    } else { 
+        // desiredTheme 是 'light'：視為回到自動模式
+        actualTheme = getSystemThemeBasedOnTime();
+        if (actualTheme === DARK_THEME) {
             body.classList.add(DARK_THEME + '-theme');
             displayName = '深色 (自動)';
         } else {
-            actualTheme = LIGHT_THEME;
+            // Light theme (預設，不加類名)
             displayName = '淺色 (自動)';
         }
     }
     
     // 更新按鈕顯示
     currentThemeName.textContent = displayName;
-    
-    // 儲存實際應用的主題到 localStorage
-    localStorage.setItem(THEME_STORAGE_KEY, actualTheme);
 }
 
 
@@ -253,8 +259,8 @@ function initializeTheme() {
         applyTheme(storedTheme);
     } else {
         // 如果沒有儲存或儲存的是 'light' (視為自動模式)，則根據時間判斷
-        const autoTheme = getSystemThemeBasedOnTime();
-        applyTheme(autoTheme); // 會將結果 (light 或 dark) 儲存到 localStorage
+        // 這裡我們直接呼叫 applyTheme('light')，它會執行自動判斷邏輯
+        applyTheme(LIGHT_THEME); 
     }
 }
 
@@ -267,7 +273,7 @@ function toggleThemeMenu() {
 }
 
 
-// --- 事件監聽器 ---
+// --- 主題事件監聽器 (已移至頂層) ---
 
 // 點擊主題切換按鈕，切換選單顯示
 themeToggleBtn.addEventListener('click', (event) => {
@@ -297,23 +303,23 @@ document.addEventListener('click', (e) => {
 // ** BONUS: 定期檢查時間以應對跨越日夜的時間 (每小時) **
 setInterval(() => {
     const storedTheme = localStorage.getItem(THEME_STORAGE_KEY);
-    const systemTheme = getSystemThemeBasedOnTime();
-
-    // 只有當前主題是時間自動判斷的結果 ('light' 或 'dark') 
-    // 並且時間發生變化時，才自動更新
-    if (storedTheme === LIGHT_THEME || storedTheme === DARK_THEME) {
-        if (storedTheme !== systemTheme) {
-            applyTheme(systemTheme); // 重新應用主題，它會自動更新 localStorage
+    
+    // 只有當前主題是 'light' (意圖為自動模式) 時，才需要根據時間自動更新
+    if (storedTheme === LIGHT_THEME) {
+        const currentSystemTheme = getSystemThemeBasedOnTime();
+        
+        // 檢查當前 body 上的主題類名是否與系統主題匹配
+        const isBodyDark = document.body.classList.contains(DARK_THEME + '-theme');
+        const isSystemDark = currentSystemTheme === DARK_THEME;
+        
+        // 如果 body 類名和系統判斷結果不一致，則重新應用 'light' 模式
+        if ((isSystemDark && !isBodyDark) || (!isSystemDark && isBodyDark)) {
+             applyTheme(LIGHT_THEME); 
         }
     }
 }, 1000 * 60 * 60); // 每小時檢查一次
     
     
-    // *** 新增：儲存播放模式到 localStorage ***
-    saveSettings(); 
-}
-
-
 // --- 定時器/統計邏輯 (保持不變) ---
 
 function toggleTimerMenu() {
@@ -488,12 +494,12 @@ audio.addEventListener('ratechange', saveSettings); // 某些瀏覽器可能需�
 audio.addEventListener('loadedmetadata', saveSettings); // 首次載入 metadata 後儲存一次
 
 
-// --- 初始化 ---
+// --- 初始化 (已將 initializeTheme 移至此處) ---
 
 // 1. 載入儲存的設定（必須在初始化時第一步執行）
 loadSavedSettings();
 
-// *** 新增：2. 初始化主題設定 (自動或手動) ***
+// *** 2. 初始化主題設定 (自動或手動) ***
 initializeTheme();
 
 // 3. 載入並高亮第一首歌
@@ -501,4 +507,4 @@ updatePlaylistHighlight();
 
 // 4. 確保模式 UI 在載入後是正確的（如果 loadSavedSettings 更改了 playMode）
 //    updateModeUI(); // 已包含在 loadSavedSettings 內部
-
+</script>
