@@ -1,8 +1,8 @@
 ---
-title: "實時數字時鐘"
+title: "數字時鐘"
 permalink: /clock/
 layout: single
-author_profile: true
+author_profile: false
 header:
   overlay_color: "#444"
   overlay_image: /assets/images/contact-bg.jpg
@@ -24,7 +24,6 @@ body.night-mode #digital-clock {
 
 <div style="text-align: center;">
 
-<h1 style="text-align: center;">實時數字時鐘</h1>
 
 這是一個時鐘冥想訓練，放下生活瑣事，放空清潔心靈...
 
