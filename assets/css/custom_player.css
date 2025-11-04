@@ -1,0 +1,82 @@
+/* ------------------------------------------- */
+/* 檔案: assets/css/custom_player.css */
+/* ------------------------------------------- */
+
+#custom-audio-player {
+    /* 讓播放器看起來像一個獨立的區塊 */
+    border: 1px solid #ddd;
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+}
+
+#custom-audio-player h3 {
+    /* 標題居中或保持與音頻控制一致 */
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 1.2em;
+    color: #333;
+}
+
+#main-audio {
+    /* 確保 HTML5 播放器佔滿寬度 */
+    width: 100%;
+    margin-bottom: 15px;
+}
+
+/* --- 模式按鈕樣式 --- */
+#player-controls {
+    text-align: right; /* 將模式按鈕放在右側 */
+    margin-bottom: 10px;
+}
+
+#mode-button {
+    cursor: pointer;
+    display: inline-block;
+    padding: 5px 10px;
+    background-color: #e9ecef;
+    border-radius: 3px;
+    font-size: 0.9em;
+    color: #495057;
+    transition: background-color 0.2s;
+    user-select: none; /* 防止文本被選中 */
+}
+
+#mode-button:hover {
+    background-color: #dee2e6; /* 懸停時顏色變深 */
+}
+
+/* --- 播放列表樣式 --- */
+#playlist {
+    list-style: none; /* 移除點 */
+    padding: 0;
+    margin: 0;
+    border-top: 1px solid #eee;
+}
+
+#playlist li {
+    padding: 10px 5px;
+    border-bottom: 1px dashed #eee;
+    cursor: pointer;
+    transition: background-color 0.15s;
+    font-size: 0.95em;
+}
+
+#playlist li:hover {
+    background-color: #f1f1f1; /* 懸停效果 */
+}
+
+#playlist li.playing {
+    /* 當前正在播放的歌曲 */
+    background-color: #e0f7fa; /* 淺藍色背景 */
+    font-weight: bold;
+    color: #007bff; /* 藍色文字 */
+    border-left: 3px solid #007bff; /* 突出左側邊框 */
+    padding-left: 7px;
+}
+
+/* 移除最後一項的虛線邊框 */
+#playlist li:last-child {
+    border-bottom: none;
+}
