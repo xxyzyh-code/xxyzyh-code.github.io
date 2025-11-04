@@ -16,8 +16,12 @@ load_player_css: true
   {% assign page.header = page.header | default: {} | merge: { "includes": custom_css } %}
 {% endif %}
 
-# {{ page.title }}  
+<div class="center-container">
 
-## 歡迎收聽！  
+# {{ page.title }} 
+
+## 歡迎收聽！
 
 {% include audio_player.html %}
+
+</div>
