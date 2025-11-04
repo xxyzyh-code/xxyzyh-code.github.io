@@ -1,0 +1,126 @@
+/* ------------------------------------------- */
+/* 檔案: assets/css/theme.css */
+/* ------------------------------------------- */
+
+/* 預設主題：淺色 (如果 body 沒有類名，將應用此樣式) */
+:root {
+    --bg-color: #ffffff;      /* 頁面背景 */
+    --text-color: #333333;    /* 主要文字顏色 */
+    --card-bg: #f9f9f9;       /* 播放器/卡片背景 */
+    --border-color: #dddddd;  /* 主要邊框 */
+    --secondary-text: #6c757d;/* 次要文字 (例如狀態欄) */
+    --hover-bg: #f1f1f1;      /* 列表懸停背景 */
+    --playing-bg: #e0f7fa;    /* 正在播放背景 */
+    --playing-text: #007bff;  /* 正在播放文字 */
+}
+
+/* 深色主題 (Dark Theme) */
+body.dark-theme {
+    --bg-color: #121212;
+    --text-color: #e0e0e0;
+    --card-bg: #1e1e1e;
+    --border-color: #333333;
+    --secondary-text: #b0b0b0;
+    --hover-bg: #2a2a2a;
+    --playing-bg: #004d40; /* 深綠色 */
+    --playing-text: #80cbc4;
+}
+
+/* 夜間/灰色主題 (Grey Theme) */
+body.grey-theme {
+    --bg-color: #36393f; /* Discord 風格的深灰色 */
+    --text-color: #f0f0f0;
+    --card-bg: #2f3136;
+    --border-color: #4f545c;
+    --secondary-text: #b0b0b0;
+    --hover-bg: #40444b;
+    --playing-bg: #4e342e; /* 柔和的深棕色 */
+    --playing-text: #ffccbc;
+}
+
+/* 將變數應用到頁面主要元素 */
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    transition: background-color 0.5s, color 0.5s; /* 平滑過渡 */
+}
+
+/* 應用到播放器和相關元素 */
+#custom-audio-player {
+    background-color: var(--card-bg);
+    border-color: var(--border-color) !important;
+}
+
+#custom-audio-player h3, #player-controls {
+    color: var(--text-color);
+    border-color: var(--border-color);
+}
+
+#playlist li {
+    border-bottom-color: var(--border-color);
+}
+
+#playlist li:hover {
+    background-color: var(--hover-bg);
+}
+
+#playlist li.playing {
+    background-color: var(--playing-bg);
+    color: var(--playing-text);
+    border-left-color: var(--playing-text);
+}
+
+#stats-bar {
+    color: var(--secondary-text);
+}
+
+
+/* *** 新增主題切換按鈕樣式 *** */
+#theme-switcher {
+    position: relative;
+}
+
+#theme-toggle-btn {
+    padding: 5px 10px;
+    background-color: var(--card-bg); 
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: all 0.2s;
+}
+
+#theme-toggle-btn:hover {
+    background-color: var(--hover-bg);
+}
+
+#theme-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    z-index: 20;
+    min-width: 180px;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    margin-top: 5px;
+}
+
+.theme-option {
+    display: block;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 0.9em;
+    color: var(--text-color);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.theme-option:last-child {
+    border-bottom: none;
+}
+
+.theme-option:hover {
+    background-color: var(--hover-bg);
+}
