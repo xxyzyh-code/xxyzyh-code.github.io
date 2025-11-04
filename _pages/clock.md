@@ -1,13 +1,13 @@
 ---
-title: "實時時鐘"
+title: "實時數字時鐘"
 permalink: /clock/
 layout: single
-author_profile: false
-header: false 
+author_profile: true
+header:
+  overlay_color: "#444"
+  overlay_image: /assets/images/contact-bg.jpg
 ---
 
-
-**實時數字時鐘**
 
 這是一個時鐘冥想訓練，放下生活瑣事，放空清潔心靈...
 
