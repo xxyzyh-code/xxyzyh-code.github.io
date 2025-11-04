@@ -493,9 +493,12 @@ audio.addEventListener('loadedmetadata', saveSettings); // 首次載入 metadata
 // 1. 載入儲存的設定（必須在初始化時第一步執行）
 loadSavedSettings();
 
-// 2. 載入並高亮第一首歌
+// *** 新增：2. 初始化主題設定 (自動或手動) ***
+initializeTheme();
+
+// 3. 載入並高亮第一首歌
 updatePlaylistHighlight(); 
 
-// 3. 確保模式 UI 在載入後是正確的（如果 loadSavedSettings 更改了 playMode）
+// 4. 確保模式 UI 在載入後是正確的（如果 loadSavedSettings 更改了 playMode）
 //    updateModeUI(); // 已包含在 loadSavedSettings 內部
-</script>
+
