@@ -2,6 +2,9 @@
 layout: page
 title: "分类"
 permalink: /categories/
+robots: "noindex, nofollow" 
+seo:
+  noindex: true
 ---
 
 <h1>📂 一级分类</h1>
