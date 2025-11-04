@@ -122,9 +122,53 @@ function updatePlaylistHighlight() {
 }
 
 
-// --- 核心邏輯：控制播放順序/循環/隨機 (保持不變) ---
-audio.addEventListener('ended', () => { /* ... 邏輯保持不變 ... */ });
-function togglePlayMode() { /* ... 邏輯保持不變 ... */ }
+// --- 核心邏輯：控制播放順序/循環/隨機 (已修復/還原) ---
+
+audio.addEventListener('ended', () => {
+    if (playMode === 1) {
+        // 模式 1: 單曲循環
+        audio.currentTime = 0; 
+        audio.play();
+    } else if (playMode === 2) {
+        // 模式 2: 隨機播放
+        const nextIndex = getNextRandomIndex();
+        playTrack(nextIndex);
+    } 
+    else {
+        // 模式 0: 順序播放 (預設)
+        if (currentTrackIndex < trackList.length - 1) {
+            playTrack(currentTrackIndex + 1); 
+        } else {
+            // 列表結束
+            playTrack(trackList.length); 
+        }
+    }
+});
+
+
+// 模式切換函數 (已修復/還原)
+function togglePlayMode() {
+    // 在 0 (順序), 1 (循環), 和 2 (隨機) 之間切換
+    playMode = (playMode + 1) % 3; 
+    
+    let modeText;
+    let titleMessage;
+    
+    if (playMode === 1) {
+        modeText = "[ 模式: 循環 ]";
+        titleMessage = "已切換到單曲循環模式";
+    } else if (playMode === 2) {
+        modeText = "[ 模式: 隨機 ]";
+        titleMessage = "已切換到隨機播放模式";
+    } else {
+        modeText = "[ 模式: 順序 ]";
+        titleMessage = "已切換到順序播放模式";
+    }
+    
+    modeButton.textContent = modeText;
+    playerTitle.textContent = titleMessage;
+}
+
 
 
 // --- *** 新增 UI/定時器/統計邏輯 *** ---
