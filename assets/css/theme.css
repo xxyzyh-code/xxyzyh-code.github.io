@@ -1,5 +1,5 @@
 /* ------------------------------------------- */
-/* 檔案: assets/css/theme.css (修正版) */
+/* 檔案: assets/css/theme.css (最終主題變數修正版) */
 /* ------------------------------------------- */
 
 /* 1. 預設主題定義：淺色 (如果 body 沒有類名，將應用此樣式) */
@@ -12,6 +12,10 @@
     --hover-bg: #f1f1f1;      /* 列表懸停背景 */
     --playing-bg: #e0f7fa;    /* 正在播放背景 */
     --playing-text: #007bff;  /* 正在播放文字 */
+    
+    /* ✅ 強調色變數：用於定時器按鈕等 */
+    --accent-color: #007bff;
+    --accent-hover: #0056b3;
 }
 
 /* 2. 深色主題 (Dark Theme) 覆蓋變數 */
@@ -22,26 +26,33 @@ body.dark-theme {
     --border-color: #333333;
     --secondary-text: #b0b0b0;
     --hover-bg: #2a2a2a;
-    --playing-bg: #004d40; /* 深綠色 */
+    --playing-bg: #004d40; 
     --playing-text: #80cbc4;
+    
+    /* ✅ 強調色變數 */
+    --accent-color: #17a2b8; /* 青色，與深色背景對比 */
+    --accent-hover: #138496;
 }
 
 /* 3. 夜間/灰色主題 (Grey Theme) 覆蓋變數 */
 body.grey-theme {
-    --bg-color: #36393f; /* Discord 風格的深灰色 */
+    --bg-color: #36393f; 
     --text-color: #f0f0f0;
     --card-bg: #2f3136;
     --border-color: #4f545c;
     --secondary-text: #b0b0b0;
     --hover-bg: #40444b;
-    --playing-bg: #4e342e; /* 柔和的深棕色 */
+    --playing-bg: #4e342e; 
     --playing-text: #ffccbc;
+    
+    /* ✅ 強調色變數 */
+    --accent-color: #8c8c8c; /* 中灰色 */
+    --accent-hover: #7b7b7b;
 }
 
 /* 4. 將變數應用到頁面主要元素 (使用 :root 或 body 都可以) */
 
 body {
-    /* 這裡使用變數，它會根據 body 上的類名自動繼承正確的變數定義 */
     background-color: var(--bg-color);
     color: var(--text-color);
     transition: background-color 0.5s, color 0.5s; /* 平滑過渡 */
@@ -50,11 +61,8 @@ body {
 /* 應用到播放器和相關元素 */
 #custom-audio-player {
     background-color: var(--card-bg);
-    /* border-color: var(--border-color) !important; <-- 移除 !important，通常不建議 */
     border-color: var(--border-color); 
 }
-
-/* 確保所有用到固定顏色的地方都改為變數 (custom_player.css 中可能還有固定顏色) */
 
 #custom-audio-player h3, #player-controls {
     color: var(--text-color);
@@ -80,7 +88,7 @@ body {
 }
 
 
-/* *** 新增主題切換按鈕樣式 *** */
+/* *** 主題切換按鈕樣式 (無需變動) *** */
 #theme-switcher {
     position: relative;
 }
@@ -130,43 +138,41 @@ body {
     background-color: var(--hover-bg);
 }
 
-/* *** 新增：隱藏菜單的規則 (必須確保其存在) *** */
+/* *** 隱藏菜單的規則 *** */
 #theme-menu.hidden-menu {
     display: none;
 }
 
 /* --- 藍色主題 (Blue Theme) --- */
-/* 柔和、冷靜的藍色調 */
 .blue-theme {
-    /* 主要/背景顏色 */
-    --main-bg: #E8F4FF;          /* 非常淺的藍色背景 */
-    --card-bg: #FFFFFF;          /* 卡片背景為白色，增加層次感 */
-    --border-color: #A3C9F2;     /* 柔和的藍色邊框 */
-    
-    /* 文字顏色 */
-    --text-color: #1A3E66;       /* 深藍色文字 */
-    --secondary-text: #4C7099;   /* 中等藍色次要文字 */
-    --playing-text: #007bff;     /* 播放中的文字/強調色：標準藍色 */
+    --bg-color: #E8F4FF;          
+    --text-color: #1A3E66;       
+    --card-bg: #FFFFFF;          
+    --border-color: #A3C9F2;     
+    --secondary-text: #4C7099;   
+    --playing-text: #007bff;     
 
-    /* 互動顏色 */
-    --hover-bg: #CFE3F7;         /* 淺藍色懸停背景 */
-    --playing-bg: #E3F2FF;       /* 非常淺的播放中背景 */
+    --hover-bg: #CFE3F7;         
+    --playing-bg: #E3F2FF;      
+    
+    /* ✅ 強調色變數 */
+    --accent-color: #2E8B57; /* 穩重的深綠色，與淺藍色背景形成良好對比 */
+    --accent-hover: #236943;
 }
 
 /* --- 綠色主題 (Green Theme) --- */
-/* 柔和、自然的綠色調 */
 .green-theme {
-    /* 主要/背景顏色 */
-    --main-bg: #F0FFF0;          /* 非常淺的綠色背景 (接近薄荷綠) */
-    --card-bg: #FFFFFF;          /* 卡片背景為白色 */
-    --border-color: #A0D3A0;     /* 柔和的綠色邊框 */
+    --bg-color: #F0FFF0;          
+    --text-color: #2E5C2E;       
+    --card-bg: #FFFFFF;          
+    --border-color: #A0D3A0;     
+    --secondary-text: #5BA85B;   
+    --playing-text: #28a745;     
     
-    /* 文字顏色 */
-    --text-color: #2E5C2E;       /* 深綠色文字 */
-    --secondary-text: #5BA85B;   /* 中等綠色次要文字 */
-    --playing-text: #28a745;     /* 播放中的文字/強調色：標準綠色 */
+    --hover-bg: #D9F7D9;         
+    --playing-bg: #E6F5E6;       
     
-    /* 互動顏色 */
-    --hover-bg: #D9F7D9;         /* 淺綠色懸停背景 */
-    --playing-bg: #E6F5E6;       /* 非常淺的播放中背景 */
+    /* ✅ 強調色變數 */
+    --accent-color: #FFC107; /* 鮮明的黃色，與綠色背景形成對比 */
+    --accent-hover: #d39e00;
 }
