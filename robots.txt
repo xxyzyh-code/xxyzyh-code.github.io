@@ -1,39 +1,72 @@
-# 1. 徹底封鎖所有網路爬蟲，包括 Googlebot 和 Bingbot
+# 1. 彻底封锁所有遵守规范的爬虫 (所有搜索引擎和通用爬虫)
 User-agent: *
 Disallow: /
 
-# 2. 針對性地列出並再次封鎖主要的 AI 專用爬蟲 (確保它們不會繞過第 1 條通用指令)
+# 2. 针对性地列出并再次封锁已知的 AI/LLM 专有爬虫
 
-# OpenAI
+# --- OpenAI / Microsoft ---
+# GPTBot (用于训练/抓取)
 User-agent: GPTBot
 Disallow: /
 
+# ChatGPT-User (用于用户在ChatGPT中发起的实时网页浏览)
 User-agent: ChatGPT-User
 Disallow: /
 
-# Google Generative AI
+# BingBot/BingPreview (Bingbot通常遵守*，但Bing也有LLM相关服务，仍建议保留*即可)
+
+# --- Google Generative AI ---
+# Google-Extended (用于 Google 的 Gemini 模型训练)
 User-agent: Google-Extended
 Disallow: /
 
-# Anthropic (Claude)
-User-agent: ClaudeBot
-Disallow: /
-
-User-agent: Claude-Web
-Disallow: /
-
-# Perplexity
-User-agent: PerplexityBot
-Disallow: /
-
-# Common Crawl (很多 LLM 模型的資料來源)
-User-agent: CCBot
-Disallow: /
-
-# Meta (Facebook/Threads)
+# --- Meta (Facebook/Threads/Llama) ---
+# MetaBot (Meta的通用爬虫，也可能用于AI数据)
 User-agent: MetaBot
 Disallow: /
 
-# Apple LLM Training
+# LlamaBot (针对Meta的Llama系列模型，目前是推测/社区建议)
+User-agent: LlamaBot
+Disallow: /
+
+# --- Anthropic (Claude) ---
+# ClaudeBot (Anthropic的爬虫，可能用于Claude模型训练)
+User-agent: ClaudeBot
+Disallow: /
+
+# Claude-Web (另一个Anthropic相关的爬虫)
+User-agent: Claude-Web
+Disallow: /
+
+# --- Perplexity ---
+# PerplexityBot (Perplexity的爬虫)
+User-agent: PerplexityBot
+Disallow: /
+
+# --- Apple ---
+# Applebot-Extended (用于 Apple LLM 训练)
 User-agent: Applebot-Extended
+Disallow: /
+
+# --- Common Crawl (很多LLM模型的开源数据来源) ---
+User-agent: CCBot
+Disallow: /
+
+# --- Yandex (俄罗斯最大的搜索引擎/AI) ---
+# YandexBot (Yandex的爬虫，也涉及AI)
+User-agent: YandexBot
+Disallow: /
+
+# --- DuckDuckGo ---
+# DuckDuckGo-ContentBot (主要用于DuckDuckGo的即时问答，与AI相关)
+User-agent: DuckDuckGo-ContentBot
+Disallow: /
+
+# --- 其他常见的数据和分析爬虫 ---
+# SemrushBot / AhrefsBot / Majestic / Screaming Frog 等 SEO/营销工具的爬虫通常遵循 *
+# 如果您特别不信任某些分析工具，可以手动加入：
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: SemrushBot
 Disallow: /
