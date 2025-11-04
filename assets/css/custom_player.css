@@ -1,5 +1,5 @@
 /* ------------------------------------------- */
-/* 檔案: assets/css/custom_player.css */
+/* 檔案: assets/css/custom_player.css (整合定時器功能後) */
 /* ------------------------------------------- */
 
 #custom-audio-player {
@@ -25,12 +25,18 @@
     margin-bottom: 15px;
 }
 
-/* --- 模式按鈕樣式 --- */
+/* --- 播放控制區塊調整 (整合模式與定時器) --- */
 #player-controls {
-    text-align: right; /* 將模式按鈕放在右側 */
+    /* 使用 Flexbox 將模式按鈕和定時器控制區分開 */
+    display: flex;
+    justify-content: space-between; /* 模式按鈕在左，定時器在右 */
+    align-items: center;
+    padding-bottom: 10px;
     margin-bottom: 10px;
+    border-bottom: 1px solid #eee;
 }
 
+/* --- 模式按鈕樣式 (微調，確保在 flexbox 中表現良好) --- */
 #mode-button {
     cursor: pointer;
     display: inline-block;
@@ -47,7 +53,43 @@
     background-color: #dee2e6; /* 懸停時顏色變深 */
 }
 
-/* --- 播放列表樣式 --- */
+/* --- *** 新增：定時器按鈕樣式 *** --- */
+#timer-controls button {
+    /* 定時按鈕基礎樣式 */
+    margin-left: 5px;
+    padding: 5px 8px;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 0.85em;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+#timer-controls button:hover {
+    background-color: #f0f0f0;
+}
+
+#timer-controls button.active-timer {
+    /* 啟用定時按鈕的高亮狀態 */
+    background-color: #28a745; /* 綠色背景 */
+    color: white;
+    border-color: #28a745;
+}
+
+#clear-timer-btn {
+    /* 取消定時按鈕樣式 */
+    background-color: #dc3545; /* 紅色背景 */
+    color: white;
+    border-color: #dc3545;
+    margin-left: 10px;
+}
+#clear-timer-btn:hover {
+    background-color: #c82333;
+}
+
+
+/* --- 播放列表樣式 (保持不變) --- */
 #playlist {
     list-style: none; /* 移除點 */
     padding: 0;
