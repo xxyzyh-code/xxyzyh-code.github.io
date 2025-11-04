@@ -206,10 +206,8 @@
 /* 1. 主題切換按鈕 */
 #theme-toggle-btn:focus, 
 #theme-toggle-btn:active {
-    /* 移除點擊時瀏覽器預設的視覺效果 */
     outline: none; 
     box-shadow: none; 
-    /* 確保背景和邊框顏色保持懸停或一致，避免凹陷 */
     background-color: var(--hover-bg); 
     border-color: var(--border-color);
 }
@@ -219,7 +217,14 @@
 #timer-toggle-btn:active {
     outline: none; 
     box-shadow: none; 
-    /* 確保背景和邊框顏色保持懸停色，避免凹陷 */
     background-color: var(--accent-hover); 
     border-color: var(--accent-hover);
+}
+
+/* 3. ✅ 新增：模式切換按鈕 */
+#mode-button:focus,
+#mode-button:active {
+    outline: none; 
+    box-shadow: none; 
+    background-color: var(--secondary-text); 
 }
