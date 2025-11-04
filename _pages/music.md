@@ -1,6 +1,6 @@
 ---
 layout: default
-title: 我的靜態音樂站  <-- 我們要顯示這個標題
+title: 我的靜態音樂站
 permalink: /music/
 load_player_css: true
 ---
@@ -16,8 +16,8 @@ load_player_css: true
   {% assign page.header = page.header | default: {} | merge: { "includes": custom_css } %}
 {% endif %}
 
-# {{ page.title }}  <-- 步驟 1: 使用 Liquid 輸出主要標題
+# {{ page.title }}  
 
-## 歡迎收聽！  <-- 步驟 2: 將「歡迎收聽！」降級為子標題
+## 歡迎收聽！  
 
 {% include audio_player.html %}
