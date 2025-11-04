@@ -176,3 +176,63 @@ body {
     --accent-color: #FFC107; /* 鮮明的黃色，與綠色背景形成對比 */
     --accent-hover: #d39e00;
 }
+
+/* --- 紫色主題 (Purple Theme) --- */
+/* 柔和、浪漫的紫色調 */
+.purple-theme {
+    /* 主要/背景顏色 */
+    --bg-color: #F8F0FF;          /* 非常淺的淡紫色背景 */
+    --text-color: #4A148C;       /* 深紫色文字 */
+    --card-bg: #FFFFFF;          /* 卡片背景為白色 */
+    --border-color: #B39DDB;     /* 柔和的紫色邊框 */
+    --secondary-text: #7E57C2;   /* 中等紫色次要文字 */
+    
+    /* 互動顏色 */
+    --hover-bg: #E1BEE7;         /* 淺紫色懸停背景 */
+    --playing-bg: #EDE7F6;       /* 非常淺的播放中背景 */
+    --playing-text: #673AB7;     /* 播放中的文字/強調色：標準紫色 */
+
+    /* 強調色 */
+    --accent-color: #D81B60;     /* 亮眼的粉色/玫紅色作為強調色 */
+    --accent-hover: #C2185B;
+}
+
+/* --- 粉色主題 (Pink Theme) --- */
+/* 柔和、可愛的粉色調 */
+.pink-theme {
+    /* 主要/背景顏色 */
+    --bg-color: #FFF0F5;          /* 淺粉色背景 (薰衣草紅) */
+    --text-color: #880E4F;       /* 深粉色/紫紅色文字 */
+    --card-bg: #FFFFFF;          
+    --border-color: #F48FB1;     /* 柔和的粉色邊框 */
+    --secondary-text: #C2185B;   
+    
+    /* 互動顏色 */
+    --hover-bg: #F8BBD0;         /* 淺粉色懸停背景 */
+    --playing-bg: #FFEBEE;       /* 非常淺的播放中背景 */
+    --playing-text: #E91E63;     /* 播放中的文字/強調色：鮮豔粉色 */
+
+    /* 強調色 */
+    --accent-color: #00BCD4;     /* 青色作為強調色，與粉色對比 */
+    --accent-hover: #00ACC1;
+}
+
+/* --- 紅色主題 (Red Theme) --- */
+/* 柔和、溫暖的紅色調 (偏橘紅) */
+.red-theme {
+    /* 主要/背景顏色 */
+    --bg-color: #FFF3E0;          /* 非常淺的米黃色/暖色調背景 */
+    --text-color: #D84315;       /* 深橘紅色文字 */
+    --card-bg: #FFFFFF;          
+    --border-color: #FFB74D;     /* 柔和的橘色邊框 */
+    --secondary-text: #FF7043;   
+    
+    /* 互動顏色 */
+    --hover-bg: #FFCCBC;         /* 淺橘色懸停背景 */
+    --playing-bg: #FFF8E1;       /* 非常淺的播放中背景 */
+    --playing-text: #F4511E;     /* 播放中的文字/強調色：暖紅色 */
+
+    /* 強調色 */
+    --accent-color: #795548;     /* 棕色作為強調色，穩重且與暖色調協調 */
+    --accent-hover: #5D4037;
+}
