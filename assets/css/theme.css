@@ -153,3 +153,20 @@ body {
     --playing-bg: #E3F2FF;       /* 非常淺的播放中背景 */
 }
 
+/* --- 綠色主題 (Green Theme) --- */
+/* 柔和、自然的綠色調 */
+.green-theme {
+    /* 主要/背景顏色 */
+    --main-bg: #F0FFF0;          /* 非常淺的綠色背景 (接近薄荷綠) */
+    --card-bg: #FFFFFF;          /* 卡片背景為白色 */
+    --border-color: #A0D3A0;     /* 柔和的綠色邊框 */
+    
+    /* 文字顏色 */
+    --text-color: #2E5C2E;       /* 深綠色文字 */
+    --secondary-text: #5BA85B;   /* 中等綠色次要文字 */
+    --playing-text: #28a745;     /* 播放中的文字/強調色：標準綠色 */
+    
+    /* 互動顏色 */
+    --hover-bg: #D9F7D9;         /* 淺綠色懸停背景 */
+    --playing-bg: #E6F5E6;       /* 非常淺的播放中背景 */
+}
