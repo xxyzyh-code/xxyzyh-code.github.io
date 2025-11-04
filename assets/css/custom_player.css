@@ -1,5 +1,5 @@
 /* ------------------------------------------- */
-/* 檔案: assets/css/custom_player.css (整合定時器功能後) */
+/* 檔案: assets/css/custom_player.css (最終版 - 整合折疊定時器與狀態欄) */
 /* ------------------------------------------- */
 
 #custom-audio-player {
@@ -34,6 +34,7 @@
     padding-bottom: 10px;
     margin-bottom: 10px;
     border-bottom: 1px solid #eee;
+    position: relative; /* 確保菜單可以相對於此定位 */
 }
 
 /* --- 模式按鈕樣式 (微調，確保在 flexbox 中表現良好) --- */
@@ -53,41 +54,76 @@
     background-color: #dee2e6; /* 懸停時顏色變深 */
 }
 
-/* --- *** 新增：定時器按鈕樣式 *** --- */
-#timer-controls button {
-    /* 定時按鈕基礎樣式 */
-    margin-left: 5px;
-    padding: 5px 8px;
-    background-color: #fff;
-    border: 1px solid #ccc;
+
+/* --- *** 定時器折疊菜單樣式 (新增/修改) *** --- */
+#sleep-timer-area {
+    position: relative;
+}
+
+#timer-toggle-btn {
+    /* 主定時按鈕 */
+    padding: 5px 10px;
+    background-color: #007bff;
+    color: white;
+    border: 1px solid #007bff;
     border-radius: 3px;
     cursor: pointer;
+    font-size: 0.9em;
+}
+#timer-toggle-btn:hover {
+    background-color: #0056b3;
+}
+
+#timer-menu {
+    /* 折疊菜單容器 */
+    position: absolute;
+    top: 100%; /* 放在按鈕下方 */
+    right: 0;
+    z-index: 10;
+    min-width: 150px;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin-top: 5px;
+}
+
+#timer-menu.hidden-menu {
+    display: none; /* JavaScript 用於切換顯示/隱藏 */
+}
+
+.menu-item {
+    display: block;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 0.9em;
+    color: #333;
+    border-bottom: 1px solid #eee;
+}
+
+.menu-item:last-child {
+    border-bottom: none;
+    color: #dc3545; /* 取消定時使用紅色 */
+}
+
+.menu-item:hover {
+    background-color: #f1f1f1;
+}
+
+/* --- 總時長與剩餘時間狀態欄 (新增) --- */
+#stats-bar {
+    display: flex;
+    justify-content: space-between;
     font-size: 0.85em;
-    transition: background-color 0.2s, color 0.2s;
+    color: #6c757d;
+    padding: 5px 0;
+    margin-bottom: 15px;
 }
 
-#timer-controls button:hover {
-    background-color: #f0f0f0;
+#remaining-timer {
+    font-weight: bold;
+    color: #28a745; /* 綠色突出顯示 */
 }
-
-#timer-controls button.active-timer {
-    /* 啟用定時按鈕的高亮狀態 */
-    background-color: #28a745; /* 綠色背景 */
-    color: white;
-    border-color: #28a745;
-}
-
-#clear-timer-btn {
-    /* 取消定時按鈕樣式 */
-    background-color: #dc3545; /* 紅色背景 */
-    color: white;
-    border-color: #dc3545;
-    margin-left: 10px;
-}
-#clear-timer-btn:hover {
-    background-color: #c82333;
-}
-
 
 /* --- 播放列表樣式 (保持不變) --- */
 #playlist {
