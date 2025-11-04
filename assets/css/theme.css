@@ -134,3 +134,22 @@ body {
 #theme-menu.hidden-menu {
     display: none;
 }
+
+/* --- 藍色主題 (Blue Theme) --- */
+/* 柔和、冷靜的藍色調 */
+.blue-theme {
+    /* 主要/背景顏色 */
+    --main-bg: #E8F4FF;          /* 非常淺的藍色背景 */
+    --card-bg: #FFFFFF;          /* 卡片背景為白色，增加層次感 */
+    --border-color: #A3C9F2;     /* 柔和的藍色邊框 */
+    
+    /* 文字顏色 */
+    --text-color: #1A3E66;       /* 深藍色文字 */
+    --secondary-text: #4C7099;   /* 中等藍色次要文字 */
+    --playing-text: #007bff;     /* 播放中的文字/強調色：標準藍色 */
+
+    /* 互動顏色 */
+    --hover-bg: #CFE3F7;         /* 淺藍色懸停背景 */
+    --playing-bg: #E3F2FF;       /* 非常淺的播放中背景 */
+}
+
