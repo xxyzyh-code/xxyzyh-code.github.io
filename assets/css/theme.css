@@ -212,10 +212,11 @@ body {
     --playing-bg: #FFEBEE;       /* 非常淺的播放中背景 */
     --playing-text: #E91E63;     /* 播放中的文字/強調色：鮮豔粉色 */
 
-    /* 強調色 */
-    --accent-color: #00BCD4;     /* 青色作為強調色，與粉色對比 */
-    --accent-hover: #00ACC1;
+    /* ✅ 強調色修正：使用柔和的紫紅色 */
+    --accent-color: #9C27B0;     
+    --accent-hover: #8E24AA;
 }
+
 
 /* --- 紅色主題 (Red Theme) --- */
 /* 柔和、溫暖的紅色調 (偏橘紅) */
