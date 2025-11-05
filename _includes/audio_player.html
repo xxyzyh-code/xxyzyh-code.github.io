@@ -65,7 +65,7 @@
 // 獲取 DOM 元素
 const audio = document.getElementById('main-audio');
 const playerTitle = document.querySelector('#custom-audio-player h3');
-const playlistItems = document.querySelectorAll('#playlist li'); 
+let playlistItems = document.querySelectorAll('#playlist li'); // 【修改】使用 let 讓排序後可以重新賦值
 const modeButton = document.getElementById('mode-button'); 
 
 // 新增 DOM 元素
@@ -105,6 +105,10 @@ let countdownIntervalId = null;
 let totalListenMinutes = 0;
 let totalListenSeconds = 0;
 let listenIntervalId = null; 
+
+// 【新增】播放次數追蹤變數
+const PLAY_COUNT_STORAGE_KEY = 'audioTrackPlayCounts'; 
+let trackPlayCounts = {}; 
 
 
 // --- *** 防抖輔助函數 *** ---
@@ -171,11 +175,17 @@ function updatePlaylistHighlight() {
     const playingOriginalIndex = currentTrackIndex >= 0 && currentTrackIndex < currentPlaylist.length 
         ? currentPlaylist[currentTrackIndex].originalIndex 
         : -1;
-
-    playlistItems.forEach((item, index) => {
+    
+    // 【修改】由於 playlistItems 可能被排序，這裡的 index 已經不是 originalIndex
+    playlistItems.forEach(item => {
         item.classList.remove('playing');
-        // 比較當前列表項的索引和正在播放歌曲的原始索引
-        if (index === playingOriginalIndex) { 
+        
+        // 從 li 元素的 onclick 屬性中提取 originalIndex
+        const onclickAttr = item.getAttribute('onclick');
+        const match = onclickAttr.match(/loadTrack\((\d+)\)/);
+        const itemOriginalIndex = match ? parseInt(match[1]) : -2;
+
+        if (itemOriginalIndex === playingOriginalIndex) { 
             item.classList.add('playing');
         }
     });
@@ -185,6 +195,10 @@ function updatePlaylistHighlight() {
 // --- 核心邏輯：控制播放順序/循環/隨機/自由 ---
 
 audio.addEventListener('ended', () => {
+    // 【修改點】在切換下一首歌之前，先記錄當前歌曲播放完成
+    incrementPlayCount(); 
+    updatePlaylistDisplay(); // 每次計數更新後，重新渲染播放次數
+    
     if (playMode === 1) {
         audio.currentTime = 0; 
         audio.play();
@@ -237,7 +251,7 @@ function togglePlayMode() {
 
 
 // --- *** 主題切換邏輯 (保持不變) *** ---
-
+// (此處省略主題切換函數，保持與您提供的版本一致)
 const THEME_STORAGE_KEY = 'userThemePreference';
 const LIGHT_THEME = 'light'; 
 const DARK_THEME = 'dark';   
@@ -462,6 +476,23 @@ function updateTotalListenTime() {
         `${totalListenMinutes} 分鐘 ${totalListenSeconds} 秒`;
 }
 
+// 【新增】播放次數追蹤函數
+function incrementPlayCount() {
+    if (currentTrackIndex >= 0 && currentTrackIndex < currentPlaylist.length) {
+        const track = currentPlaylist[currentTrackIndex];
+        const key = track.originalIndex; // 使用原始索引作為唯一鍵
+        
+        // 增加計數
+        trackPlayCounts[key] = (trackPlayCounts[key] || 0) + 1; 
+        
+        // 儲存到 LocalStorage
+        try {
+            localStorage.setItem(PLAY_COUNT_STORAGE_KEY, JSON.stringify(trackPlayCounts));
+        } catch (e) {
+            console.warn('無法儲存播放次數到 LocalStorage.', e);
+        }
+    }
+}
 
 // --- 外部呼叫函數 (來自列表點擊) ---
 
@@ -495,7 +526,6 @@ function loadTrack(originalIndex) {
         playTrack(originalIndex); 
     }
 }
-
 
 
 // --- *** 搜尋/篩選邏輯 (重構為動態歌單) *** ---
@@ -553,6 +583,7 @@ function filterPlaylist() {
 
     // 2. 更新 HTML 列表的顯示/隱藏狀態
     playlistItems.forEach(item => {
+        // 從 li 元素的內容中提取文本
         const itemText = item.textContent.toLowerCase(); 
         if (itemText.includes(searchText) || searchText.length === 0) {
             item.style.display = ''; 
@@ -566,8 +597,100 @@ function filterPlaylist() {
 }
 
 
+// --- 播放列表顯示與排序邏輯 ---
 
-// --- *** LocalStorage 邏輯 (持久化：模式/主題/音量/靜音/進度) *** ---
+/**
+ * 更新播放列表，顯示每首歌的播放次數
+ */
+function updatePlaylistDisplay() {
+    // 【修改】重新讀取 DOM 列表，因為排序可能會改變順序
+    const currentListItems = document.querySelectorAll('#playlist li'); 
+    
+    currentListItems.forEach(item => {
+        // 從 li 元素的 onclick 屬性中提取 originalIndex
+        const onclickAttr = item.getAttribute('onclick');
+        const match = onclickAttr.match(/loadTrack\((\d+)\)/);
+        const index = match ? parseInt(match[1]) : -1;
+        
+        if (index === -1) return;
+        
+        const track = MASTER_TRACK_LIST[index];
+        const originalText = track.title + ' - ' + track.artist;
+        const playCount = trackPlayCounts[index] || 0;
+        
+        // 清除舊的內容 (確保不重複添加次數)
+        item.innerHTML = '';
+        
+        // 創建主體文字 (歌名 - 歌手)
+        const mainSpan = document.createElement('span');
+        mainSpan.textContent = originalText;
+        item.appendChild(mainSpan);
+        
+        // 創建播放次數小字
+        if (playCount > 0) {
+            const countSpan = document.createElement('small');
+            countSpan.textContent = ` (${playCount} 次播放)`;
+            
+            // 內聯樣式實現小字、灰色，不佔用太多空間
+            countSpan.style.fontSize = '0.8em'; 
+            countSpan.style.color = '#888'; 
+            countSpan.style.marginLeft = '10px';
+            
+            item.appendChild(countSpan);
+        }
+    });
+}
+
+/**
+ * 根據播放次數對播放列表進行排序 (人氣榜)
+ */
+function sortPlaylistByPlayCount() {
+    // 1. 建立一個包含播放次數信息的列表副本
+    const sortableList = [...MASTER_TRACK_LIST].map(track => {
+        const count = trackPlayCounts[track.originalIndex] || 0;
+        return { ...track, playCount: count };
+    });
+
+    // 2. 排序：播放次數高的在前 (降序)，次數相同的按照原始索引 (升序)
+    sortableList.sort((a, b) => {
+        if (b.playCount !== a.playCount) {
+            return b.playCount - a.playCount;
+        }
+        return a.originalIndex - b.originalIndex; // 次數相同時保持原始順序
+    });
+
+    // 3. 獲取 HTML 列表元素和原始的 li 元素集合
+    const playlistUl = document.getElementById('playlist');
+    const originalLiElements = Array.from(playlistUl.querySelectorAll('li'));
+
+    // 4. 清空現有列表
+    playlistUl.innerHTML = '';
+
+    // 5. 根據排序後的順序重新附加列表項
+    sortableList.forEach(track => {
+        // 找到對應原始索引的 HTML 元素
+        const originalIndex = track.originalIndex;
+        const liElement = originalLiElements.find(item => {
+            const onclickAttr = item.getAttribute('onclick');
+            const match = onclickAttr.match(/loadTrack\((\d+)\)/);
+            return match && parseInt(match[1]) === originalIndex;
+        });
+
+        if (liElement) {
+            playlistUl.appendChild(liElement);
+        }
+    });
+    
+    // 6. 重新獲取 playlistItems 引用，確保它們指向新的 DOM 順序
+    playlistItems = document.querySelectorAll('#playlist li'); 
+
+    // 7. 重新渲染播放次數和高亮狀態
+    updatePlaylistDisplay();
+    updatePlaylistHighlight();
+}
+
+
+// --- *** LocalStorage 邏輯 (持久化：模式/主題/音量/靜音/進度/播放次數) *** ---
 
 const CURRENT_TRACK_INDEX_KEY = 'audioPlayerIndex';
 const CURRENT_TRACK_TIME_KEY = 'audioPlayerTime';
@@ -635,6 +758,12 @@ function loadSavedSettings() {
              localStorage.removeItem(CURRENT_TRACK_TIME_KEY); 
         }
         
+        // 載入播放次數數據
+        const savedCounts = localStorage.getItem(PLAY_COUNT_STORAGE_KEY);
+        if (savedCounts) {
+            trackPlayCounts = JSON.parse(savedCounts);
+        }
+        
     } catch (e) {
         console.warn('Failed to load settings from LocalStorage.', e);
     }
@@ -680,13 +809,11 @@ playlistSearchInput.addEventListener('input', debounce(filterPlaylist, 300));
 // 關鍵：在載入任何東西之前，先建立主歌單
 resetCurrentPlaylist(); 
 
-// 1. 載入儲存的設定
+// 1. 載入儲存的設定（包括播放次數）
 loadSavedSettings();
 
-// 2. 初始化主題設定 (自動或手動)
+// 2. 執行排序和顯示播放次數
+sortPlaylistByPlayCount(); // 取代舊的 updatePlaylistHighlight()
+
+// 3. 初始化主題設定 (自動或手動)
 initializeTheme();
-
-// 3. 載入並高亮第一首歌
-updatePlaylistHighlight(); 
-
-</script>
