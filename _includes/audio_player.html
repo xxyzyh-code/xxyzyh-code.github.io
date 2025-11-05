@@ -505,7 +505,6 @@ function loadTrack(originalIndex) {
     if (playMode !== 3) {
         playMode = 3;
         modeButton.textContent = "[ 模式: 自由 ]";
-        playerTitle.textContent = "已切換到自由播放模式 (點擊列表)";
         saveSettings(); 
     }
     
@@ -524,6 +523,25 @@ function loadTrack(originalIndex) {
         // 由於 currentPlaylist 現在與 Master List 相同，原始索引 (originalIndex) 即是當前索引
         playerTitle.textContent = "已清除篩選，並播放您點選的歌曲";
         playTrack(originalIndex); 
+    }
+}
+
+
+// 【新增】播放次數追蹤函數
+function incrementPlayCount() {
+    if (currentTrackIndex >= 0 && currentTrackIndex < currentPlaylist.length) {
+        const track = currentPlaylist[currentTrackIndex];
+        const key = track.originalIndex; // 使用原始索引作為唯一鍵
+        
+        // 增加計數
+        trackPlayCounts[key] = (trackPlayCounts[key] || 0) + 1; 
+        
+        // 儲存到 LocalStorage
+        try {
+            localStorage.setItem(PLAY_COUNT_STORAGE_KEY, JSON.stringify(trackPlayCounts));
+        } catch (e) {
+            console.warn('無法儲存播放次數到 LocalStorage.', e);
+        }
     }
 }
 
@@ -603,7 +621,7 @@ function filterPlaylist() {
  * 更新播放列表，顯示每首歌的播放次數
  */
 function updatePlaylistDisplay() {
-    // 【修改】重新讀取 DOM 列表，因為排序可能會改變順序
+    // 重新讀取 DOM 列表，因為排序可能會改變順序
     const currentListItems = document.querySelectorAll('#playlist li'); 
     
     currentListItems.forEach(item => {
@@ -817,3 +835,4 @@ sortPlaylistByPlayCount(); // 取代舊的 updatePlaylistHighlight()
 
 // 3. 初始化主題設定 (自動或手動)
 initializeTheme();
+</script>
