@@ -166,25 +166,33 @@ function getNextRandomIndex() {
     return newIndex;
 }
 
-// 更新播放列表的高亮狀態
-function updatePlaylistHighlight() {
-    const playingOriginalIndex = currentTrackIndex >= 0 && currentTrackIndex < currentPlaylist.length 
-        ? currentPlaylist[currentTrackIndex].originalIndex 
-        : -1;
+// 更新播放列表的高亮狀態，並增加「自動滾動」功能
+function updatePlaylistHighlight(manualScroll = false) {
+    const listItems = document.querySelectorAll('#playlist li');
     
-    playlistItems.forEach(item => {
+    // 1. 移除所有項目的高亮狀態
+    listItems.forEach(item => {
         item.classList.remove('playing');
-        
-        const onclickAttr = item.getAttribute('onclick');
-        const match = onclickAttr.match(/loadTrack\((\d+)\)/);
-        const itemOriginalIndex = match ? parseInt(match[1]) : -2;
-
-        if (itemOriginalIndex === playingOriginalIndex) { 
-            item.classList.add('playing');
-        }
     });
-}
 
+    // 2. 為當前播放的歌曲添加高亮狀態
+    if (currentTrackIndex >= 0 && currentTrackIndex < listItems.length) {
+        const playingItem = listItems[currentTrackIndex];
+        playingItem.classList.add('playing');
+        
+        // 3. === 新增邏輯：自動滾動到正在播放的歌曲 ===
+        
+        // 只有在歌曲切換時（非手動搜索或排序時），才執行自動滾動。
+        // 當前的 CSS 滾動 (overflow-y: auto) 已經生效，
+        // 這裡確保當歌曲切換到視圖外時，列表會自動調整位置。
+        if (!manualScroll) {
+             playingItem.scrollIntoView({
+                behavior: 'smooth', // 使用平滑效果
+                block: 'nearest'    // 確保元素盡量在可見範圍內，如果已經可見則不滾動
+            });
+        }
+    }
+}
 
 // --- 核心邏輯：控制播放順序/循環/隨機/自由 ---
 
