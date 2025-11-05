@@ -198,6 +198,8 @@ audio.addEventListener('ended', () => {
     // 【修改點】在切換下一首歌之前，先記錄當前歌曲播放完成
     incrementPlayCount(); 
     updatePlaylistDisplay(); // 每次計數更新後，重新渲染播放次數
+    sortPlaylistByPlayCount(); //實時執行排序：下一首歌曲播放時，列表已經是最新的高人氣排序了！
+
     
     if (playMode === 1) {
         audio.currentTime = 0; 
