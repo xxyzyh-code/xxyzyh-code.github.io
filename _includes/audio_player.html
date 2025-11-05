@@ -48,15 +48,16 @@
     <span>總時長: <span id="total-listen-time">0 分鐘</span></span>
     <span>剩餘: <span id="remaining-timer">--:--</span></span>
 </div>
-    
+
 <ul id="playlist">
 
     {% for track in site.data.music %}
-        <li data-url="{{ track.url }}" onclick="loadTrack('{{ track.url }}', '{{ track.title }}', {{ forloop.index0 }})">
+        <li onclick="loadTrack({{ forloop.index0 }})">
             {{ track.title }} - {{ track.artist }}
         </li>
     {% endfor %}
     </ul>
+    
 </div>
 
 
@@ -464,7 +465,12 @@ function updateTotalListenTime() {
 
 // --- 外部呼叫函數 (來自列表點擊) ---
 
-function loadTrack(url, title, originalIndex) { 
+/**
+ * 當用戶點擊播放列表時載入歌曲
+ * @param {number} originalIndex - 歌曲在 Master List 中的原始索引
+ */
+function loadTrack(originalIndex) { 
+    // 1. 切換到自由模式
     if (playMode !== 3) {
         playMode = 3;
         modeButton.textContent = "[ 模式: 自由 ]";
@@ -472,15 +478,24 @@ function loadTrack(url, title, originalIndex) {
         saveSettings(); 
     }
     
+    // 2. 查找歌曲在當前播放列表中的索引
     const newIndex = currentPlaylist.findIndex(track => track.originalIndex === originalIndex);
 
     if (newIndex !== -1) {
+        // 情況 A: 歌曲在篩選後的歌單中，直接播放該歌單中的索引
         playTrack(newIndex);
     } else {
+        // 情況 B: 歌曲不在篩選後的歌單中 (使用者點擊了被隱藏的項目)
+        
+        // 這裡我們必須先將歌單重設回 Master List (因為用戶明確點擊了某首歌)
         resetCurrentPlaylist();
-        playTrack(originalIndex);
+        
+        // 由於 currentPlaylist 現在與 Master List 相同，原始索引 (originalIndex) 即是當前索引
+        playerTitle.textContent = "已清除篩選，並播放您點選的歌曲";
+        playTrack(originalIndex); 
     }
 }
+
 
 
 // --- *** 搜尋/篩選邏輯 (重構為動態歌單) *** ---
