@@ -159,18 +159,34 @@
     color: #28a745; 
 }
 
-/* --- 播放列表樣式 (保持不變) --- */
+
+/* --- *** 播放列表樣式 (新增滾動容器) *** --- */
+
 #playlist {
     list-style: none; 
     padding: 0;
-    margin: 0;
-    border-top: 1px solid var(--border-color); 
+    margin: 10px 0; /* 讓列表上下有間距 */
+    
+    /* === 核心滾動樣式 === */
+    max-height: 350px;       /* 限制列表的最大高度 */
+    overflow-y: auto;        /* 內容超出時顯示垂直滾動條 */
+    
+    /* 添加視覺輔助，讓滾動區域更清晰 */
+    border: 1px solid var(--border-color); /* 使用主題邊框變數 */
+    border-radius: 6px;      
+    background-color: var(--card-bg); /* 使用主題卡片背景變數 */
+    
+    /* 確保滾動條與播放器整體邊緣對齊 */
+    box-sizing: border-box;
 }
 
 #playlist li {
-    padding: 10px 5px;
-    border-bottom: 1px dashed var(--border-color); 
+    padding: 12px 15px;      /* 調整內邊距以適應新的列表容器 */
     cursor: pointer;
+    
+    /* 使用虛線改為實線，並使用主題邊框色 */
+    border-bottom: 1px solid var(--border-color); 
+    
     transition: background-color 0.15s;
     font-size: 0.95em;
 }
@@ -184,12 +200,14 @@
     font-weight: bold;
     color: var(--playing-text); 
     border-left: 3px solid var(--playing-text); 
-    padding-left: 7px;
+    padding-left: 12px; /* 3px 邊框 + 12px 內邊距 = 15px (與非 playing 狀態對齊) */
 }
 
 #playlist li:last-child {
     border-bottom: none;
 }
+
+
 
 /* --- 居中播放器和標題的樣式 --- */
 .center-container {
