@@ -60,7 +60,7 @@
     
 </div>
 <script>
-    // 獲取 DOM 元素
+// 獲取 DOM 元素
 const audio = document.getElementById('main-audio');
 const playerTitle = document.querySelector('#custom-audio-player h3');
 let playlistItems = document.querySelectorAll('#playlist li'); 
@@ -194,7 +194,7 @@ audio.addEventListener('ended', () => {
     updatePlaylistDisplay(); 
     sortPlaylistByPlayCount(); 
 
-    // 【新增】在切換下一首前，更新 URL 錨點 (供分享)
+    // 【分享連結】在切換下一首前，更新 URL 錨點
     if (currentTrackIndex >= 0 && currentTrackIndex < currentPlaylist.length) {
         window.location.hash = `song-index-${currentPlaylist[currentTrackIndex].originalIndex}`;
     }
@@ -236,7 +236,7 @@ audio.addEventListener('ended', () => {
                 playerTitle.textContent = "順序播放完成，已停止。";
                 currentTrackIndex = -1; // 標記為未播放狀態
                 updatePlaylistHighlight();
-                window.location.hash = ''; // 【優化】歌單結束時清除錨點
+                window.location.hash = ''; // 歌單結束時清除錨點
             }
             break;
     }
@@ -274,7 +274,7 @@ function updateModeUI() {
 }
 
 
-// --- *** 主題切換邏輯 (已修復中文符號) *** ---
+// --- *** 主題切換邏輯 *** ---
 const THEME_STORAGE_KEY = 'userThemePreference';
 const LIGHT_THEME = 'light'; 
 const DARK_THEME = 'dark';   
@@ -300,14 +300,14 @@ function applyTheme(desiredTheme, isManual = false) {
     );
 
     let themeToApply = desiredTheme;
-    let modeText = '【手動】'; // <-- 修復中文符號
+    let modeText = '【手動】';
 
     if (isManual) {
         localStorage.setItem(THEME_STORAGE_KEY, desiredTheme);
     } 
     else if (desiredTheme === LIGHT_THEME) {
         themeToApply = getSystemThemeBasedOnTime();
-        modeText = '【自動】'; // <-- 修復中文符號
+        modeText = '【自動】';
     }
 
     if (themeToApply === DARK_THEME) {
@@ -357,7 +357,7 @@ function initializeTheme() {
     }
 }
 
-// --- 主題/定時器/統計邏輯 (省略與上次相同的代碼) ---
+// --- 主題/定時器/統計邏輯 ---
 
 themeToggleBtn.addEventListener('click', (event) => {
     event.stopPropagation(); 
@@ -512,7 +512,7 @@ function incrementPlayCount() {
  * @param {number} originalIndex - 歌曲在 Master List 中的原始索引
  */
 function loadTrack(originalIndex) { 
-    // 【修改點 2.1】: 點擊歌曲時切換到「自由模式 (3)」
+    // 點擊歌曲時切換到「自由模式 (3)」
     if (playMode !== 3) {
         playMode = 3; 
         updateModeUI();
@@ -533,11 +533,11 @@ function loadTrack(originalIndex) {
         }
     }
     
-    // 【修改點 2.2】: 點擊後更新 URL 錨點，供分享使用
+    // 點擊後更新 URL 錨點，供分享使用
     window.location.hash = `song-index-${originalIndex}`;
 }
 
-// --- *** 搜尋/篩選邏輯 (與您原來的代碼相同) *** ---
+// --- *** 搜尋/篩選邏輯 *** ---
 
 function filterPlaylist() {
     const searchText = playlistSearchInput.value.toLowerCase().trim(); 
@@ -593,7 +593,7 @@ function filterPlaylist() {
     updatePlaylistHighlight(); 
 }
 
-// --- 播放列表顯示與排序邏輯 (省略與上次相同的代碼) ---
+// --- 播放列表顯示與排序邏輯 ---
 
 function updatePlaylistDisplay() {
     const currentListItems = document.querySelectorAll('#playlist li'); 
@@ -666,7 +666,7 @@ function sortPlaylistByPlayCount() {
 }
 
 
-// --- *** LocalStorage 邏輯 (省略與上次相同的代碼) *** ---
+// --- *** LocalStorage 邏輯 *** ---
 
 const CURRENT_TRACK_INDEX_KEY = 'audioPlayerIndex';
 const CURRENT_TRACK_TIME_KEY = 'audioPlayerTime';
@@ -745,36 +745,44 @@ function loadSavedSettings() {
 }
 
 
-// --- *** URL 錨點處理邏輯 (新增) *** ---
+// --- *** URL 錨點處理邏輯 (優化載入速度的最終修訂版) *** ---
 function handleUrlAnchor() {
-    // 1. 獲取 URL 中的錨點部分 (例如 #song-index-1)
     const hash = window.location.hash;
 
     if (hash.startsWith('#song-index-')) {
-        // 2. 解析出歌曲的原始索引
         const parts = hash.split('-');
         const originalIndex = parseInt(parts[parts.length - 1]);
 
-        // 3. 確保索引有效且在 Master List 範圍內
         if (!isNaN(originalIndex) && originalIndex >= 0 && originalIndex < MASTER_TRACK_LIST.length) {
             
-            // 使用 loadTrack 函數載入歌曲 (它會自動切換到自由模式)
+            const trackTitle = MASTER_TRACK_LIST[originalIndex].title;
+            
+            // 1. 載入歌曲。這會觸發 loadTrack，loadTrack 會將模式設為 3 並立即嘗試播放。
             loadTrack(originalIndex); 
             
-            // 由於是外部連結，給用戶一個嘗試自動播放的機會
-            audio.play().catch(error => {
-                // 如果自動播放失敗，playerTitle 會顯示載入信息
-                playerTitle.textContent = `從分享載入：${MASTER_TRACK_LIST[originalIndex].title} (需點擊播放)`;
-            });
-            
-            // 將播放模式設定為順序停止 (0)，以便在播放完畢後，如果用戶沒有點擊下一首，它會停止
+            // 2. 立即將模式設回 0 (分享連結的預期模式)，並更新 UI 和儲存
             playMode = 0; 
             updateModeUI();
             saveSettings();
+            
+            // 3. 設置友好的緩衝提示
+            playerTitle.textContent = `從分享連結載入：${trackTitle} (正在緩衝...)`;
+
+            // 4. 監聽「真正開始播放」事件，以清除緩衝提示
+            const handlePlaying = () => {
+                 // 確保只處理當前歌曲
+                 if (playerTitle.textContent.includes(trackTitle)) { 
+                     playerTitle.textContent = `正在播放：${trackTitle}`;
+                     audio.removeEventListener('playing', handlePlaying);
+                 }
+            };
+            audio.addEventListener('playing', handlePlaying);
+            
+            // 5. 如果瀏覽器阻止了自動播放，通過 play() 的 Promise catch 處理
+            audio.play().catch(error => {
+                 playerTitle.textContent = `從分享載入：${trackTitle} (需點擊播放)`;
+            });
         }
-        // 【優化】載入完成後，將錨點替換為不含錨點的 URL，保持分享連結的持久性
-        // history.replaceState({}, document.title, window.location.pathname + window.location.search);
-        // 但為了方便用戶複製分享連結，通常保留錨點更好。
     }
 }
 // ------------------------------------
@@ -808,7 +816,7 @@ if(playMode === 0 && !localStorage.getItem('audioPlayerMode')) {
     updateModeUI();
 }
 
-// 【修改點 3】: 在載入儲存設置後，立即檢查 URL 錨點
+// 在載入儲存設置後，立即檢查 URL 錨點
 handleUrlAnchor();
 
 sortPlaylistByPlayCount(); 
