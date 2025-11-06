@@ -287,28 +287,38 @@ audio.addEventListener('ended', () => {
     if (playMode === 1) { // 單曲循環：不改變索引，直接重播
         audio.currentTime = 0; 
         audio.play();
-        // 由於索引不變，高光不需更新。
-        // 確保單曲循環時，高光不會因其他邏輯而意外改變。
         updatePlaylistHighlight(); 
-        return; // 立即返回，不執行後續的 playTrack 邏輯
+        return; 
     } 
     
-    // 計算下一首索引
+    // ⭐️ 修正：處理自由模式 (3) - 播完即停
+    if (playMode === 3) { 
+        audio.pause();
+        playerTitle.textContent = "自由模式下，歌曲播放完畢。";
+        currentTrackIndex = -1; // 標記為未播放狀態
+        updatePlaylistHighlight(); 
+        window.location.hash = ''; // 歌單結束時清除錨點
+        return; // 立即返回，停止後續的播放邏輯
+    } 
+    
+    // 計算下一首索引 (僅針對模式 0, 2, 4)
     if (playMode === 2) { // 隨機播放
         nextIndex = getNextRandomIndex();
     } else if (playMode === 4) { // 順序循環
         nextIndex = (currentTrackIndex + 1) % currentPlaylist.length;
-    } else if (currentTrackIndex < currentPlaylist.length - 1) { 
-        // 順序停止 (0) 或 自由模式 (3) - 還有下一首
-        nextIndex = currentTrackIndex + 1;
-    } else {
-        // 順序停止 (0) 或 自由模式 (3) - 已是最後一首，應停止
-        audio.pause();
-        playerTitle.textContent = "播放列表已結束";
-        currentTrackIndex = -1; // 標記為未播放狀態
-        updatePlaylistHighlight(); 
-        window.location.hash = ''; // 歌單結束時清除錨點
-        return; // 停止播放後返回
+    } else { // 順序停止 (0)
+        if (currentTrackIndex < currentPlaylist.length - 1) { 
+            // 還有下一首
+            nextIndex = currentTrackIndex + 1;
+        } else {
+            // 已是最後一首，應停止
+            audio.pause();
+            playerTitle.textContent = "播放列表已結束";
+            currentTrackIndex = -1; // 標記為未播放狀態
+            updatePlaylistHighlight(); 
+            window.location.hash = ''; // 歌單結束時清除錨點
+            return; // 停止播放後返回
+        }
     }
 
     // 3. 呼叫 playTrack 統一處理播放和高光更新
