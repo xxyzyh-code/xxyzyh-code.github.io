@@ -57,6 +57,45 @@
     background-color: var(--secondary-text); 
 }
 
+/* --- *** 導航按鈕群組樣式 (新增) *** --- */
+#nav-buttons-group {
+    display: flex;
+    gap: 10px; /* 按鈕間距 */
+    align-items: center;
+}
+
+/* --- *** 上一曲/下一曲按鈕樣式 (新增) *** --- */
+#prev-button, 
+#next-button {
+    cursor: pointer;
+    display: inline-block;
+    padding: 5px 10px;
+    
+    /* 複製 mode-button 的樣式 */
+    background-color: var(--hover-bg); 
+    border: 1px solid var(--border-color);
+    
+    border-radius: 3px;
+    font-size: 0.9em;
+    color: var(--text-color); 
+    transition: background-color 0.2s;
+    user-select: none; 
+}
+
+#prev-button:hover,
+#next-button:hover {
+    background-color: var(--secondary-text); 
+}
+
+/* 確保按鈕點擊後樣式立即恢復 */
+#prev-button:focus,
+#prev-button:active,
+#next-button:focus,
+#next-button:active {
+    outline: none; 
+    box-shadow: none; 
+    background-color: var(--secondary-text); 
+}
 
 /* --- *** 定時器折疊菜單樣式 (使用強調色變數) *** --- */
 #sleep-timer-area {
