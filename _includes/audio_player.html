@@ -602,6 +602,54 @@ function incrementPlayCount() {
         } 
     }
 }
+    
+    // --- *** Supabase/API 相關函數 *** ---
+
+// 1. 獲取或生成唯一的匿名用戶 ID
+function getUserId() {
+  let id = localStorage.getItem('anon_user_id');
+  if (!id) {
+    // 使用瀏覽器內置的 crypto.randomUUID() 創建唯一 ID
+    id = crypto.randomUUID(); 
+    localStorage.setItem('anon_user_id', id);
+  }
+  return id;
+}
+
+// 2. 向 Serverless API 發送播放日誌
+function trackPlayToDatabase(song_id) {
+    // 檢查 song_id 是否有效
+    if (typeof song_id === 'undefined' || song_id === null) {
+        console.warn("trackPlayToDatabase: Song ID 無效，跳過數據庫記錄。");
+        return;
+    }
+    
+    // 獲取當前用戶 ID
+    const user_id = getUserId(); 
+    
+    // 發送 POST 請求到您的 Serverless API
+    fetch('/api/track', {
+        method: 'POST',
+        body: JSON.stringify({
+            user_id: user_id,
+            // 這裡使用 's' + originalIndex 作為 song_id，保證唯一性
+            song_id: `s${song_id}` 
+        }),
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        // console.log(`播放記錄發送成功: Song ID s${song_id}`);
+    })
+    .catch(error => {
+        console.error('播放記錄發送失敗:', error);
+    });
+}
 
 // --- 外部呼叫函數 (來自列表點擊) ---
 
@@ -958,8 +1006,33 @@ audio.addEventListener('timeupdate', () => {
     }
 });
 
-audio.addEventListener('play', saveSettings);
-audio.addEventListener('pause', saveSettings);
+// 🌟 關鍵修正: 在 'play' 事件中同時處理本地計時和數據庫記錄
+audio.addEventListener('play', () => {
+    // 1. 維護本地總收聽時長
+    if (listenIntervalId === null) {
+        listenIntervalId = setInterval(updateTotalListenTime, 1000);
+    }
+    
+    // 2. ⭐️ 核心新增: 發送數據到數據庫
+    if (currentTrackIndex >= 0 && currentTrackIndex < currentPlaylist.length) {
+        const currentSongOriginalIndex = currentPlaylist[currentTrackIndex].originalIndex;
+        // 調用 API 函數
+        trackPlayToDatabase(currentSongOriginalIndex); 
+    }
+    
+    // 3. 儲存播放狀態
+    saveSettings(); 
+});
+
+audio.addEventListener('pause', () => {
+    if (listenIntervalId !== null) {
+        clearInterval(listenIntervalId);
+        listenIntervalId = null;
+    }
+    saveSettings();
+});
+
+
 audio.addEventListener('ended', saveSettings);
 
 playlistSearchInput.addEventListener('input', debounce(filterPlaylist, 300));
