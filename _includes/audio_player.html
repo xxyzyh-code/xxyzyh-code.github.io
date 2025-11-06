@@ -62,7 +62,6 @@
 </div>
 
 <ul id="playlist">
-
     {% for track in site.data.music %}
         <li onclick="loadTrack({{ forloop.index0 }})">
             {{ track.title }} - {{ track.artist }}
@@ -93,23 +92,26 @@ const themeOptions = document.querySelectorAll('#theme-menu .theme-option');
     
     
 // 1. 準備數據和狀態追蹤
-const MASTER_TRACK_LIST = [ 
+// ⭐️ 關鍵修正 1: 通過 Jekyll 語法動態生成最新的 MASTER_TRACK_LIST
+// 使用 | jsonify 確保輸出為有效的 JSON 數組
+// 此外，我們需要修改 MASTER_TRACK_LIST 結構，以確保包含原始索引 (originalIndex)
+const MASTER_TRACK_LIST = (function() {
+    const data = {{ site.data.music | jsonify }};
+    return data.map((track, index) => ({
+        title: track.title,
+        artist: track.artist,
+        url: track.url,
+        originalIndex: index // 根據 Jekyll 的 forloop.index0 設置原始索引
+    }));
+})(); 
 
-    // 增加一個原始索引 (originalIndex)，用於將來回溯或去篩選時定位
-    { title: "Alive in the summer time", artist: "AI", url: "https://raw.githubusercontent.com/xxyzyh-code/music/main/Alive in the summer time.m4a", originalIndex: 0 },
-
-    // 增加一個原始索引 (originalIndex)，用於將來回溯或去篩選時定位
-    { title: "Breakbeat background", artist: "AI", url: "https://raw.githubusercontent.com/xxyzyh-code/music/main/Breakbeat background.m4a", originalIndex: 1 },
-
-    // 增加一個原始索引 (originalIndex)，用於將來回溯或去篩選時定位
-    { title: "The best moments in life", artist: "AI", url: "https://raw.githubusercontent.com/xxyzyh-code/music/main/The best moments in life.m4a", originalIndex: 2 },
-
-];
 
 let currentPlaylist = []; 
 let currentTrackIndex = 0; 
 // 播放模式：0=順序停止, 1=單曲循環, 2=隨機播放, 3=自由模式, 4=順序循環
 let playMode = 0; 
+
+// ... (其餘變數保持不變) ...
 
 // 定時器狀態變數
 let sleepTimerId = null; 
@@ -146,7 +148,7 @@ function resetCurrentPlaylist() {
 }
 
 
-// --- 輔助函數 ---
+// --- 輔助函數 (以下所有函數保持不變) ---
 
 // 載入並播放指定索引的歌曲
 function playTrack(index) {
@@ -177,6 +179,8 @@ function getNextRandomIndex() {
     
     return newIndex;
 }
+
+// ... (playNextTrack, playPreviousTrack, updatePlaylistHighlight 保持不變) ...
 
 // *** 修正：播放下一曲功能 ***
 function playNextTrack() {
@@ -450,7 +454,7 @@ function initializeTheme() {
     }
 }
 
-// --- 主題/定時器/統計邏輯 ---
+// --- 主題/定時器/統計邏輯 (保持不變) ---
 
 themeToggleBtn.addEventListener('click', (event) => {
     event.stopPropagation(); 
@@ -844,14 +848,26 @@ function loadSavedSettings() {
             }
         }
         
+        // 關鍵修正：當 MASTER_TRACK_LIST 被動態生成後，長度可能會變
         const savedIndex = localStorage.getItem(CURRENT_TRACK_INDEX_KEY);
         if (savedIndex !== null) {
             const index = parseInt(savedIndex);
+            // 這裡必須檢查是否在新列表長度內
             if (index >= 0 && index < MASTER_TRACK_LIST.length) { 
                 currentTrackIndex = index;
                 const track = MASTER_TRACK_LIST[index]; 
                 audio.src = track.url;
                 playerTitle.textContent = `上次播放：${track.title}`;
+            } else {
+                // 如果舊索引在新列表中不存在，則重置為 0
+                currentTrackIndex = 0; 
+                if (MASTER_TRACK_LIST.length > 0) {
+                    const track = MASTER_TRACK_LIST[0]; 
+                    audio.src = track.url;
+                    playerTitle.textContent = `上次播放的歌曲已更新，現播放：${track.title}`;
+                } else {
+                    currentTrackIndex = -1; // 列表為空
+                }
             }
         }
 
@@ -867,6 +883,19 @@ function loadSavedSettings() {
         const savedCounts = localStorage.getItem(PLAY_COUNT_STORAGE_KEY);
         if (savedCounts) {
             trackPlayCounts = JSON.parse(savedCounts);
+            
+            // ⭐️ 額外修正：如果新歌單長度變了，要清理掉舊的播放次數記錄
+            const currentKeys = MASTER_TRACK_LIST.map(t => t.originalIndex.toString());
+            let keysToDelete = [];
+            for (const key in trackPlayCounts) {
+                if (!currentKeys.includes(key)) {
+                    keysToDelete.push(key);
+                }
+            }
+            keysToDelete.forEach(key => delete trackPlayCounts[key]);
+            
+            // 重新儲存清理後的數據
+            localStorage.setItem(PLAY_COUNT_STORAGE_KEY, JSON.stringify(trackPlayCounts));
         }
         
     } catch (e) {
