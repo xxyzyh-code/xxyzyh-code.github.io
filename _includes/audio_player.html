@@ -1077,10 +1077,6 @@ async function initializePlayer(isManualToggle = false) {
     if(!localStorage.getItem('audioPlayerMode') || isManualToggle) {
         updateModeUI();
     }
-
-    // ⭐️ 關鍵修正：在排序前確保 playlistItems 獲取的是 DOM 元素
-    // 這一步是防止 DOM 元素在排序前被錯誤清除的保險。
-    playlistItems = document.querySelectorAll('#playlist li'); 
     
     // 4. 排序和顯示
     handleUrlAnchor();
@@ -1088,6 +1084,17 @@ async function initializePlayer(isManualToggle = false) {
     initializeTheme();
 }
 
+    // ⭐️ 關鍵：將啟動代碼包裹在 DOMContentLoaded 中
+document.addEventListener('DOMContentLoaded', () => {
+    // 1. 在 DOM 準備就緒後，確保全局 playlistItems 變量被正確賦值
+    // 這一步是確保所有函數都能正確訪問列表元素的保險
+    playlistItems = document.querySelectorAll('#playlist li'); 
+
+    // 2. 檢查列表是否為空 (這不應該發生，但作為最後的保險)
+    if (playlistItems.length === 0 && MASTER_TRACK_LIST.length > 0) {
+        console.error("致命錯誤: DOMContentLoaded 時 playlist 元素為空，但 MASTER_TRACK_LIST 有數據。這表明 Jekyll 渲染失敗或 DOM 結構錯誤。");
+        // 雖然理論上不該發生，但如果發生了，後續的 sortPlaylistByPlayCount 中的重建邏輯會處理它。
+    }
 
 // ⭐️ 啟動播放器
 initializePlayer(); 
