@@ -1,0 +1,12 @@
+{
+  "name": "jekyll-supabase-api",
+  "version": "1.0.0",
+  "description": "Jekyll site with Vercel Serverless API integration.",
+  "main": "index.js",
+  "scripts": {
+    "build": "jekyll build"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.43.4"
+  }
+}
