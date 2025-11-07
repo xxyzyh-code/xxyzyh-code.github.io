@@ -666,32 +666,47 @@ function incrementPlayCount() {
 }
     
 // --- 外部呼叫函數 (來自列表點擊) ---
+// ⭐️ 修正後的 loadTrack 函數 (解決篩選後播放錯誤歌曲的問題)
 /**
  * @param {number} originalIndex - 歌曲在 Master List 中的原始索引
  */
 function loadTrack(originalIndex) { 
-    // ... (保持不變) ...
+    // 確保點擊播放列表時進入自由模式（可選）
     if (playMode !== 3) {
         playMode = 3; 
         updateModeUI();
         saveSettings(); 
     }
     
+    // 1. 在當前列表 (可能已排序或篩選) 中查找歌曲
     const newIndex = currentPlaylist.findIndex(track => track.originalIndex === originalIndex);
+    
     if (newIndex !== -1) {
+        // 2. 如果找到，播放它 (播放邏輯完全依賴 currentPlaylist)
         playTrack(newIndex);
-    } else {
-        resetCurrentPlaylist();
         
+    } else {
+        // 3. 如果在當前列表中找不到（例如，您點擊了一個被隱藏但仍然存在的 LI），
+        // 則直接在 MASTER_TRACK_LIST 中查找，並將 currentPlaylist 設置為完整列表。
+        // 但由於篩選是通過 DOM 隱藏完成的，這通常不應該發生。
+        
+        // 為了安全起見，如果找不到，我們不重置 currentPlaylist，只發出警告
+        console.warn(`loadTrack: 歌曲 (原始索引: ${originalIndex}) 在當前歌單中找不到。`);
+        
+        // 嘗試從 MASTER_TRACK_LIST 獲取並播放，但保持 currentPlaylist 不變 (這會導致播放的歌曲不在 currentPlaylist 中)
         const masterIndex = MASTER_TRACK_LIST.findIndex(track => track.originalIndex === originalIndex);
         if (masterIndex !== -1) {
-            playerTitle.textContent = "已清除篩選，並播放您點選的歌曲";
-            playTrack(masterIndex); 
+             // 找到原始歌曲：臨時設置 audio src，但不改變 currentTrackIndex
+             audio.src = MASTER_TRACK_LIST[masterIndex].url;
+             playerTitle.textContent = `播放器錯誤：播放了未在當前歌單中的歌曲 (${MASTER_TRACK_LIST[masterIndex].title})`;
+             audio.play().catch(error => console.error("自動播放失敗:", error));
         }
     }
     
     window.location.hash = `song-index-${originalIndex}`;
+    updatePlaylistHighlight(); // 確保高亮顯示正確
 }
+
 // --- *** 搜尋/篩選邏輯 (保持不變) *** ---
 function filterPlaylist() {
     const searchText = playlistSearchInput.value.toLowerCase().trim(); 
