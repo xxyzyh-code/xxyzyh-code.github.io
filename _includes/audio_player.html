@@ -79,6 +79,9 @@
     
 </div>
 <script>
+    // ⭐️ 關鍵修正 1: 使用 Liquid 將數據傳遞給 JavaScript
+// 注意: `trackDataArray` 現在是一個全局可用的 JS 變量
+const trackDataArray = {{ site.data.music | jsonify }}; 
 // ------------------------------------
 // ⭐️ 關鍵：Supabase API 配置 (使用您提供的 Key)
 // ------------------------------------
@@ -1084,19 +1087,18 @@ async function initializePlayer(isManualToggle = false) {
     initializeTheme();
 }
 
-    // ⭐️ 關鍵：將啟動代碼包裹在 DOMContentLoaded 中
+// ⭐️ 關鍵修正 2: 修正 DOMContentLoaded 閉合
 document.addEventListener('DOMContentLoaded', () => {
     // 1. 在 DOM 準備就緒後，確保全局 playlistItems 變量被正確賦值
     // 這一步是確保所有函數都能正確訪問列表元素的保險
     playlistItems = document.querySelectorAll('#playlist li'); 
 
-    // 2. 檢查列表是否為空 (這不應該發生，但作為最後的保險)
+    // 2. 檢查列表是否為空
     if (playlistItems.length === 0 && MASTER_TRACK_LIST.length > 0) {
-        console.error("致命錯誤: DOMContentLoaded 時 playlist 元素為空，但 MASTER_TRACK_LIST 有數據。這表明 Jekyll 渲染失敗或 DOM 結構錯誤。");
-        // 雖然理論上不該發生，但如果發生了，後續的 sortPlaylistByPlayCount 中的重建邏輯會處理它。
+        console.error("嚴重警告: DOMContentLoaded 時 playlist 元素為空。");
     }
 
-// ⭐️ 啟動播放器
-initializePlayer(); 
-
+    // 3. 啟動播放器
+    initializePlayer(); 
+});
 </script>
