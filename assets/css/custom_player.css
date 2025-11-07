@@ -285,3 +285,7 @@ span[onclick]:focus, span[onclick]:active {
     background-color: var(--accent-hover); 
     border-color: var(--accent-hover);
 }
+/* 確保所有帶有 hidden-menu 類的菜單一開始就是隱藏的 */
+.hidden-menu {
+    display: none !important; /* ⭐️ 關鍵修正：確保它能覆蓋任何內聯或低優先級樣式 */
+}
