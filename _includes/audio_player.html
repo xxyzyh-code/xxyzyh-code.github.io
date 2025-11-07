@@ -789,29 +789,30 @@ function updatePlaylistDisplay() {
     });
 }
 
+// sortPlaylistByPlayCount 函數 
 function sortPlaylistByPlayCount() {
     
+    // 如果播放列表不是完整的，則不進行排序，只更新顯示
     if (currentPlaylist.length !== MASTER_TRACK_LIST.length) {
          updatePlaylistDisplay(); 
          updatePlaylistHighlight();
          return;
     }
     
+    // 1. 準備用於排序的增強列表 (基於 MASTER_TRACK_LIST)
     const sortableList = [...MASTER_TRACK_LIST].map(track => {
         const index = track.originalIndex;
         let count = 0;
         
-        // ⭐️ 關鍵修改：根據 dataMode 獲取排序依據的次數
         if (dataMode === 'global') {
-            // 使用 track.id 查找全球數據
             count = globalTrackPlayCounts[track.id] || 0; 
         } else {
-            // 使用 track.originalIndex 查找本地數據
             count = trackPlayCounts[index] || 0; 
         }
         return { ...track, playCount: count };
     });
-    // ... (其餘排序和 DOM 重排邏輯保持不變) ...
+    
+    // 2. 執行排序 (按播放次數降序，然後按原始索引升序)
     sortableList.sort((a, b) => {
         if (b.playCount !== a.playCount) {
             return b.playCount - a.playCount;
@@ -819,42 +820,56 @@ function sortPlaylistByPlayCount() {
         return a.originalIndex - b.originalIndex; 
     });
     
+    // 3. 儲存當前播放狀態
     const currentlyPlayingOriginalIndex = currentTrackIndex >= 0 && currentTrackIndex < currentPlaylist.length
         ? currentPlaylist[currentTrackIndex].originalIndex 
         : -1; 
         
+    // 4. 關鍵：更新內部播放列表 currentPlaylist 數組
     currentPlaylist = sortableList; 
     
+    // 5. 重新定位當前歌曲在新列表中的索引
     if (currentlyPlayingOriginalIndex !== -1) {
         const newIndex = currentPlaylist.findIndex(track => track.originalIndex === currentlyPlayingOriginalIndex);
-        if (newIndex !== -1) {
-            currentTrackIndex = newIndex;
-        } else {
-            currentTrackIndex = -1;
-        }
+        currentTrackIndex = newIndex !== -1 ? newIndex : 0; // 如果找不到則設為第一首
     } else {
         currentTrackIndex = 0;
     }
 
+    // ⭐️ 關鍵修正：使用文檔片段 (Document Fragment) 進行優化的 DOM 重排
     const playlistUl = document.getElementById('playlist');
+    const fragment = document.createDocumentFragment();
     const originalLiElements = Array.from(playlistUl.querySelectorAll('li'));
-    playlistUl.innerHTML = '';
+    
+    // 創建原始 Li 元素的映射，以便通過 originalIndex 快速查找
+    const liMap = new Map();
+    originalLiElements.forEach(item => {
+        const onclickAttr = item.getAttribute('onclick');
+        const match = onclickAttr.match(/loadTrack\((\d+)\)/);
+        if (match) {
+            liMap.set(parseInt(match[1]), item);
+        }
+    });
+
+    // 根據排序後的列表 currentPlaylist 順序，將 li 元素添加到片段中
     currentPlaylist.forEach(track => { 
         const originalIndex = track.originalIndex;
-        const liElement = originalLiElements.find(item => {
-            const onclickAttr = item.getAttribute('onclick');
-            const match = onclickAttr.match(/loadTrack\((\d+)\)/);
-            return match && parseInt(match[1]) === originalIndex;
-        });
+        const liElement = liMap.get(originalIndex);
         if (liElement) {
-            playlistUl.appendChild(liElement);
+            fragment.appendChild(liElement); // 移除舊位置，添加到片段
         }
     });
     
+    // 6. 清空舊列表並一次性添加新順序
+    playlistUl.innerHTML = '';
+    playlistUl.appendChild(fragment);
+    
+    // 7. 更新全局引用的 playlistItems
     playlistItems = document.querySelectorAll('#playlist li'); 
     updatePlaylistDisplay();
     updatePlaylistHighlight();
 }
+
 
 // --- *** LocalStorage 邏輯 (保持不變) *** ---
 const CURRENT_TRACK_INDEX_KEY = 'audioPlayerIndex';
@@ -1035,12 +1050,11 @@ async function initializePlayer(isManualToggle = false) {
 
     // 2. 只有在模式設定為 'global' 時才發起 API 請求
     if (dataMode === 'global') {
-         // UI 已經更新為「全球統計」，現在異步獲取數據
          const counts = await fetchGlobalPlayCounts();
-         globalTrackPlayCounts = counts; // 將全球數據存入新的全局變量
-         document.getElementById('current-data-mode').textContent = '[全球統計]'; // 載入完成，更新 UI
+         globalTrackPlayCounts = counts; 
+         document.getElementById('current-data-mode').textContent = '[全球統計]'; 
     } else {
-         globalTrackPlayCounts = {}; // 如果是本地模式，則清空全球數據
+         globalTrackPlayCounts = {}; 
     }
 
     // 3. 處理剩餘邏輯
@@ -1048,10 +1062,16 @@ async function initializePlayer(isManualToggle = false) {
         updateModeUI();
     }
 
+    // ⭐️ 關鍵修正：在排序前確保 playlistItems 獲取的是 DOM 元素
+    // 這一步是防止 DOM 元素在排序前被錯誤清除的保險。
+    playlistItems = document.querySelectorAll('#playlist li'); 
+    
+    // 4. 排序和顯示
     handleUrlAnchor();
-    sortPlaylistByPlayCount(); // 排序現在根據 dataMode 選擇數據源
+    sortPlaylistByPlayCount(); // 排序現在會根據 dataMode 選擇數據源
     initializeTheme();
 }
+
 
 // ⭐️ 啟動播放器
 initializePlayer(); 
