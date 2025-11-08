@@ -160,8 +160,6 @@ function getUserId() {
 
 // 2. 向 Serverless API 發送播放日誌
 function trackPlayToDatabase(song_id) {
-    // ... (保持不變，因為這部分假設您已使用 Serverless API) ...
-    // ... (略) ...
     if (typeof song_id === 'undefined' || song_id === null) {
         console.warn("trackPlayToDatabase: Song ID 無效，跳過數據庫記錄。");
         return;
@@ -169,17 +167,25 @@ function trackPlayToDatabase(song_id) {
     
     const user_id = getUserId(); 
     
+    // ⭐️ 核心修改 A: 找到當前播放歌曲的 title
+    const currentTrack = currentPlaylist[currentTrackIndex];
+    const song_title = currentTrack ? currentTrack.title : '未知歌曲'; // 獲取 title
+    
     // 這裡使用 song_id 本身（即 MASTER_TRACK_LIST 中的 track.id 或 sX）
     fetch('/api/track', { 
         method: 'POST',
         body: JSON.stringify({
             user_id: user_id,
-            song_id: song_id // 使用 track.id
+            song_id: song_id,
+            // ⭐️ 核心修改 B: 將 title 傳遞給 API
+            title: song_title 
         }),
         headers: { 'Content-Type': 'application/json' }
     })
     .then(response => {
         if (!response.ok) {
+            // 打印響應狀態，有助於調試
+            console.error(`播放記錄發送失敗，狀態碼: ${response.status}`);
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         return response.json();
