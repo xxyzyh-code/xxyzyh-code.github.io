@@ -5,10 +5,19 @@
     }
   },
   "routes": [
+    // 1. 確保所有以 .js 結尾的 API 請求（如 /api/stats.js）直接導向 Function
+    {
+      "src": "/api/(.*)\\.js$",
+      "dest": "/api/$1.js"
+    },
+    // 2. 這是關鍵重寫：
+    //    它捕獲 /api/stats/ (帶斜線) 和 /api/stats (不帶斜線) 的請求
+    //    並將其路由到 /api/stats.js
     { 
-      "src": "/api/stats(/|$)", 
+      "src": "/api/stats(?:/)?", 
       "dest": "/api/stats.js" 
     },
+    // 3. 處理其他不帶 .js 的 API 請求，可能不需要，但作為後備保留
     { 
       "src": "/api/(.*)", 
       "dest": "/api/$1" 
