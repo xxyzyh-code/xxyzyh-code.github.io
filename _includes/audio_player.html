@@ -196,7 +196,6 @@ async function fetchGlobalPlayCounts() {
     // 1. UI 顯示載入中
     document.getElementById('current-data-mode').textContent = '[載入中...]';
 
-    // ⭐️⭐️ 核心修正：使用 window.location.origin 構造絕對 URL ⭐️⭐️
     const BASE_URL = window.location.origin;
     const apiEndpoint = `${BASE_URL}/api/stats`;
     
@@ -204,29 +203,42 @@ async function fetchGlobalPlayCounts() {
         const response = await fetch(apiEndpoint, {
             method: 'GET',
             headers: {
-                // Serverless API 會處理認證，前端只需發起標準 GET 請求
                 'Content-Type': 'application/json' 
             }
         });
-
+        
+        // --- 修正區域 START ---
         if (!response.ok) {
-            // 處理 Serverless API 返回的非 200 狀態碼
-            const errorBody = await response.json().catch(() => ({ message: 'API 返回非 JSON 錯誤或 Vercel 靜態 404 頁面' }));
-            throw new Error(`API 錯誤! 狀態碼: ${response.status}. 詳情: ${errorBody.message}`);
+            // 嘗試解析錯誤信息
+            let errorMessage = `API 錯誤! 狀態碼: ${response.status}.`;
+            try {
+                const errorBody = await response.json();
+                if (errorBody && errorBody.message) {
+                    errorMessage += ` 詳情: ${errorBody.message}`;
+                } else if (errorBody.error) {
+                    errorMessage += ` 詳情: ${errorBody.error}`;
+                }
+            } catch (e) {
+                // 如果無法解析 JSON (例如 Vercel 返回了 HTML 404 頁面)
+                errorMessage += ` 後端響應格式錯誤或為靜態頁面。`;
+            }
+            
+            // 統一拋出錯誤，讓 catch 處理彈窗
+            throw new Error(errorMessage);
         }
+        // --- 修正區域 END ---
         
-        // 3. 接收數據 (Serverless API 已經將數據整理成 { "song_id": plays } 格式)
         const globalStats = await response.json();
-        
-        // 4. 返回結果
         return globalStats;
         
     } catch (error) {
         console.error('獲取全球播放次數失敗:', error);
-        // 如果載入失敗，給用戶彈窗提示，並將狀態設為失敗
-        alert(`無法載入全球統計數據。請檢查後端 API 和 Supabase RLS。錯誤: ${error.message}`);
+        
+        // 彈窗顯示更精確的錯誤信息
+        alert(`無法載入全球統計數據。錯誤: ${error.message}`);
+        
         document.getElementById('current-data-mode').textContent = '[載入失敗]'; 
-        return {}; // 載入失敗時返回空對象，防止程序崩潰
+        return {}; 
     }
 }
 
