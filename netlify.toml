@@ -1,0 +1,8 @@
+[build]
+  command = "bundle exec jekyll build"
+  publish = "_site"
+
+[build.environment]
+  BUNDLE_WITHOUT = ""
+  LANG = "C.UTF-8"
+  LC_ALL = "C.UTF-8"
