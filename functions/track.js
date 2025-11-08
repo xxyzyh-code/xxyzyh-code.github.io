@@ -1,11 +1,11 @@
-// api/track.js (修正後的程式碼)
-const { createClient } = require('@supabase/supabase-js'); // 1. 改用 require
+// api/track.js (已修正支援 title 欄位)
+const { createClient } = require('@supabase/supabase-js');
 
 // 由於 Vercel Serverless Function 環境變數的載入方式，
 // 建議直接在檔案中定義函式並導出。
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
-module.exports = async (req, res) => { // 2. 改用 module.exports
+module.exports = async (req, res) => {
   
   // *** 解決 405 Method Not Allowed 的關鍵部分 ***
   if (req.method !== 'POST') {
@@ -15,28 +15,34 @@ module.exports = async (req, res) => { // 2. 改用 module.exports
   // **********************************************
   
   try {
-    // Vercel Serverless Function (Node.js) 預設會解析 JSON 請求體，
-    // 但為了安全起見，如果 req.body 是字串，仍需解析。
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
     
-    const { user_id, song_id } = body;
+    // ⭐️ 核心修改 1: 從請求體中取出 title
+    const { user_id, song_id, title } = body; 
 
+    // 檢查關鍵數據是否存在
+    if (!user_id || !song_id || !title) {
+        return res.status(400).json({ error: 'Missing required fields: user_id, song_id, or title.' });
+    }
+
+    // 1. 查詢現有記錄
     const { data: existing, error: selectError } = await supabase
       .from('play_logs')
-      .select('id, plays') // 只選擇需要的欄位
+      .select('id, plays') 
       .eq('user_id', user_id)
       .eq('song_id', song_id)
-      .maybeSingle(); // 確保只返回 0 或 1 條記錄
+      .maybeSingle(); 
 
-    if (selectError && selectError.code !== 'PGRST116') { // PGRST116 是 "未找到單一記錄"
+    if (selectError && selectError.code !== 'PGRST116') {
         console.error('Supabase select error:', selectError);
         return res.status(500).json({ error: 'Database read error' });
     }
 
     if (existing) {
-      // 找到記錄，更新播放次數
+      // 2. 找到記錄，更新播放次數
       const { error: updateError } = await supabase
         .from('play_logs')
+        // ⭐️ 核心修改 2: UPDATE 邏輯只更新 plays 和 last_played
         .update({ plays: existing.plays + 1, last_played: new Date().toISOString() })
         .eq('id', existing.id);
         
@@ -46,10 +52,17 @@ module.exports = async (req, res) => { // 2. 改用 module.exports
       }
       
     } else {
-      // 未找到記錄，插入新記錄
+      // 3. 未找到記錄，插入新記錄
       const { error: insertError } = await supabase
         .from('play_logs')
-        .insert([{ user_id, song_id, plays: 1, last_played: new Date().toISOString() }]);
+        // ⭐️ 核心修改 3: INSERT 邏輯包含 title
+        .insert([{ 
+            user_id, 
+            song_id, 
+            title, // 必須包含 title 欄位
+            plays: 1, 
+            last_played: new Date().toISOString() 
+        }]);
 
       if (insertError) {
         console.error('Supabase insert error:', insertError);
