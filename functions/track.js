@@ -1,26 +1,20 @@
-// api/track.js (已修正 INSERT/UPDATE 語句以解決 400 Bad Request)
+// api/track.js - 修正版本：使用 returning: 'minimal'
 const { createClient } = require('@supabase/supabase-js');
 
-// 由於 Vercel Serverless Function 環境變數的載入方式，
-// 建議直接在檔案中定義函式並導出。
+// 繼續使用 SUPABASE_KEY，但您必須確保 Vercel 環境變數中存在此密鑰
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
 module.exports = async (req, res) => {
   
-  // *** 解決 405 Method Not Allowed 的關鍵部分 ***
   if (req.method !== 'POST') {
     res.setHeader('Allow', ['POST']);
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
-  // **********************************************
   
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-    
-    // ⭐️ 從請求體中取出 user_id, song_id, title
     const { user_id, song_id, title } = body; 
 
-    // 檢查關鍵數據是否存在
     if (!user_id || !song_id || !title) {
         return res.status(400).json({ error: 'Missing required fields: user_id, song_id, or title.' });
     }
@@ -42,12 +36,13 @@ module.exports = async (req, res) => {
       // 2. 找到記錄，更新播放次數
       const { error: updateError } = await supabase
         .from('play_logs')
-        // 核心修正 A: UPDATE 邏輯
         .update({ plays: existing.plays + 1, last_played: new Date().toISOString() })
         .eq('id', existing.id)
-        .select('*'); // 👈 新增：強制 SDK 完整執行並返回數據，避免 400 錯誤
+        // 核心修正 A: 使用 returning: 'minimal' 避免 400 錯誤
+        .maybeSingle({ returning: 'minimal' }); 
 
       if (updateError) {
+        // 🚨 Vercel 的 500 錯誤很可能源於此處
         console.error('Supabase update error:', updateError);
         return res.status(500).json({ error: 'Database update error' });
       }
@@ -56,17 +51,20 @@ module.exports = async (req, res) => {
       // 3. 未找到記錄，插入新記錄
       const { error: insertError } = await supabase
         .from('play_logs')
-        // 核心修正 B: INSERT 邏輯包含 title
         .insert([{ 
             user_id, 
             song_id, 
-            title, // 必須包含 title 欄位
+            title, 
             plays: 1, 
             last_played: new Date().toISOString() 
-        }])
-        .select('*'); // 👈 新增：強制 SDK 完整執行並返回數據，避免 400 錯誤
+        }], 
+        { 
+            // 核心修正 B: 使用 returning: 'minimal' 避免 400 錯誤
+            returning: 'minimal' 
+        });
 
       if (insertError) {
+        // 🚨 Vercel 的 500 錯誤很可能源於此處
         console.error('Supabase insert error:', insertError);
         return res.status(500).json({ error: 'Database insert error' });
       }
