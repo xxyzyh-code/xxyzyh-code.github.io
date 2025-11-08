@@ -1,7 +1,8 @@
 {
   "functions": {
     "functions/**/*.js": { 
-      "runtime": "node@20"
+      // 修正運行時語法：從 "node@20" 改為 "nodejs20.x"
+      "runtime": "nodejs20.x"
     }
   },
   "rewrites": [
