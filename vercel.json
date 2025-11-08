@@ -1,17 +1,28 @@
 {
   "functions": {
+    // 定義所有位於 functions 資料夾下的 .js 文件都是 Serverless Functions
     "functions/**/*.js": { 
       "runtime": "node@20"
     }
   },
   "rewrites": [
     { 
+      // 外部請求 /api/stats
       "source": "/api/stats", 
       "destination": "/functions/stats.js" 
     },
     { 
       "source": "/api/stats/", 
       "destination": "/functions/stats.js" 
+    },
+    { 
+      // 外部請求 /api/track
+      "source": "/api/track", 
+      "destination": "/functions/track.js" 
+    },
+    { 
+      "source": "/api/track/", 
+      "destination": "/functions/track.js" 
     }
   ]
 }
