@@ -1,16 +1,7 @@
 {
   "functions": {
-    "api/**/*.js": { // 使用通配符匹配 api/ 下的所有 JS 文件
+    "api/**/*.js": { 
       "runtime": "node@20"
     }
-  },
-  "builds": [
-    {
-      "src": "package.json", 
-      "use": "@vercel/static-build",
-      "config": {
-        "zeroConfig": true
-      }
-    }
-  ]
+  }
 }
