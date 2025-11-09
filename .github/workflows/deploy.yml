@@ -20,14 +20,13 @@ jobs:
     - name: Set up Ruby
       uses: ruby/setup-ruby@v1
       with:
-        # 修正：使用 '3.3' (最新的次要版本) 取代 '3.x'，解決 Unknown version 錯誤
-        ruby-version: '3.3'
+        # 修正：與您現有的 jekyll.yml 保持一致
+        ruby-version: '3.2'
         bundler-cache: true # 執行 bundle install
 
     # 3. 安裝 Jekyll 依賴
     - name: Install dependencies
       run: |
-        # 由於 bundler-cache: true，理論上這一步可以簡化
         gem install bundler
         bundle install
 
