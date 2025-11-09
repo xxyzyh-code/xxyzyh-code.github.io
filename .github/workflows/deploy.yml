@@ -1,0 +1,45 @@
+# .github/workflows/deploy.yml
+name: Jekyll Build & Deploy to Netlify
+
+on:
+  push:
+    branches:
+      # 當推送到 main 分支時觸發此工作流程
+      - main
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    # 1. 檢查程式碼
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    # 2. 設定 Ruby 環境
+    - name: Set up Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: '3.x' # 確保與您本地 Jekyll 環境匹配
+        bundler-cache: true # 執行 bundle install
+
+    # 3. 安裝 Jekyll 依賴
+    - name: Install dependencies
+      run: |
+        gem install bundler
+        bundle install
+
+    # 4. 執行 Jekyll 建構 (核心：耗時操作在 GitHub 執行)
+    - name: Build Jekyll site
+      run: bundle exec jekyll build
+
+    # 5. 部署到 Netlify (使用預先建構的 _site 資料夾)
+    - name: Deploy to Netlify
+      uses: netlify/actions/cli@master
+      env:
+        # 使用 GitHub Secrets 中設定的值
+        NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+        NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+      with:
+        # 指定要部署的目錄，這是 Jekyll 建構輸出的 _site
+        args: deploy --prod --dir=_site --message="Deploy from GitHub Actions"
