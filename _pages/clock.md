@@ -7,11 +7,9 @@ header:
   overlay_color: "rgba(0, 0, 0, 0)" 
 ---
 
-
 <script src="/assets/js/libs/calendar-converter.min.js"></script>
 
 <link rel="stylesheet" href="/assets/css/clock_styles.css">
-
 
 <div style="text-align: center;">
 
@@ -76,8 +74,6 @@ header:
 
 </div>
 
-</div>
-
 <div id="meditation-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center;">
     <div id="modal-content" style="background: white; padding: 30px; border-radius: 10px; text-align: center; max-width: 400px; color: black;">
         <h3 id="meditation-title">冥想時刻</h3>
@@ -87,32 +83,7 @@ header:
 </div>
 
 <audio id="meditation-audio" loop></audio>
+
 <audio id="alarm-audio"></audio>
 
-<script src="/assets/js/libs/calendar-converter.min.js"></script>
-
-<script>
-    // 檢查函式庫是否載入，並實例化一次
-    if (typeof calendarConverter !== 'undefined') {
-        window.calendarConverterInstance = new calendarConverter();
-    }
-</script>
-
-<script type="module" src="/assets/js/config.js"></script>
-<script type="module" src="/assets/js/timeModule.js"></script>
-<script type="module" src="/assets/js/pomodoroModule.js"></script>
-<script type="module" src="/assets/js/uiModule.js"></script>
-
-<script type="module">
-    // 使用絕對路徑導入初始化函數
-    import { initializeTimeModule } from '/assets/js/timeModule.js';
-    import { initializePomodoroModule } from '/assets/js/pomodoroModule.js';
-    import { initializeUIModule } from '/assets/js/uiModule.js';
-
-    // 確保 DOM 載入完成後再初始化所有模組
-    document.addEventListener('DOMContentLoaded', () => {
-        initializeTimeModule();
-        initializePomodoroModule();
-        initializeUIModule();
-    });
-</script>
+<script type="module" src="/assets/js/clock.js"></script>
