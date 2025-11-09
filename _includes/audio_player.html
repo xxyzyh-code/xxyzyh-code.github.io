@@ -786,7 +786,7 @@ function filterPlaylist() {
             
         } else {
              playerTitle.textContent = `已根據篩選建立新歌單 (${currentPlaylist.length} 首)。請點擊播放。`;
-             currentTrackIndex = -1; 
+             currentTrackIndex = 0; 
              
              const track = currentPlaylist[0]; 
              audio.src = track.url; 
