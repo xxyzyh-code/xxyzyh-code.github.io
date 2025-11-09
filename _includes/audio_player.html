@@ -1070,22 +1070,26 @@ function loadSavedSettings() {
     }
 }
 
-// --- *** URL 錨點處理邏輯 (保持不變) *** ---
-function handleUrlAnchor() {
-    // ... (保持不變) ...
+// --- *** URL 錨點處理邏輯 (修正 II) *** ---
+function handleUrlAnchor(isInitialLoad = false) {
     const hash = window.location.hash;
+    
     if (hash.startsWith('#song-index-')) {
         const parts = hash.split('-');
         const originalIndex = parseInt(parts[parts.length - 1]);
+        
         if (!isNaN(originalIndex) && originalIndex >= 0 && originalIndex < MASTER_TRACK_LIST.length) {
             
             const trackTitle = MASTER_TRACK_LIST[originalIndex].title;
             
             loadTrack(originalIndex); 
             
-            playMode = 0; 
-            updateModeUI();
-            saveSettings();
+            // ⭐️ 修正：只在初次載入時重置模式，因為分享連結通常需要從頭開始
+            if (isInitialLoad) {
+                playMode = 0; // 順序停止
+                updateModeUI();
+                saveSettings();
+            }
             
             playerTitle.textContent = `從分享連結載入：${trackTitle} (正在緩衝...)`;
             const handlePlaying = () => {
@@ -1140,7 +1144,7 @@ playlistSearchInput.addEventListener('input', debounce(filterPlaylist, 300));
 // --- *** 異步初始化函數 *** ---
 
 async function initializePlayer(isManualToggle = false) {
-    // 1. 載入本地設置 (包括 dataMode, __LAST_PLAYED_ORIGINAL_INDEX, 等)
+    // 1. 載入本地設置 (包括 dataMode, __LAST_PLAYED_ORIGINAL_INDEX, playMode 等)
     loadSavedSettings(); 
     
     // 2. 只有在模式設定為 'global' 時才發起 API 請求
@@ -1166,13 +1170,11 @@ async function initializePlayer(isManualToggle = false) {
         resetCurrentPlaylist(); 
     }
     
-    // 4. 處理 UI 
-    if(!localStorage.getItem('audioPlayerMode') || isManualToggle) {
-        updateModeUI();
-    }
+    // 4. 處理 UI (修正 A)
+    updateModeUI(); // 確保 UI 反映 loadSavedSettings 中載入的 playMode
     
     // 5. 排序
-    handleUrlAnchor();
+    // handleUrlAnchor() 🔴 修正 I: 此處移除，改在 DOMContentLoaded 中呼叫
     // sortPlaylistByPlayCount 會處理排序和更新列表顯示
     sortPlaylistByPlayCount(); 
     
@@ -1193,7 +1195,7 @@ async function initializePlayer(isManualToggle = false) {
         // 清除標記
         delete window.__LAST_PLAYED_ORIGINAL_INDEX; 
         
-        // 確保 audio.src 和標題正確（sortPlaylistByPlayCount 已經在結尾做了，但此處再次確認）
+        // 確保 audio.src 和標題正確
         const track = currentPlaylist[currentTrackIndex];
         audio.src = track.url; 
         playerTitle.textContent = `上次播放：${track.title}`;
@@ -1203,10 +1205,9 @@ async function initializePlayer(isManualToggle = false) {
     initializeTheme();
 }
 
-// ⭐️ 關鍵修正 2: 修正 DOMContentLoaded 閉合
+// ⭐️ 關鍵修正 2: 修正 DOMContentLoaded 閉合 (修正 III)
 document.addEventListener('DOMContentLoaded', () => {
     // 1. 在 DOM 準備就緒後，確保全局 playlistItems 變量被正確賦值
-    // 這一步是確保所有函數都能正確訪問列表元素的保險
     playlistItems = document.querySelectorAll('#playlist li'); 
 
     // 2. 檢查列表是否為空
@@ -1214,7 +1215,10 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error("嚴重警告: DOMContentLoaded 時 playlist 元素為空。");
     }
 
-    // 3. 啟動播放器
+    // 3. 啟動播放器 (載入設置、數據、排序)
     initializePlayer(); 
+    
+    // 4. 處理 URL 錨點 (只在首次載入時執行模式重置)
+    handleUrlAnchor(true);
 });
 </script>
