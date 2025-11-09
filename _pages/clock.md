@@ -8,142 +8,18 @@ header:
   overlay_image: /assets/images/contact-bg.jpg
 ---
 
-<style>
-/* 程式夥伴：定義夜間模式的樣式 */
-/* 這些樣式會被 JavaScript 添加到 body 上 */
-body.night-mode {
-    background-color: #1a1a1a; /* 深黑背景 */
-    color: #cccccc;           /* 柔和的灰色文字 */
-}
-
-/* 確保所有容器適應夜間模式 */
-body.night-mode #main-container,
-body.night-mode #pomodoro-timer,
-body.night-mode #weather-info, /* 新增：天氣容器 */
-body.night-mode #digital-clock {
-    color: #00ff66; /* 夜間文字顏色 */
-    border-color: #00ff66;
-}
-
-/* 程式夥伴：設定整體背景過渡與圖片 */
-body {
-    transition: background-image 2s ease-in-out, background-color 1s; /* 平滑過渡 */
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-}
-
-/* 白天：預設/晴朗背景 (使用佔位符圖片) */
-body:not(.night-mode) {
-    background-image: url('https://picsum.photos/seed/day/1920/1080'); 
-}
-
-/* 夜間：星空背景 (使用佔位符圖片) */
-body.night-mode {
-    background-image: url('https://picsum.photos/seed/night/1920/1080'); 
-    background-color: #1a1a1a;
-    color: #cccccc;
-}
-
-
-/* 程式夥伴：新增主要容器樣式，使用 Flexbox 讓元件並排 */
-#main-container {
-    display: flex;
-    flex-direction: column; /* 預設：元件上下堆疊 */
-    align-items: center;    /* 水平居中 */
-    gap: 30px;              /* 元件之間的間距 */
-    padding: 20px;
-}
-
-/* 在較寬的螢幕上，讓所有模組並排 */
-@media (min-width: 1024px) {
-    #main-container {
-        flex-direction: row; /* 寬螢幕：元件並排 */
-        justify-content: center; /* 間隔置中 */
-    }
-}
-
-/* 時鐘樣式 */
-#digital-clock {
-    font-size: 3.5em; /* 放大時鐘字體 */
-    font-weight: bold;
-    text-align: center;
-}
-
-/* 日期樣式 */
-#current-date {
-    font-size: 1.5em;
-    margin-top: 10px;
-    font-weight: normal;
-}
-
-/* 程式夥伴：番茄鐘容器樣式 */
-#pomodoro-timer {
-    border: 2px solid #333;
-    padding: 20px;
-    border-radius: 10px;
-    text-align: center;
-    min-width: 280px; /* 確保容器足夠寬 */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-#timer-display {
-    font-size: 2.5em;
-    font-weight: bold;
-    margin: 10px 0;
-}
-
-#control-buttons button {
-    padding: 10px 15px;
-    margin: 5px;
-    font-size: 1em;
-    cursor: pointer;
-    border: none;
-    border-radius: 5px;
-    background-color: #007bff; /* 藍色按鈕 */
-    color: white;
-    transition: background-color 0.3s;
-}
-
-#control-buttons button:hover {
-    background-color: #0056b3;
-}
-
-#status-message {
-    margin-top: 15px;
-    font-weight: bold;
-    min-height: 20px; /* 預留空間，避免文字出現時介面跳動 */
-    color: #28a745; /* 綠色成功訊息 */
-}
-
-/* 程式夥伴：新增天氣容器樣式 */
-#weather-info {
-    border: 2px solid #333;
-    padding: 20px;
-    border-radius: 10px;
-    text-align: center;
-    min-width: 280px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-#weather-details {
-    display: flex; /* 讓圖示和文字並排 */
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    min-height: 50px;
-}
-
-#weather-icon img {
-    width: 50px; /* 調整天氣圖示大小 */
-    height: 50px;
-}
-
-</style>
+<link rel="stylesheet" href="/assets/css/clock_styles.css">
 
 <div style="text-align: center;">
 
 這是一個時鐘冥想訓練，放下生活瑣事，放空清潔心靈...
+
+<div id="theme-switcher" style="text-align: center; margin-top: 20px;">
+    <h4>🎨 選擇主題：</h4>
+    <button id="theme-default-btn">預設</button>
+    <button id="theme-neon-btn">霓虹風</button>
+    <button id="theme-dos-btn">復古 DOS</button>
+</div>
 
 <div id="main-container">
 
@@ -192,7 +68,7 @@ function updateClock() {
     const currentHour = now.getHours(); // 獲取當前小時 (0-23)
     const body = document.body;
 
-    // 1. 日夜模式切換邏輯
+    // 1. 日夜模式切換邏輯 (樣式定義在外部 CSS 文件中)
     const isDayTime = currentHour >= 6 && currentHour < 18; // 白天 (06:00 - 17:59)
 
     if (isDayTime) {
@@ -335,7 +211,7 @@ resetBtn.addEventListener('click', resetTimer);
 // IV. 天氣資訊邏輯
 // ===================================
 
-// **程式夥伴：已替換成您提供的 API Key**
+// API Key 已在此處整合
 const API_KEY = 'be0d16a112a34af758f9a6a22e133de3';
 const WEATHER_API_URL = 'https://api.openweathermap.org/data/2.5/weather';
 
@@ -371,8 +247,6 @@ function fetchWeather() {
  * @param {number} lon - 經度。
  */
 async function getWeatherData(lat, lon) {
-    // 由於您已經提供 API Key，這裡省略檢查
-    
     const url = `${WEATHER_API_URL}?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric&lang=zh_tw`;
     
     try {
@@ -383,7 +257,7 @@ async function getWeatherData(lat, lon) {
         const data = await response.json();
         
         // 解析並顯示數據
-        const temp = Math.round(data.main.temp); // 四捨五入到整數
+        const temp = Math.round(data.main.temp); 
         const description = data.weather[0].description;
         const iconCode = data.weather[0].icon;
         const locationName = data.name;
@@ -397,8 +271,6 @@ async function getWeatherData(lat, lon) {
             <img src="https://openweathermap.org/img/wn/${iconCode}@2x.png" alt="${description}">
         `;
 
-        // 💡 拓展：您可以在這裡加入根據天氣圖示（iconCode）改變背景圖片的邏輯。
-
     } catch (error) {
         document.getElementById('weather-temp-desc').textContent = '載入天氣數據失敗 😓';
         console.error('Weather Fetch Error:', error);
@@ -406,7 +278,46 @@ async function getWeatherData(lat, lon) {
 }
 
 
-// V. 啟動所有功能
+// ===================================
+// V. 主題切換與儲存邏輯
+// ===================================
+
+const THEMES = ['default', 'neon-theme', 'dos-theme'];
+
+/**
+ * @description 根據主題名稱，設定並儲存當前主題。
+ * @param {string} themeName - 要切換的主題名稱 ('default', 'neon-theme', 'dos-theme')。
+ */
+function setTheme(themeName) {
+    const body = document.body;
+
+    // 1. 移除所有主題類別
+    THEMES.forEach(theme => {
+        if (theme !== 'default') {
+            body.classList.remove(theme);
+        }
+    });
+
+    // 2. 添加選定的主題類別 (如果不是預設)
+    if (themeName !== 'default') {
+        body.classList.add(themeName);
+    }
+    
+    // 3. 使用 localStorage 記住使用者偏好
+    localStorage.setItem('clockTheme', themeName);
+}
+
+/**
+ * @description 從 localStorage 載入儲存的主題。
+ */
+function loadTheme() {
+    // 載入儲存的主題，如果沒有儲存，則預設為 'default'
+    const savedTheme = localStorage.getItem('clockTheme') || 'default';
+    setTheme(savedTheme);
+}
+
+// ===================================
+// VI. 啟動所有功能
 // ===================================
 
 // 啟動時鐘和日期：立即執行並設置每秒更新
@@ -415,7 +326,12 @@ setInterval(updateClock, 1000);
 
 // 啟動天氣功能：在啟動時載入一次
 fetchWeather(); 
-// 如果需要更新，可以在此設置較長的時間間隔 (例如每 30 分鐘更新一次)
-// setInterval(fetchWeather, 30 * 60 * 1000); 
 
+// 啟動主題功能：載入儲存的主題
+loadTheme(); 
+
+// 添加按鈕事件監聽器
+document.getElementById('theme-default-btn').addEventListener('click', () => setTheme('default'));
+document.getElementById('theme-neon-btn').addEventListener('click', () => setTheme('neon-theme'));
+document.getElementById('theme-dos-btn').addEventListener('click', () => setTheme('dos-theme'));
 </script>
