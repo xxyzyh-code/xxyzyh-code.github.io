@@ -219,3 +219,21 @@ body.dos-theme #control-buttons button {
     border: 1px solid #00ff00;
     border-radius: 0;
 }
+
+/* =================================== */
+/* 標題居中修正 (針對 Minimal Mistakes 主題，使用 !important 覆寫) */
+/* =================================== */
+
+.page__header {
+    /* 確保 header 區塊內的文本內容居中 */
+    text-align: center !important; 
+}
+.page__header h1 {
+    /* 確保標題 h1 自身居中 */
+    text-align: center !important;
+}
+
+/* 備用方案：針對頁面標題容器內的連結元素（如果標題被包在連結內） */
+.page__header .archive__item-title {
+    text-align: center !important;
+}
