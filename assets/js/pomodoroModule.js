@@ -1,28 +1,21 @@
-// pomodoroModule.js - 延遲 DOM 引用修正版
+// pomodoroModule.js
 
-import { 
-    POMODORO_TIME_MINUTES, 
-    SHORT_BREAK_TIME_MINUTES
-} from './config.js'; 
-
-const WORK_TIME = POMODORO_TIME_MINUTES * 60;
-const BREAK_TIME = SHORT_BREAK_TIME_MINUTES * 60; 
-
+const WORK_TIME = 25 * 60;
+const BREAK_TIME = 5 * 60;
 let totalSeconds = WORK_TIME;
 let isRunning = false;
 let timerInterval = null;
 let isWorkMode = true;
 
-// 程式夥伴：將所有 DOM 元素聲明為 null，等待初始化時賦值
-let timerDisplay = null;
-let timerMode = null;
-let statusMessage = null;
-let startBtn = null;
-let pauseBtn = null;
-let resetBtn = null;
-let soundToggle = null;
-let alarmAudio = null;
-
+// DOM 元素
+const timerDisplay = document.getElementById('timer-display');
+const timerMode = document.getElementById('timer-mode');
+const statusMessage = document.getElementById('status-message');
+const startBtn = document.getElementById('start-btn');
+const pauseBtn = document.getElementById('pause-btn');
+const resetBtn = document.getElementById('reset-btn');
+const soundToggle = document.getElementById('sound-toggle');
+const alarmAudio = document.getElementById('alarm-audio');
 let vibrationInterval = null; 
 const VIBRATE_PATTERN = [1000, 500, 500, 500]; 
 
@@ -37,10 +30,8 @@ function formatTime(seconds) {
  * @description 停止所有提醒（聲音和振動）。
  */
 function stopAlarm() {
-    if (alarmAudio) {
-        alarmAudio.pause();
-        alarmAudio.currentTime = 0;
-    }
+    alarmAudio.pause();
+    alarmAudio.currentTime = 0;
     if (vibrationInterval !== null) {
         clearInterval(vibrationInterval);
         vibrationInterval = null;
@@ -54,7 +45,7 @@ function stopAlarm() {
  * @description 播放聲音並啟動無限振動模式。
  */
 function playAlarm() {
-    if (soundToggle && soundToggle.checked && alarmAudio) {
+    if (soundToggle.checked) {
         alarmAudio.play().catch(e => console.error("番茄鐘音訊播放失敗:", e));
     }
 
@@ -69,7 +60,7 @@ function playAlarm() {
 }
 
 function startTimer() {
-    if (isRunning || !startBtn) return;
+    if (isRunning) return;
     stopAlarm(); 
     isRunning = true;
     statusMessage.textContent = isWorkMode ? '專注工作 🧠' : '享受休息時光 ☕';
@@ -88,13 +79,7 @@ function startTimer() {
             
             isWorkMode = !isWorkMode;
             totalSeconds = isWorkMode ? WORK_TIME : BREAK_TIME;
-            
-            // 動態生成模式文本
-            const workTimeStr = formatTime(WORK_TIME);
-            const breakTimeStr = formatTime(BREAK_TIME);
-            
-            timerMode.textContent = isWorkMode ? `模式：工作 (${workTimeStr})` : `模式：休息 (${breakTimeStr})`;
-                
+            timerMode.textContent = isWorkMode ? '模式：工作 (25:00)' : '模式：休息 (05:00)';
             timerDisplay.textContent = formatTime(totalSeconds);
             statusMessage.textContent = isWorkMode ? '休息結束！開始新一輪工作 💪' : '你太棒了！休息一下吧 🍵';
             startBtn.disabled = false;
@@ -127,31 +112,9 @@ function resetTimer() {
  * @description 啟動番茄鐘模組並設置事件監聽器。
  */
 export function initializePomodoroModule() {
-    // 程式夥伴：將 DOM 查詢移到這裡，確保在 DOM 載入後執行
-    timerDisplay = document.getElementById('timer-display');
-    timerMode = document.getElementById('timer-mode');
-    statusMessage = document.getElementById('status-message');
-    startBtn = document.getElementById('start-btn');
-    pauseBtn = document.getElementById('pause-btn');
-    resetBtn = document.getElementById('reset-btn');
-    soundToggle = document.getElementById('sound-toggle');
-    alarmAudio = document.getElementById('alarm-audio');
-    
-    // 確保所有元素都被找到
-    if (!timerDisplay || !startBtn) {
-        console.error("Pomodoro Module Error: 缺少必要的 DOM 元素，初始化中止。");
-        return;
-    }
-
-    // 動態生成初始模式文本
-    const workTimeStr = formatTime(WORK_TIME); 
-    const breakTimeStr = formatTime(BREAK_TIME); 
-    
     // 設置初始顯示
     timerDisplay.textContent = formatTime(totalSeconds);
-    timerMode.textContent = isWorkMode 
-        ? `模式：工作 (${workTimeStr})` 
-        : `模式：休息 (${breakTimeStr})`;
+    timerMode.textContent = isWorkMode ? '模式：工作 (25:00)' : '模式：休息 (05:00)';
     
     // 事件監聽器
     startBtn.addEventListener('click', startTimer);
