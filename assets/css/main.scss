@@ -37,7 +37,7 @@
 /* 基礎與日夜模式樣式 */
 /* =================================== */
 
-body {
+body.clock-bg {
     transition: background-image 2s ease-in-out, background-color 1s; /* 平滑過渡 */
     background-size: cover;
     background-position: center;
@@ -164,7 +164,7 @@ body {
 /* =================================== */
 
 /* 霓虹風格 (Neon Theme) 樣式 */
-body.neon-theme {
+body.clock-bg.neon-theme {
     background-color: #0d010d; 
     color: #00ffff;           
     font-family: 'Arial Black', sans-serif;
@@ -198,7 +198,7 @@ body.neon-theme {
 }
 
 /* 復古 DOS 風格 (DOS Theme) 樣式 */
-body.dos-theme {
+body.clock-bg.dos-theme {
     background-color: #000000; 
     color: #00ff00;           
     font-family: 'Courier New', Courier, monospace; 
