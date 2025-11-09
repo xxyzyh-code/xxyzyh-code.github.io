@@ -1,41 +1,38 @@
-// timeModule.js - 修正版
+// timeModule.js - 最終修正版
 
-/**
- * @description 計算並顯示農曆日期和節氣。
- */
 function updateLunarDate() {
     const now = new Date();
     const lunarElement = document.getElementById('lunar-date');
     
-    // 程式夥伴修正：從 window 全域物件檢查和獲取函式庫
-    // 確保即使在 ES 模組環境中也能正確引用同步載入的函式庫
-    const converter = window.calendarConverter; 
+    // 程式夥伴修正：改為使用實例化的物件名稱
+    const converter = window.calendarConverterInstance; 
 
     if (typeof converter === 'undefined') {
         if (lunarElement) {
-            // 由於路徑已修正，如果還沒載入，可能真的有問題，但我們保留這個提示
             lunarElement.textContent = '農曆函式庫載入失敗或不可用。';
         }
-        console.error("Lunar Date Error: window.calendarConverter is undefined.");
+        console.error("Lunar Date Error: window.calendarConverterInstance is undefined.");
         return;
     }
-
-    // 程式邏輯不變，使用 converter 變數
-    const lunarData = converter.solar2lunar(now.getFullYear(), now.getMonth() + 1, now.getDate());
+    
+    // 修正：農曆函式庫 solar2lunar() 期望的參數形式
+    // 根據您提供的程式碼，solar2lunar 期望的是一個 Date 物件
+    // 因此需要修改調用方式
+    const lunarData = converter.solar2lunar(now);
     
     let displayString = '';
-    displayString += `${lunarData.IMonthCn}${lunarData.IDayCn}`;
-    displayString += ` (${lunarData.gzYear})`;
+    // 由於我們取得了完整的 lunarData 物件，現在可以提取需要顯示的資訊
+    displayString += `${lunarData.lunarMonth}月${lunarData.lunarDay}`; // 例如：六月十八
+    displayString += ` (${lunarData.lunarYear})`; // 例如：(龍)
 
-    if (lunarData.isTerm) {
-        displayString += ` | ${lunarData.Term}`;
+    if (lunarData.solarTerms) {
+        displayString += ` | ${lunarData.solarTerms}`;
     }
 
     if (lunarElement) {
         lunarElement.textContent = displayString;
     }
 }
-
 
 /**
  * @description 更新數字時鐘和公曆日期，並處理日夜模式切換。
