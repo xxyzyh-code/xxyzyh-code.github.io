@@ -5,13 +5,12 @@ layout: single
 author_profile: false
 header:
   overlay_color: "rgba(0, 0, 0, 0)" 
-clock_page: true 
 ---
 
 
 <script src="/assets/js/libs/calendar-converter.min.js"></script>
 
-<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="stylesheet" href="/assets/css/clock_styles.css">
 
 
 <div style="text-align: center;">
