@@ -7,9 +7,10 @@ header:
   overlay_color: "rgba(0, 0, 0, 0)" 
 ---
 
-<script src="https://cdn.jsdelivr.net/npm/calendar-converter@1.0.0/dist/calendar-converter.min.js"></script>
+<script src="/assets/js/libs/calendar-converter.min.js"></script>
 
 <link rel="stylesheet" href="/assets/css/clock_styles.css">
+
 
 <div style="text-align: center;">
 
