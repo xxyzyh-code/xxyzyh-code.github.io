@@ -1,8 +1,29 @@
 [build]
+  # 保留您現有的 Jekyll 建構指令和發布目錄
   command = "bundle exec jekyll build"
   publish = "_site"
+  
+  # 💡 最佳實踐：如果您的 Functions 在 netlify/functions 以外，請在這裡指定。
+  # 由於您說您已經配置了 netlify functions 目錄，我們假設您使用的是預設路徑。
+  # 如果不是預設路徑，請取消註釋並修改下一行：
+  # functions = "your-functions-folder" 
 
 [build.environment]
   BUNDLE_WITHOUT = ""
   LANG = "C.UTF-8"
   LC_ALL = "C.UTF-8"
+
+# --- 在此處追加 Netlify Functions 相關的配置 ---
+
+# 重新導向規則：將 /api/ 請求重寫到 Netlify Functions
+# 這是讓您的前端程式碼（呼叫 /api/stats）能夠觸發後端函數的關鍵。
+# 狀態碼 200 表示靜默重寫 (不會改變瀏覽器 URL)。
+[[redirects]]
+  from = "/api/stats"
+  to = "/.netlify/functions/api-stats"
+  status = 200
+
+[[redirects]]
+  from = "/api/track"
+  to = "/.netlify/functions/api-track"
+  status = 200
