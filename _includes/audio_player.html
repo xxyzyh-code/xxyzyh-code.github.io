@@ -601,18 +601,21 @@ function toggleTimerMenu() {
         themeMenu.classList.add('hidden-menu');
     }
 }
+// ⭐️ 修正 D： setSleepTimer 函數 (移除 setTimeout 裡的 clearSleepTimer)
 function setSleepTimer(minutes) {
     clearSleepTimer();
     toggleTimerMenu(); 
-    // ... (定時器邏輯保持不變) ...
+    
     const delayMilliseconds = minutes * 60 * 1000;
     
     sleepTime = minutes * 60;
     endTime = Date.now() + delayMilliseconds;
+    
+    // 關鍵修正：setTimeout 只需要執行 audio.pause() 和訊息更新
     sleepTimerId = setTimeout(() => {
+        // 僅暫停，讓 updateTimerCountdown 處理清理邏輯
         audio.pause(); 
         playerTitle.textContent = `定時器到期，已暫停播放 (${minutes} 分鐘)`;
-        clearSleepTimer(); 
     }, delayMilliseconds);
     
     countdownIntervalId = setInterval(updateTimerCountdown, 1000);
@@ -622,6 +625,7 @@ function setSleepTimer(minutes) {
         audio.play();
     }
 }
+
 function clearSleepTimer() {
     // ... (清除定時器邏輯保持不變) ...
     if (sleepTimerId !== null) {
@@ -639,6 +643,7 @@ function clearSleepTimer() {
     remainingTimerSpan.textContent = "--:--";
     playerTitle.textContent = "已取消定時器";
 }
+// ⭐️ 修正 E： updateTimerCountdown 函數 (到期時執行 clearSleepTimer)
 function updateTimerCountdown() {
     // ... (更新定時器倒數邏輯保持不變) ...
     if (endTime > 0) {
@@ -652,6 +657,7 @@ function updateTimerCountdown() {
             `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
             
         if (remainingS === 0) {
+            // 統一在這裡執行清理，防止重複
             clearSleepTimer(); 
             if (!audio.paused) {
                  audio.pause();
@@ -660,6 +666,7 @@ function updateTimerCountdown() {
         }
     }
 }
+
 audio.addEventListener('play', () => {
     if (listenIntervalId === null) {
         listenIntervalId = setInterval(updateTotalListenTime, 1000);
@@ -706,46 +713,56 @@ function incrementPlayCount() {
 }
     
 // --- 外部呼叫函數 (來自列表點擊) ---
-// ⭐️ 修正後的 loadTrack 函數 (解決篩選後播放錯誤歌曲的問題)
+// ⭐️ 修正 A：優化 loadTrack 函數 (移除可能導致狀態不一致的備用邏輯)
 /**
  * @param {number} originalIndex - 歌曲在 Master List 中的原始索引
  */
 function loadTrack(originalIndex) { 
-    // 確保點擊播放列表時進入自由模式（可選）
+    
+    // 1. 確保播放列表是完整的（如果當前是篩選模式，則先退出篩選，並重置 currentPlaylist）
+    const isFiltered = playlistSearchInput.value.trim().length > 0;
+    if (isFiltered) {
+        // 點擊列表應被視為退出篩選
+        playlistSearchInput.value = ''; // 清空搜索框
+        filterPlaylist(); // 執行 filterPlaylist，它會重置 currentPlaylist 和 currentTrackIndex=0
+        
+        // 由於 filterPlaylist() 已經將 currentPlaylist 重設為完整列表，我們現在可以在完整列表裡查找
+        // 注意：filterPlaylist() 已經呼叫了 updatePlaylistHighlight() 和 sortPlaylistByPlayCount()
+    }
+    
+    // 2. 確保點擊播放列表時進入自由模式（可選）
     if (playMode !== 3) {
         playMode = 3; 
         updateModeUI();
         saveSettings(); 
     }
     
-    // 1. 在當前列表 (可能已排序或篩選) 中查找歌曲
+    // 3. 在當前列表 (可能已排序或篩選/重置) 中查找歌曲
     const newIndex = currentPlaylist.findIndex(track => track.originalIndex === originalIndex);
     
     if (newIndex !== -1) {
-        // 2. 如果找到，播放它 (播放邏輯完全依賴 currentPlaylist)
+        // 4. 如果找到，播放它 (播放邏輯完全依賴 currentPlaylist)
         playTrack(newIndex);
         
     } else {
-        // 3. 如果在當前列表中找不到（例如，您點擊了一個被隱藏但仍然存在的 LI），
-        // 則直接在 MASTER_TRACK_LIST 中查找，並將 currentPlaylist 設置為完整列表。
-        // 但由於篩選是通過 DOM 隱藏完成的，這通常不應該發生。
+        // 5. 核心修正：如果歌曲不在當前歌單中 (這不應該發生在未篩選狀態)，
+        // 則發出警告並預設播放 MASTER_TRACK_LIST 的第一首歌
+        console.error(`loadTrack 錯誤: 歌曲 (原始索引: ${originalIndex}) 在當前歌單中找不到。`);
         
-        // 為了安全起見，如果找不到，我們不重置 currentPlaylist，只發出警告
-        console.warn(`loadTrack: 歌曲 (原始索引: ${originalIndex}) 在當前歌單中找不到。`);
-        
-        // 嘗試從 MASTER_TRACK_LIST 獲取並播放，但保持 currentPlaylist 不變 (這會導致播放的歌曲不在 currentPlaylist 中)
-        const masterIndex = MASTER_TRACK_LIST.findIndex(track => track.originalIndex === originalIndex);
-        if (masterIndex !== -1) {
-             // 找到原始歌曲：臨時設置 audio src，但不改變 currentTrackIndex
-             audio.src = MASTER_TRACK_LIST[masterIndex].url;
-             playerTitle.textContent = `播放器錯誤：播放了未在當前歌單中的歌曲 (${MASTER_TRACK_LIST[masterIndex].title})`;
-             audio.play().catch(error => console.error("自動播放失敗:", error));
+        // 為避免狀態混亂，這裡不執行任何播放，因為我們不知道下一曲該怎麼辦。
+        // 可以選擇：強制重設整個播放器到 MASTER_TRACK_LIST 的第一首。
+        if (currentPlaylist.length === 0) {
+            resetCurrentPlaylist();
+            sortPlaylistByPlayCount(); // 確保排序
         }
+        
+        playerTitle.textContent = `錯誤：歌曲找不到。請手動點擊歌單中的其他歌曲。`;
     }
     
     window.location.hash = `song-index-${originalIndex}`;
     updatePlaylistHighlight(); // 確保高亮顯示正確
 }
+
 
 // --- *** 搜尋/篩選邏輯 (保持不變) *** ---
 function filterPlaylist() {
