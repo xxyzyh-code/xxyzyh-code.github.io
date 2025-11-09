@@ -1,14 +1,10 @@
-// pomodoroModule.js - 配置優化版
+// pomodoroModule.js - 延遲 DOM 引用修正版
 
-// 程式夥伴：從 config.js 導入所有時間常量
 import { 
     POMODORO_TIME_MINUTES, 
-    SHORT_BREAK_TIME_MINUTES, 
-    LONG_BREAK_TIME_MINUTES, // 雖然目前未使用，但先導入以備未來擴展
-    LONG_BREAK_INTERVAL // 雖然目前未使用，但先導入以備未來擴展
+    SHORT_BREAK_TIME_MINUTES
 } from './config.js'; 
 
-// 程式夥伴：使用配置常量計算秒數
 const WORK_TIME = POMODORO_TIME_MINUTES * 60;
 const BREAK_TIME = SHORT_BREAK_TIME_MINUTES * 60; 
 
@@ -16,20 +12,18 @@ let totalSeconds = WORK_TIME;
 let isRunning = false;
 let timerInterval = null;
 let isWorkMode = true;
-// let cycleCount = 0; // 未來用於計算長休息，暫時註釋
 
-// DOM 元素
-const timerDisplay = document.getElementById('timer-display');
-const timerMode = document.getElementById('timer-mode');
-const statusMessage = document.getElementById('status-message');
-const startBtn = document.getElementById('start-btn');
-const pauseBtn = document.getElementById('pause-btn');
-const resetBtn = document.getElementById('reset-btn');
-const soundToggle = document.getElementById('sound-toggle');
-const alarmAudio = document.getElementById('alarm-audio');
+// 程式夥伴：將所有 DOM 元素聲明為 null，等待初始化時賦值
+let timerDisplay = null;
+let timerMode = null;
+let statusMessage = null;
+let startBtn = null;
+let pauseBtn = null;
+let resetBtn = null;
+let soundToggle = null;
+let alarmAudio = null;
+
 let vibrationInterval = null; 
-
-// 程式夥伴：保留 VIBRATE_PATTERN 在此，因為它是與提醒功能緊密相關的模式，而非通用時間配置
 const VIBRATE_PATTERN = [1000, 500, 500, 500]; 
 
 function formatTime(seconds) {
@@ -43,8 +37,10 @@ function formatTime(seconds) {
  * @description 停止所有提醒（聲音和振動）。
  */
 function stopAlarm() {
-    alarmAudio.pause();
-    alarmAudio.currentTime = 0;
+    if (alarmAudio) {
+        alarmAudio.pause();
+        alarmAudio.currentTime = 0;
+    }
     if (vibrationInterval !== null) {
         clearInterval(vibrationInterval);
         vibrationInterval = null;
@@ -58,7 +54,7 @@ function stopAlarm() {
  * @description 播放聲音並啟動無限振動模式。
  */
 function playAlarm() {
-    if (soundToggle.checked) {
+    if (soundToggle && soundToggle.checked && alarmAudio) {
         alarmAudio.play().catch(e => console.error("番茄鐘音訊播放失敗:", e));
     }
 
@@ -73,7 +69,7 @@ function playAlarm() {
 }
 
 function startTimer() {
-    if (isRunning) return;
+    if (isRunning || !startBtn) return;
     stopAlarm(); 
     isRunning = true;
     statusMessage.textContent = isWorkMode ? '專注工作 🧠' : '享受休息時光 ☕';
@@ -93,13 +89,11 @@ function startTimer() {
             isWorkMode = !isWorkMode;
             totalSeconds = isWorkMode ? WORK_TIME : BREAK_TIME;
             
-            // 程式夥伴：動態生成模式文本，避免硬編碼時間
-            const workTimeStr = formatTime(WORK_TIME); // 25:00
-            const breakTimeStr = formatTime(BREAK_TIME); // 05:00
+            // 動態生成模式文本
+            const workTimeStr = formatTime(WORK_TIME);
+            const breakTimeStr = formatTime(BREAK_TIME);
             
-            timerMode.textContent = isWorkMode 
-                ? `模式：工作 (${workTimeStr})` 
-                : `模式：休息 (${breakTimeStr})`;
+            timerMode.textContent = isWorkMode ? `模式：工作 (${workTimeStr})` : `模式：休息 (${breakTimeStr})`;
                 
             timerDisplay.textContent = formatTime(totalSeconds);
             statusMessage.textContent = isWorkMode ? '休息結束！開始新一輪工作 💪' : '你太棒了！休息一下吧 🍵';
@@ -133,7 +127,23 @@ function resetTimer() {
  * @description 啟動番茄鐘模組並設置事件監聽器。
  */
 export function initializePomodoroModule() {
-    // 程式夥伴：動態生成初始模式文本
+    // 程式夥伴：將 DOM 查詢移到這裡，確保在 DOM 載入後執行
+    timerDisplay = document.getElementById('timer-display');
+    timerMode = document.getElementById('timer-mode');
+    statusMessage = document.getElementById('status-message');
+    startBtn = document.getElementById('start-btn');
+    pauseBtn = document.getElementById('pause-btn');
+    resetBtn = document.getElementById('reset-btn');
+    soundToggle = document.getElementById('sound-toggle');
+    alarmAudio = document.getElementById('alarm-audio');
+    
+    // 確保所有元素都被找到
+    if (!timerDisplay || !startBtn) {
+        console.error("Pomodoro Module Error: 缺少必要的 DOM 元素，初始化中止。");
+        return;
+    }
+
+    // 動態生成初始模式文本
     const workTimeStr = formatTime(WORK_TIME); 
     const breakTimeStr = formatTime(BREAK_TIME); 
     
