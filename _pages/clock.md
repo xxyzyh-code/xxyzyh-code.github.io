@@ -9,7 +9,7 @@ header:
 
 <script src="/assets/js/libs/calendar-converter.min.js"></script>
 
-<link rel="stylesheet" href="/assets/css/clock_styles.css">
+<link rel="stylesheet" href="/assets/css/main.css">
 
 
 <div style="text-align: center;">
