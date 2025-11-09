@@ -32,16 +32,20 @@ header:
 
     <div id="pomodoro-timer">
         <h3>🍅 番茄工作法</h3>
+        
+        <div style="margin-bottom: 10px;">
+            <input type="checkbox" id="sound-toggle" checked>
+            <label for="sound-toggle">聲音提醒</label>
+        </div>
+        
         <p id="timer-mode">模式：工作 (25:00)</p>
-        <div id="timer-display">25:00</div>
-        <div id="control-buttons">
+        <div id="timer-display">25:00</div> <div id="control-buttons">
             <button id="start-btn">啟動</button>
             <button id="pause-btn" disabled>暫停</button>
             <button id="reset-btn">重置</button>
         </div>
         <div id="status-message">準備開始！</div>
     </div>
-    
     <div id="weather-info">
         <h3>📍 當地天氣</h3>
         <p id="weather-location">正在定位...</p>
@@ -68,13 +72,16 @@ header:
     您的瀏覽器不支援 audio 元素。
 </audio>
 
+<audio id="alarm-audio">
+    <source src="assets/audio/alarm_bell.mp3" type="audio/mpeg">
+</audio>
+
 <script>
 // 程式夥伴：整合了時鐘更新、日期顯示、日夜模式切換、番茄鐘、天氣及冥想邏輯
 
 // ===================================
 // I. 數字時鐘與日期邏輯
 // ===================================
-// ... (程式碼與之前相同) ...
 function updateClock() {
     const now = new Date();
     const currentHour = now.getHours();
@@ -108,7 +115,6 @@ function updateClock() {
 // ===================================
 // II. 番茄鐘 (Pomodoro Timer) 邏輯
 // ===================================
-// ... (程式碼與之前相同) ...
 const WORK_TIME = 25 * 60;
 const BREAK_TIME = 5 * 60;
 let totalSeconds = WORK_TIME;
@@ -121,6 +127,63 @@ const statusMessage = document.getElementById('status-message');
 const startBtn = document.getElementById('start-btn');
 const pauseBtn = document.getElementById('pause-btn');
 const resetBtn = document.getElementById('reset-btn');
+// 新增：提醒相關 DOM 元素
+const soundToggle = document.getElementById('sound-toggle');
+const alarmAudio = document.getElementById('alarm-audio');
+// 全域變數，用於追蹤振動狀態
+let vibrationInterval = null; 
+
+// 振動模式：[持續時間, 間隔時間, 持續時間, ...] (毫秒)
+const VIBRATE_PATTERN = [1000, 500, 500, 500]; 
+
+/**
+ * @description 播放聲音並啟動無限振動模式。
+ */
+function playAlarm() {
+    // 1. 聲音提醒 (可選)
+    if (soundToggle.checked) {
+        alarmAudio.play().catch(e => console.error("音訊播放失敗:", e));
+    }
+
+    // 2. 振動提醒 (強制，不允許用戶關閉)
+    if ('vibrate' in navigator) {
+        
+        let patternIndex = 0;
+        
+        // 為了達到“直到用戶手動按終止才終止”的目的，我們使用 setInterval 循環調用 vibration API
+        vibrationInterval = setInterval(() => {
+            const duration = VIBRATE_PATTERN[patternIndex];
+            
+            navigator.vibrate(duration); // 啟動振動
+            
+            // 下一次振動從哪裡開始
+            patternIndex = (patternIndex + 2) % VIBRATE_PATTERN.length; 
+
+        }, VIBRATE_PATTERN.reduce((sum, val) => sum + val, 0)); // 總循環時長
+
+        console.log("振動提醒已啟動 (循環模式)。");
+    } else {
+        console.log("設備不支援振動 API。");
+    }
+}
+
+/**
+ * @description 停止所有提醒（聲音和振動）。
+ */
+function stopAlarm() {
+    // 1. 停止聲音
+    alarmAudio.pause();
+    alarmAudio.currentTime = 0;
+
+    // 2. 停止振動
+    if (vibrationInterval !== null) {
+        clearInterval(vibrationInterval); // 停止循環調用
+        vibrationInterval = null;
+    }
+    if ('vibrate' in navigator) {
+        navigator.vibrate(0); // 傳入 0 停止當前振動
+    }
+}
 
 function formatTime(seconds) {
     const min = Math.floor(seconds / 60);
@@ -131,6 +194,7 @@ function formatTime(seconds) {
 
 function startTimer() {
     if (isRunning) return;
+    stopAlarm(); 
     isRunning = true;
     statusMessage.textContent = isWorkMode ? '專注工作 🧠' : '享受休息時光 ☕';
     startBtn.disabled = true;
@@ -141,8 +205,11 @@ function startTimer() {
         timerDisplay.textContent = formatTime(totalSeconds);
 
         if (totalSeconds <= 0) {
-            clearInterval(timerInterval);
+            clearInterval(timerInterval); 
             isRunning = false;
+            
+            playAlarm(); 
+            
             isWorkMode = !isWorkMode;
             totalSeconds = isWorkMode ? WORK_TIME : BREAK_TIME;
             timerMode.textContent = isWorkMode ? '模式：工作 (25:00)' : '模式：休息 (05:00)';
@@ -164,6 +231,7 @@ function pauseTimer() {
 }
 
 function resetTimer() {
+    stopAlarm(); 
     clearInterval(timerInterval);
     isRunning = false;
     totalSeconds = isWorkMode ? WORK_TIME : BREAK_TIME;
@@ -182,7 +250,6 @@ resetBtn.addEventListener('click', resetTimer);
 // ===================================
 // IV. 天氣資訊邏輯
 // ===================================
-// ... (程式碼與之前相同) ...
 const API_KEY = 'be0d16a112a34af758f9a6a22e133de3';
 const WEATHER_API_URL = 'https://api.openweathermap.org/data/2.5/weather';
 
@@ -234,7 +301,6 @@ async function getWeatherData(lat, lon) {
 // ===================================
 // V. 主題切換與儲存邏輯
 // ===================================
-// ... (程式碼與之前相同) ...
 const THEMES = ['default', 'neon-theme', 'dos-theme'];
 
 function setTheme(themeName) {
@@ -261,7 +327,7 @@ function loadTheme() {
 // VI. 冥想引導模式邏輯 (新增)
 // ===================================
 
-const MEDITATION_INTERVAL_MIN = 60; // 每 60 分鐘彈出一次提示
+const MEDITATION_INTERVAL_MIN = 60; 
 const MEDITATION_MESSAGES = [
     "閉上眼睛，深呼吸三次，感受當下的寧靜。",
     "輕輕放下你的肩膀和下巴，放鬆五秒。",
@@ -289,7 +355,6 @@ function showMeditationPrompt() {
         console.log("音訊自動播放失敗，通常需要使用者互動權限。", error);
     });
 
-    // 30 秒後自動關閉
     setTimeout(closeMeditationPrompt, 30000); 
 }
 
@@ -306,7 +371,6 @@ function toggleMeditationMode() {
         toggleBtn.textContent = '🧘‍♀️ 關閉冥想';
         toggleBtn.style.backgroundColor = '#dc3545';
 
-        // 啟動定時器，設置每小時提示一次
         meditationTimer = setInterval(showMeditationPrompt, MEDITATION_INTERVAL_MIN * 60 * 1000); 
         console.log(`冥想模式已啟用，將於每 ${MEDITATION_INTERVAL_MIN} 分鐘提示。`);
 
