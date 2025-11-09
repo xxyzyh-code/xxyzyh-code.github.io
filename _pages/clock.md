@@ -19,10 +19,32 @@ body.night-mode {
 /* 確保所有容器適應夜間模式 */
 body.night-mode #main-container,
 body.night-mode #pomodoro-timer,
+body.night-mode #weather-info, /* 新增：天氣容器 */
 body.night-mode #digital-clock {
-    color: #00ff66; /* 可選：夜間文字顏色 */
+    color: #00ff66; /* 夜間文字顏色 */
     border-color: #00ff66;
 }
+
+/* 程式夥伴：設定整體背景過渡與圖片 */
+body {
+    transition: background-image 2s ease-in-out, background-color 1s; /* 平滑過渡 */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+/* 白天：預設/晴朗背景 (使用佔位符圖片) */
+body:not(.night-mode) {
+    background-image: url('https://picsum.photos/seed/day/1920/1080'); 
+}
+
+/* 夜間：星空背景 (使用佔位符圖片) */
+body.night-mode {
+    background-image: url('https://picsum.photos/seed/night/1920/1080'); 
+    background-color: #1a1a1a;
+    color: #cccccc;
+}
+
 
 /* 程式夥伴：新增主要容器樣式，使用 Flexbox 讓元件並排 */
 #main-container {
@@ -33,8 +55,8 @@ body.night-mode #digital-clock {
     padding: 20px;
 }
 
-/* 在較寬的螢幕上，讓時鐘和番茄鐘並排 */
-@media (min-width: 768px) {
+/* 在較寬的螢幕上，讓所有模組並排 */
+@media (min-width: 1024px) {
     #main-container {
         flex-direction: row; /* 寬螢幕：元件並排 */
         justify-content: center; /* 間隔置中 */
@@ -62,6 +84,7 @@ body.night-mode #digital-clock {
     border-radius: 10px;
     text-align: center;
     min-width: 280px; /* 確保容器足夠寬 */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 #timer-display {
@@ -92,6 +115,30 @@ body.night-mode #digital-clock {
     min-height: 20px; /* 預留空間，避免文字出現時介面跳動 */
     color: #28a745; /* 綠色成功訊息 */
 }
+
+/* 程式夥伴：新增天氣容器樣式 */
+#weather-info {
+    border: 2px solid #333;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    min-width: 280px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+#weather-details {
+    display: flex; /* 讓圖示和文字並排 */
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-height: 50px;
+}
+
+#weather-icon img {
+    width: 50px; /* 調整天氣圖示大小 */
+    height: 50px;
+}
+
 </style>
 
 <div style="text-align: center;">
@@ -116,13 +163,22 @@ body.night-mode #digital-clock {
         </div>
         <div id="status-message">準備開始！</div>
     </div>
+    
+    <div id="weather-info">
+        <h3>📍 當地天氣</h3>
+        <p id="weather-location">正在定位...</p>
+        <div id="weather-details">
+            <div id="weather-icon"></div>
+            <div id="weather-temp-desc">載入中...</div>
+        </div>
+    </div>
 
 </div>
 
 </div>
 
 <script>
-// 程式夥伴：整合了時鐘更新、日期顯示、日夜模式切換及番茄鐘邏輯
+// 程式夥伴：整合了時鐘更新、日期顯示、日夜模式切換、番茄鐘及天氣邏輯
 
 // ===================================
 // I. 數字時鐘與日期邏輯
@@ -163,7 +219,6 @@ function updateClock() {
 
     // 3. 日期更新邏輯
     const dateOptions = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
-    // 使用 toLocaleDateString 讓日期格式適應使用者瀏覽器設定 (如：2025 年 11 月 9 日 星期日)
     const dateString = now.toLocaleDateString('zh-TW', dateOptions); 
     
     const dateElement = document.getElementById('current-date');
@@ -276,10 +331,91 @@ pauseBtn.addEventListener('click', pauseTimer);
 resetBtn.addEventListener('click', resetTimer);
 
 
-// IV. 啟動所有功能
+// ===================================
+// IV. 天氣資訊邏輯
 // ===================================
 
-// 啟動時鐘：立即執行並設置每秒更新
+// **程式夥伴：已替換成您提供的 API Key**
+const API_KEY = 'be0d16a112a34af758f9a6a22e133de3';
+const WEATHER_API_URL = 'https://api.openweathermap.org/data/2.5/weather';
+
+/**
+ * @description 獲取並顯示天氣資訊。
+ */
+function fetchWeather() {
+    // 檢查瀏覽器是否支援地理定位
+    if (navigator.geolocation) {
+        // 獲取當前位置
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
+                getWeatherData(lat, lon);
+            },
+            (error) => {
+                // 定位失敗的處理
+                document.getElementById('weather-location').textContent = '定位失敗 🌍';
+                document.getElementById('weather-temp-desc').textContent = '請檢查權限或網路。';
+                console.error('Geolocation Error:', error);
+            },
+            { timeout: 10000 } // 設置超時時間
+        );
+    } else {
+        document.getElementById('weather-location').textContent = '您的瀏覽器不支援地理定位。';
+    }
+}
+
+/**
+ * @description 從 OpenWeatherMap 獲取天氣數據並更新介面。
+ * @param {number} lat - 緯度。
+ * @param {number} lon - 經度。
+ */
+async function getWeatherData(lat, lon) {
+    // 由於您已經提供 API Key，這裡省略檢查
+    
+    const url = `${WEATHER_API_URL}?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric&lang=zh_tw`;
+    
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        
+        // 解析並顯示數據
+        const temp = Math.round(data.main.temp); // 四捨五入到整數
+        const description = data.weather[0].description;
+        const iconCode = data.weather[0].icon;
+        const locationName = data.name;
+
+        // 更新介面
+        document.getElementById('weather-location').textContent = `${locationName}`;
+        document.getElementById('weather-temp-desc').innerHTML = `
+            ${temp}°C, ${description}
+        `;
+        document.getElementById('weather-icon').innerHTML = `
+            <img src="https://openweathermap.org/img/wn/${iconCode}@2x.png" alt="${description}">
+        `;
+
+        // 💡 拓展：您可以在這裡加入根據天氣圖示（iconCode）改變背景圖片的邏輯。
+
+    } catch (error) {
+        document.getElementById('weather-temp-desc').textContent = '載入天氣數據失敗 😓';
+        console.error('Weather Fetch Error:', error);
+    }
+}
+
+
+// V. 啟動所有功能
+// ===================================
+
+// 啟動時鐘和日期：立即執行並設置每秒更新
 updateClock();
 setInterval(updateClock, 1000);
+
+// 啟動天氣功能：在啟動時載入一次
+fetchWeather(); 
+// 如果需要更新，可以在此設置較長的時間間隔 (例如每 30 分鐘更新一次)
+// setInterval(fetchWeather, 30 * 60 * 1000); 
+
 </script>
