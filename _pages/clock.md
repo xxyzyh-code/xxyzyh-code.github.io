@@ -4,8 +4,7 @@ permalink: /clock/
 layout: single
 author_profile: false
 header:
-  overlay_color: "#444"
-  overlay_image: /assets/images/contact-bg.jpg
+  overlay_color: "rgba(0, 0, 0, 0)" 
 ---
 
 <script src="https://cdn.jsdelivr.net/npm/calendar-converter@1.0.0/dist/calendar-converter.min.js"></script>
