@@ -1,136 +1,104 @@
-# .github/workflows/deploy_to_ipfs.yml
-name: Jekyll Build & Deploy to IPFS (via NFT.Storage)
+name: Jekyll Build & Decentralized Deploy
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
 
 jobs:
-  deploy_ipfs:
+  build-deploy:
     runs-on: ubuntu-latest
-
     steps:
-      # 1. 檢查程式碼
+      # 🧱 Step 1. 拉取源代码
       - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }} # 確保有權限推送 CID 文件
+        uses: actions/checkout@v3
 
-      # --- 🚀 Jekyll 構建流程 (保持不變) ---
-      - name: Set up Ruby
+      # 🧱 Step 2. 安装 Ruby + Jekyll
+      - name: Setup Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: '3.2' 
-          bundler-cache: true 
+          ruby-version: 3.2
 
       - name: Install dependencies
         run: |
           gem install bundler
           bundle install
 
+      # 🧱 Step 3. 构建 Jekyll 网站
       - name: Build Jekyll site
         run: |
-          echo "💡 Starting Jekyll build..."
-          JEKYLL_ENV=production bundle exec jekyll build --config _config.yml
-          echo "✅ Jekyll build complete. Files are in _site/."
-      
-      # --- Jekyll 構建流程結束 ---
+          bundle exec jekyll build
+          echo "✅ Site built at _site/"
 
+      # 🧱 Step 4. 压缩打包
+      - name: Compress built site
+        run: tar -czf site.tar.gz -C _site .
 
-      # 2. 【最終修正：使用 clouddrove/ipfs-upload-action】
-      - name: Upload to IPFS via NFT.Storage
-        id: ipfs_deploy
-        # 替換為可用的 Action 連結
-        uses: clouddrove/ipfs-upload-action@v1 
-        with:
-          path: ./_site/ 
-          # 該 Action 仍然使用 NFT_STORAGE_TOKEN 進行驗證
-          token: ${{ secrets.NFT_STORAGE_TOKEN }}
-          
-      # 3. 提取 CID 並準備更新文件
-      - name: Extract CID for Update
-        id: extract_cid
+      # 🌐 Step 5. 优先尝试上传 Arweave
+      - name: Upload to Arweave
+        id: arweave
         run: |
-          # clouddrove Action 的輸出變數為 cid
-          NEW_CID="${{ steps.ipfs_deploy.outputs.cid }}" 
-          
-          if [ -z "$NEW_CID" ]; then
-            echo "❌ IPFS Upload failed: CID is empty."
-            exit 1
-          fi
-
-          echo "NEW_CID=$NEW_CID" >> $GITHUB_OUTPUT
-          # 這裡固定使用 dweb.link 作為公共網關連結
-          echo "GATEWAY_USED=https://dweb.link" >> $GITHUB_OUTPUT
-          echo "✅ CID extracted: $NEW_CID"
-
-      # 4. 更新 CID 歷史和最新連結文件
-      - name: Update CID History and Latest Link 📝
-        if: success() 
-        env:
-          NEW_CID: ${{ steps.extract_cid.outputs.NEW_CID }} 
-          GATEWAY_USED: ${{ steps.extract_cid.outputs.GATEWAY_USED }}
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          
-          LATEST_CID_FILE="CID_LATEST.md"
-          HISTORY_CID_FILE="CID_HISTORY.md"
-          CID_LINK="$GATEWAY_USED/ipfs/$NEW_CID" 
-          TIMESTAMP=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
-
-          # 檢查 CID 是否有變更 (保持不變)
-          OLD_CID=""
-          if [ -f $LATEST_CID_FILE ]; then
-              OLD_CID=$(grep 'CID:' $LATEST_CID_FILE | head -1 | sed -e 's/.*`\([a-zA-Z0-9]*\)`/\1/')
-          fi
-
-          if [ "$NEW_CID" = "$OLD_CID" ]; then
-              echo "CID ($NEW_CID) 未變更，無需推送文件。"
-              exit 0 
-          fi
-          
-          echo "🔑 CID 變更偵測到。正在更新文件..."
-
-          # 更新 LATEST CID 文件 (覆蓋)
-          cat > $LATEST_CID_FILE <<EOL
-# 🌐 最新 IPFS 部署連結
-
----
-### 🚀 最新部署
-📅 **時間 (UTC):** \`${TIMESTAMP}\`
-🆔 **CID:** \`${NEW_CID}\`
-🔗 **訪問連結 (via $GATEWAY_USED):** [點擊此處訪問]($CID_LINK)
-EOL
-
-          # 更新 CID 歷史文件 (Append 並排序到最前)
-          NEW_ENTRY="---
-### 📦 部署於 $TIMESTAMP
-* **CID:** \`${NEW_CID}\`
-* **連結 (via $GATEWAY_USED):** [訪問]($CID_LINK)"
-
-          if [ ! -f $HISTORY_CID_FILE ]; then
-              echo "# 📜 IPFS 部署歷史記錄" > $HISTORY_CID_FILE
-              echo "$NEW_ENTRY" >> $HISTORY_CID_FILE
+          echo "🚀 Uploading to Arweave..."
+          RESPONSE=$(curl -s -X POST -F "file=@site.tar.gz" https://arseeding.dev/api/v1/tx/arweave)
+          TX_ID=$(echo "$RESPONSE" | grep -o '"id":"[^"]*"' | head -1 | cut -d':' -f2 | tr -d '"')
+          if [ -n "$TX_ID" ]; then
+            echo "✅ Uploaded to Arweave: https://arweave.net/$TX_ID"
+            echo "URL=https://arweave.net/$TX_ID" >> $GITHUB_OUTPUT
+            exit 0
           else
-              TEMP_FILE=$(mktemp)
-              tail -n +2 $HISTORY_CID_FILE > $TEMP_FILE 
-              
-              echo "# 📜 IPFS 部署歷史記錄" > $HISTORY_CID_FILE
-              echo "$NEW_ENTRY" >> $HISTORY_CID_FILE
-              
-              cat $TEMP_FILE >> $HISTORY_CID_FILE
-              rm $TEMP_FILE
+            echo "❌ Arweave upload failed."
           fi
-          
-          # 提交和推送更改
-          echo "正在提交和推送 CID 文件..."
-          git add $LATEST_CID_FILE $HISTORY_CID_FILE
-          git commit -m "🤖 [CI] Auto-update IPFS CID to $NEW_CID"
-          git push
+        continue-on-error: true
 
-      # 5. 顯示最終連結
-      - name: Show final deployed link
-        if: success()
-        run: echo "🌐 Your site deployed via ${{ steps.extract_cid.outputs.GATEWAY_USED }}/ipfs/${{ steps.extract_cid.outputs.NEW_CID }}"
+      # 🌐 Step 6. 若 Arweave 失败，转 NFT.Storage
+      - name: Upload to NFT.Storage
+        id: nft
+        if: steps.arweave.outcome == 'failure'
+        run: |
+          echo "🚀 Uploading to NFT.Storage..."
+          RESPONSE=$(curl -s -X POST -F "file=@site.tar.gz" https://api.nft.storage/upload)
+          CID=$(echo "$RESPONSE" | grep -o '"cid":"[^"]*"' | head -1 | cut -d':' -f2 | tr -d '"')
+          if [ -n "$CID" ]; then
+            echo "✅ Uploaded to NFT.Storage: https://ipfs.io/ipfs/$CID"
+            echo "URL=https://ipfs.io/ipfs/$CID" >> $GITHUB_OUTPUT
+            exit 0
+          else
+            echo "❌ NFT.Storage upload failed."
+          fi
+        continue-on-error: true
+
+      # 🌐 Step 7. 若前两者都挂，最后尝试本地 IPFS
+      - name: Temporary IPFS broadcast
+        id: ipfs
+        if: steps.arweave.outcome == 'failure' && steps.nft.outcome == 'failure'
+        run: |
+          echo "🚀 Installing and running IPFS..."
+          wget -q https://dist.ipfs.tech/kubo/v0.27.0/kubo_v0.27.0_linux-amd64.tar.gz
+          tar -xzf kubo_v0.27.0_kubo_v0.27.0_linux-amd64.tar.gz
+          cd kubo
+          sudo bash install.sh
+          ipfs init
+          ipfs daemon &
+          sleep 15
+          CID=$(ipfs add -r ../site.tar.gz | tail -n1 | awk '{print $2}')
+          echo "✅ Broadcasted CID: $CID"
+          echo "URL=https://ipfs.io/ipfs/$CID" >> $GITHUB_OUTPUT
+
+      # 🪐 Step 8. 更新到仓库文件
+      - name: Update decentralized link file
+        run: |
+          URL=${{ steps.arweave.outputs.URL || steps.nft.outputs.URL || steps.ipfs.outputs.URL }}
+          echo "# 🌍 Latest Decentralized Deployment" > DECENTRALIZED_LINK.md
+          echo "" >> DECENTRALIZED_LINK.md
+          echo "🔗 **Access your Jekyll site:** [$URL]($URL)" >> DECENTRALIZED_LINK.md
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add DECENTRALIZED_LINK.md
+          git commit -m "🤖 Auto-update decentralized deploy link"
+          git push || echo "No changes to commit"
+
+      # ✅ Step 9. 输出结果
+      - name: Final output
+        run: |
+          echo "✅ Deployment complete!"
+          cat DECENTRALIZED_LINK.md
