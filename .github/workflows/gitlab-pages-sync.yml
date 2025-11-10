@@ -1,0 +1,40 @@
+name: Sync Jekyll to GitLab Pages
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout GitHub repo
+        uses: actions/checkout@v3
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.2
+
+      - name: Install dependencies
+        run: |
+          gem install bundler
+          bundle install
+
+      - name: Build Jekyll site
+        run: |
+          bundle exec jekyll build -d _site
+          echo "✅ Jekyll build complete"
+
+      - name: Deploy to GitLab Pages
+        env:
+          GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
+          GITLAB_REPO: https://oauth2:${{ secrets.GITLAB_TOKEN }}@gitlab.com/xxyzyh/my-blog.git
+        run: |
+          cd _site
+          git init
+          git remote add origin $GITLAB_REPO
+          git add .
+          git commit -m "Sync Jekyll site to GitLab Pages"
+          git push -f origin main
