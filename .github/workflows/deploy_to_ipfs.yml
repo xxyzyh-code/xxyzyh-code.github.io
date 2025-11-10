@@ -30,7 +30,6 @@ jobs:
           bundle install
 
       - name: Build Jekyll site
-        # 確保構建輸出到 _site
         run: |
           echo "💡 Starting Jekyll build..."
           JEKYLL_ENV=production bundle exec jekyll build --config _config.yml
@@ -39,23 +38,30 @@ jobs:
       # --- Jekyll 構建流程結束 ---
 
 
-      # 2. 【核心變動】使用 NFT.Storage Action 進行上傳和 Pinning
+      # 2. 【最終修正：使用 clouddrove/ipfs-upload-action】
       - name: Upload to IPFS via NFT.Storage
         id: ipfs_deploy
-        uses: nftstorage/ipfs-upload-action@v1.2.0
+        # 替換為可用的 Action 連結
+        uses: clouddrove/ipfs-upload-action@v1 
         with:
-          # 這是 Jekyll 網站的輸出目錄
           path: ./_site/ 
-          # 使用我們設定的 Secret
+          # 該 Action 仍然使用 NFT_STORAGE_TOKEN 進行驗證
           token: ${{ secrets.NFT_STORAGE_TOKEN }}
           
       # 3. 提取 CID 並準備更新文件
       - name: Extract CID for Update
         id: extract_cid
         run: |
-          # NFT.Storage Action 的輸出變數為 ipfs-hash
-          NEW_CID="${{ steps.ipfs_deploy.outputs.ipfs-hash }}"
+          # clouddrove Action 的輸出變數為 cid
+          NEW_CID="${{ steps.ipfs_deploy.outputs.cid }}" 
+          
+          if [ -z "$NEW_CID" ]; then
+            echo "❌ IPFS Upload failed: CID is empty."
+            exit 1
+          fi
+
           echo "NEW_CID=$NEW_CID" >> $GITHUB_OUTPUT
+          # 這裡固定使用 dweb.link 作為公共網關連結
           echo "GATEWAY_USED=https://dweb.link" >> $GITHUB_OUTPUT
           echo "✅ CID extracted: $NEW_CID"
 
@@ -63,7 +69,6 @@ jobs:
       - name: Update CID History and Latest Link 📝
         if: success() 
         env:
-          # 從上一個步驟獲取 CID 和使用的網關（這裡固定用 dweb.link，因為它是最可靠的公共網關）
           NEW_CID: ${{ steps.extract_cid.outputs.NEW_CID }} 
           GATEWAY_USED: ${{ steps.extract_cid.outputs.GATEWAY_USED }}
         run: |
