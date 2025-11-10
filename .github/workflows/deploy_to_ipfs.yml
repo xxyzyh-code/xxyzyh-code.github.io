@@ -4,8 +4,7 @@ name: Jekyll Build & Deploy to IPFS
 on:
   push:
     branches:
-      # 當推送到 main 分支時觸發此工作流程
-      - main
+      - main  # 當推送到 main 分支時觸發此工作流程
 
 jobs:
   deploy_ipfs:
@@ -16,17 +15,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          # 確保有權限推送 CID 文件
-          token: ${{ secrets.GITHUB_TOKEN }} 
+          token: ${{ secrets.GITHUB_TOKEN }} # 確保有權限推送 CID 文件
 
-      # --- 🚀 複製您現有的 Jekyll 構建流程 (步驟 2, 3, 4) ---
+      # --- 🚀 複製您現有的 Jekyll 構建流程 ---
 
       # 2. 設定 Ruby 環境
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
-          # 保持與您 Netlify 流程一致的 Ruby 版本
-          ruby-version: '3.2' 
+          ruby-version: '3.2' # 保持與您 Netlify 流程一致的 Ruby 版本
           bundler-cache: true 
 
       # 3. 安裝 Jekyll 依賴
@@ -39,7 +36,6 @@ jobs:
       - name: Build Jekyll site
         run: |
           echo "💡 Starting Jekyll build..."
-          # 使用 JEKYLL_ENV=production 環境變數
           JEKYLL_ENV=production bundle exec jekyll build --config _config.yml
           echo "✅ Jekyll build complete. Files are in _site/."
       
@@ -62,7 +58,6 @@ jobs:
           INFURA_PROJECT_ID: ${{ secrets.INFURA_PROJECT_ID }}
           INFURA_PROJECT_SECRET: ${{ secrets.INFURA_PROJECT_SECRET }}
           CID_FILE_NAME: cid_output.txt 
-          # 指定要上傳的目錄：Jekyll 的輸出目錄
           BUILD_DIR: _site 
         run: |
           node <<'EOF'
@@ -127,17 +122,14 @@ jobs:
 
           (async () => {
             try {
-              // 傳入 BUILD_DIR 的完整路徑
               const rootCid = await addDirectory(path.join(process.cwd(), buildDir)); 
               console.log(`✅ Upload complete!`);
               console.log(`🌐 Your website CID: ${rootCid}`);
               
-              // 將 CID 寫入臨時文件
               fs.writeFileSync(cidFileName, rootCid);
               
               console.log(`📌 Pinning to Infura...`);
 
-              // Pin 到 Infura
               const response = await fetch('https://ipfs.infura.io:5001/api/v0/pin/add?arg=' + rootCid, {
                 method: 'POST',
                 headers: { authorization: auth }
@@ -168,7 +160,6 @@ jobs:
           })();
           EOF
           
-          # 將 CID 寫入 GITHUB_OUTPUT 供後續步驟使用
           NEW_CID=$(cat $CID_FILE_NAME)
           echo "NEW_CID=$NEW_CID" >> $GITHUB_OUTPUT
 
@@ -179,7 +170,6 @@ jobs:
         env:
           NEW_CID: ${{ steps.ipfs_deploy.outputs.NEW_CID }} 
         run: |
-          # 設置 Git 環境
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
           
@@ -189,7 +179,7 @@ jobs:
           CID_LINK="$IPFS_GATEWAY/$NEW_CID"
           TIMESTAMP=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
 
-          # 檢查 CID 是否有變更 (如果沒有變更則不推送，避免無意義的 Git Commit)
+          # 檢查 CID 是否有變更
           OLD_CID=""
           if [ -f $LATEST_CID_FILE ]; then
               OLD_CID=$(grep 'CID:' $LATEST_CID_FILE | head -1 | sed -e 's/.*`\([a-zA-Z0-9]*\)`/\1/')
@@ -203,13 +193,15 @@ jobs:
           echo "🔑 CID 變更偵測到。正在更新文件..."
 
           # 更新 LATEST CID 文件 (覆蓋)
-          echo "# 🌐 最新 IPFS 部署連結" > $LATEST_CID_FILE
-          echo "" >> $LATEST_CID_FILE
-          echo "---" >> $LATEST_CID_FILE
-          echo "### 🚀 最新部署" >> $LATEST_CID_FILE
-          echo "📅 **時間 (UTC):** \`${TIMESTAMP}\`" >> $LATEST_CID_FILE
-          echo "🆔 **CID:** \`${NEW_CID}\`" >> $LATEST_CID_FILE
-          echo "🔗 **訪問連結:** [點擊此處訪問]($CID_LINK)" >> $LATEST_CID_FILE
+          cat > $LATEST_CID_FILE <<EOL
+# 🌐 最新 IPFS 部署連結
+
+---
+### 🚀 最新部署
+📅 **時間 (UTC):** \`${TIMESTAMP}\`
+🆔 **CID:** \`${NEW_CID}\`
+🔗 **訪問連結:** [點擊此處訪問]($CID_LINK)
+EOL
 
           # 更新 CID 歷史文件 (Append 並排序到最前)
           NEW_ENTRY="---
@@ -222,9 +214,14 @@ jobs:
               echo "$NEW_ENTRY" >> $HISTORY_CID_FILE
           else
               TEMP_FILE=$(mktemp)
-              cat $HISTORY_CID_FILE | tail -n +2 > $TEMP_FILE 
+              # 讀取除了標題行之外的內容
+              tail -n +2 $HISTORY_CID_FILE > $TEMP_FILE 
+              
+              # 重新寫入標題和新條目
               echo "# 📜 IPFS 部署歷史記錄" > $HISTORY_CID_FILE
               echo "$NEW_ENTRY" >> $HISTORY_CID_FILE
+              
+              # 附加舊的歷史記錄
               cat $TEMP_FILE >> $HISTORY_CID_FILE
               rm $TEMP_FILE
           fi
