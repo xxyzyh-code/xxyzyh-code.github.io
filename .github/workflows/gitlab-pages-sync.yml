@@ -19,12 +19,21 @@ jobs:
       - name: 🔄 Deploy to GitLab
         env:
           GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
-          # 🚨 關鍵修改：從 oauth2 變為 gitlab-ci-token 
-          GITLAB_REPO: https://gitlab-ci-token:${{ secrets.GITLAB_TOKEN }}@gitlab.com/xxyzyh/my-blog.git 
+          # 替換成你的 GitLab 使用者名稱
+          GITLAB_REPO: https://xxyzyh:${{ secrets.GITLAB_TOKEN }}@gitlab.com/xxyzyh/my-blog.git 
         run: |
+          # 設置 Git 身份
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          
+          # 🚨 除錯步驟：安全地列印出用於推送的 URL 
+          # 這裡使用 sed 將 Token 替換為 ***** 以保護你的密碼
+          echo "Debugging URL (Token hidden):"
+          echo $GITLAB_REPO | sed "s/${{ secrets.GITLAB_TOKEN }}/*****/"
+          
+          # 添加遠程倉庫並推送
           git remote add gitlab $GITLAB_REPO
           echo "🚀 Pushing code to GitLab repository..."
+          # 再次嘗試推送
           git push --force --quiet gitlab main:main
           echo "✅ Synchronization complete!"
