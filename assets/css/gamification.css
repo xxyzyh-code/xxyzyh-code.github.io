@@ -1,0 +1,134 @@
+/* 建議新增到 /assets/css/gamification.css 或類似檔案 */
+
+/* 儀表板主容器 */
+.gamification-dashboard {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 300px; /* 寬度 */
+    background-color: #f7f7f7;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    font-family: Arial, sans-serif;
+    z-index: 1000; /* 確保它浮在其他元素之上 */
+    transition: all 0.3s ease-in-out;
+}
+
+/* 標頭 (點擊區域) */
+.gamification-dashboard .header {
+    background-color: #5cb85c; /* 綠色，代表成功/進度 */
+    color: white;
+    padding: 10px 15px;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: bold;
+}
+
+.gamification-dashboard .header .collapse-icon {
+    font-size: 0.8em;
+    transition: transform 0.3s;
+}
+
+/* 內容區 */
+.gamification-dashboard .content {
+    padding: 15px;
+    transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
+    overflow: hidden;
+    max-height: 500px; /* 初始展開高度 */
+}
+
+/* 內容收合狀態 */
+.gamification-dashboard .content.collapsed {
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    opacity: 0;
+}
+
+.gamification-dashboard .content.collapsed ~ .header .collapse-icon {
+    transform: rotate(-90deg);
+}
+
+/* 積分和進度條樣式 */
+.score-row, .progress-text-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+    font-size: 0.9em;
+}
+
+.progress-container {
+    background-color: #e0e0e0;
+    border-radius: 4px;
+    overflow: hidden;
+    height: 12px;
+    margin-bottom: 8px;
+}
+
+.progress-bar {
+    height: 100%;
+    background-color: #ff9800; /* 橙色進度條 */
+    width: 0%; /* 將由 JS 控制 */
+    transition: width 0.5s ease;
+}
+
+.level-label {
+    font-weight: bold;
+}
+
+/* 徽章樣式 */
+.section-title {
+    margin-top: 10px;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #333;
+    border-bottom: 1px dashed #ccc;
+    padding-bottom: 3px;
+    font-size: 1em;
+}
+
+.achievement-list {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    min-height: 30px;
+    padding-top: 5px;
+}
+
+.badge-icon {
+    font-size: 1.5em;
+    cursor: help;
+    /* 這裡可以添加 CSS 濾鏡來模擬「未獲得」狀態，例如 opacity 或 grayscale */
+    /* .unlocked { filter: grayscale(100%); opacity: 0.5; } */
+}
+
+
+/* 系統通知彈窗 (位於頂部中間) */
+.game-notification {
+    position: fixed;
+    top: 50px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 15px 25px;
+    border-radius: 6px;
+    color: white;
+    font-weight: bold;
+    text-align: center;
+    z-index: 1001;
+    display: none; /* 初始隱藏 */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    transition: opacity 0.3s, transform 0.3s;
+}
+
+.game-notification.level-up {
+    background-color: #007bff; /* 藍色升級 */
+}
+
+.game-notification.achievement {
+    background-color: #dc3545; /* 紅色徽章 */
+}
