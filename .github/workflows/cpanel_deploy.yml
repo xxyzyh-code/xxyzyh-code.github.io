@@ -33,26 +33,30 @@ jobs:
         env:
           JEKYLL_ENV: production
       
-      - name: 🚀 Deploy built files to cPanel /public_html (via Password SFTP)
-        # 🚨 使用目前最穩定且支持 SFTP 密碼的 Action
-        uses: lins-oss/sftp-action@v2.0.0 
+      - name: 🚀 Deploy built files to cPanel /public_html (騙過 FTP Action)
+        # 🚨 換回第一個 Action，因為它是最穩定的。
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.0 
         with:
-          # 連接資訊 (這個 Action 的參數是明確的)
-          host: ${{ secrets.FTP_HOST }}
+          # 連接資訊 (保持不變)
+          server: ${{ secrets.FTP_HOST }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          port: 22 # 標準 SFTP 端口
           
-          # 上傳 Jekyll 的輸出目錄
-          local-path: './_site/**'
-          # 您的網站根目錄
-          remote-path: '/home/xxyzyh/public_html/'
+          # 🚨 關鍵修正點：
+          # 欺騙 Action 使用 FTP (它不認識 SFTP)
+          protocol: ftp 
+          # 告訴它用 SSH 端口 22
+          port: 22 
           
-          # 確保所有參數都使用正確的格式
+          # 確保路徑是正確的 (我們用它要求的 local-dir 和 server-dir)
+          local-dir: ./_site/
+          server-dir: /public_html/
           
-          # 刪除遠端不存在於本地的文件 (這會保持 public_html 乾淨)
-          dry-run: false
-          delete-remote: true
-          
-          # 確保排除 .git 和其他文件
-          exclude: ".git*, .DS_Store, .cpanel.yml"
+          # 刪除遠端不再需要的舊文件 (保持 public_html 乾淨)
+          state-name: .ftp-deploy-sync-state.json
+          log-level: verbose
+          # 清理 public_html 避免 Index of / 錯誤
+          exclude: |
+            **/.git*
+            **/.DS_Store
+            **/.cpanel.yml
