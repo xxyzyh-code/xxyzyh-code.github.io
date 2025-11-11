@@ -343,3 +343,6 @@ export function getStats() {
 
 // 匯出徽章配置，以便在 UI 中渲染完整的徽章列表
 export const AchievementList = CONFIG.ACHIEVEMENTS;
+
+// 程式夥伴: 修正！將 addMusicScore 暴露在全局，供 audio_player.html 使用
+window.addMusicScore = addMusicScore;
