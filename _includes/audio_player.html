@@ -138,6 +138,9 @@ let countdownIntervalId = null;
 let totalListenMinutes = 0;
 let totalListenSeconds = 0;
 let listenIntervalId = null; 
+    // ⭐️ 新增計時變數
+let scoreTimerIntervalId = null; // 用於計分的主要計時器 ID
+let scoreAccumulatorSeconds = 0; // 累積的秒數，達到 60 秒計分一次
 
 const PLAY_COUNT_STORAGE_KEY = 'audioTrackPlayCounts'; 
 let trackPlayCounts = {}; 
