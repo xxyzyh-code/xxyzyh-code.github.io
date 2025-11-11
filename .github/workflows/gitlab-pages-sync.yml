@@ -20,34 +20,28 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           
-          # 🚨 關鍵解決方案：不將 Token 拼接到 URL 中
-          # 1. 定義 GitLab 倉庫的乾淨 URL
-          # 替換 xxyzyh/my-blog.git 為你的目標倉庫路徑
-          GITLAB_REPO_CLEAN="https://gitlab.com/xxyzyh/my-blog.git"
+          # 🚨 最終清理：精確清理換行符和空格，確保 Token 是一個純淨字串
+          # 這是為了解決你多次遇到的 "newline in its password component" 警告。
+          CLEAN_TOKEN=$(echo -n "${{ secrets.GITLAB_TOKEN }}" | tr -d '\n\r ')
           
-          # 2. 設置 Gitlab 倉庫的認證資訊
-          # 使用 git config credential.helper 讓 Git 自動處理認證
-          # 注意：我們在這裡使用 printf "%s" 來確保 ${{ secrets.GITLAB_TOKEN }} 
-          # 變數被視為單純的字串，不會包含換行。
-          printf "%s" "${{ secrets.GITLAB_TOKEN }}" > gitlab_token.txt
+          # 1. 對清洗後的 Token 進行 URL 編碼
+          # 確保 Token 中的特殊字元能被 Git 正確解析
+          GITLAB_TOKEN_ENCODED=$(echo -n "$CLEAN_TOKEN" | xxd -p | sed 's/\(..\)/%\1/g')
           
-          # 3. 設置 credential helper，讓 Git 使用 Token 進行 HTTP 基本認證
-          # 我們將 Token 值傳遞給一個名為 "GITLAB_TOKEN_AUTH" 的環境變數
-          # 並且使用一個腳本來輸出認證資訊給 Git
-          git config credential.https://gitlab.com.helper "!f() { test \"\$1\" = get && echo \"password=$(cat gitlab_token.txt)\" && echo \"username=xxyzyh\"; }; f"
+          # 2. 構建最終 URL (務必替換 YOUR_GITLAB_USERNAME)
+          GITLAB_REPO="https://xxyzyh:$GITLAB_TOKEN_ENCODED@gitlab.com/xxyzyh/my-blog.git"
           
-          # 4. 添加遠程倉庫並推送（使用乾淨 URL）
-          git remote add gitlab "$GITLAB_REPO_CLEAN"
+          # 3. 添加遠程倉庫並推送
+          # Git 會將當前工作目錄 (你的整個 GitHub 倉庫) 推送上去
+          git remote add gitlab "$GITLAB_REPO"
+          echo "🚀 Pushing entire GitHub repository to GitLab..."
           
-          echo "🚀 Pushing code to GitLab repository..."
-          
-          # 嘗試推送
+          # 嘗試推送，--force 確保覆蓋 GitLab 上只有 .gitlab-ci.yml 的狀態
           git push --force --quiet gitlab main:main
           
           if [ $? -eq 0 ]; then
-            echo "✅ Synchronization complete!"
+            echo "✅ Synchronization complete! Check GitLab CI/CD for Jekyll build pipeline."
           else
-            echo "❌ Synchronization FAILED. Final check: GitLab PAT validity (must be one clean line)."
+            echo "❌ Synchronization FAILED. Check Secret value in GitHub."
             exit 1
           fi
-          
