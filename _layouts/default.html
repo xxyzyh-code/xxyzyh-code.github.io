@@ -37,5 +37,96 @@
     </div>
 
     {% include scripts.html %}
+
+    {% if page.path contains '_posts/' %}
+    <script>
+    // ===========================================
+    // 程式夥伴: 遊戲化 - 閱讀計分邏輯
+    // 條件檢查: 頁面路徑包含 '_posts/' (文章頁面)
+    // ===========================================
+
+    // 檢查 addBlogScore 函數是否已經透過 clock.js 載入
+    if (typeof window.addBlogScore === 'function') {
+        
+        // ⭐️ 關鍵 1: 獲取當前文章的唯一 ID (使用 Liquid 獲取 Jekyll 的 page.url)
+        const currentArticleId = '{{ page.url }}'; 
+        const READ_LOG_KEY = 'read_log';
+        
+        // ⭐️ 關鍵 2: 載入並檢查閱讀紀錄
+        let readLog = {};
+        try {
+            const savedLog = localStorage.getItem(READ_LOG_KEY);
+            if (savedLog) {
+                readLog = JSON.parse(savedLog);
+            }
+        } catch (e) {
+            console.error("載入閱讀紀錄失敗:", e);
+        }
+        
+        // 判斷是否為首次閱讀
+        let isFirstRead = !readLog[currentArticleId];
+        
+        // ⭐️ 關鍵 3: 閱讀計分主邏輯 (每分鐘執行一次)
+        let readTimerInterval = null;
+        let secondsElapsed = 0;
+        
+        function trackReadingTime() {
+            secondsElapsed++;
+            
+            // 每 60 秒計分
+            if (secondsElapsed % 60 === 0) {
+                
+                // 呼叫 gamificationModule 裡的計分函數
+                const success = addBlogScore(isFirstRead);
+                
+                if (success) {
+                    console.log(`閱讀計分成功。首次閱讀狀態: ${isFirstRead ? '是' : '否'}`);
+                    
+                    // 首次計分成功後，更新閱讀紀錄並儲存
+                    if (isFirstRead) {
+                        readLog[currentArticleId] = true;
+                        localStorage.setItem(READ_LOG_KEY, JSON.stringify(readLog));
+                        isFirstRead = false; // 之後的計分不再是「首次」
+                    }
+                } else {
+                    console.log("閱讀積分已達到每日上限，停止計時。");
+                    // 如果達到上限，停止計時器以節省資源
+                    stopTracking();
+                }
+            }
+        }
+        
+        function startTracking() {
+            if (readTimerInterval === null) {
+                readTimerInterval = setInterval(trackReadingTime, 1000);
+                console.log("程式夥伴: 文章閱讀計時器已啟動。");
+            }
+        }
+
+        function stopTracking() {
+            if (readTimerInterval !== null) {
+                clearInterval(readTimerInterval);
+                readTimerInterval = null;
+                console.log("程式夥伴: 文章閱讀計時器已停止。");
+            }
+        }
+        
+        // ⭐️ 關鍵 4: 監聽網頁可見性 (防止用戶切換標籤頁時繼續計分)
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                startTracking();
+            } else {
+                stopTracking();
+            }
+        });
+
+        // 頁面載入時啟動計時器
+        startTracking();
+    } else {
+        console.warn("程式夥伴: 遊戲化模組未完全載入。文章計分未啟動。");
+    }
+    </script>
+    {% endif %}
+
   </body>
 </html>
