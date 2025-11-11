@@ -33,24 +33,24 @@ jobs:
         env:
           JEKYLL_ENV: production
       
-      - name: 🚀 Deploy built files to cPanel /public_html (via SFTP)
-        # 🚨 關鍵修正點：更換為 SFTP 專用 Action
-        uses: easingthemes/ssh-deploy@main 
+      - name: 🚀 Deploy built files to cPanel /public_html (via Password SFTP)
+        # 🚨 再次更換 Action！使用支援密碼的 SFTP Action
+        uses: w9jds/action-sftp-with-password@v3 
         with:
-          # 連接資訊 (使用 GitHub Secrets)
-          SSH_HOST: ${{ secrets.FTP_HOST }}
-          SSH_USERNAME: ${{ secrets.FTP_USERNAME }}
-          SSH_PASSWORD: ${{ secrets.FTP_PASSWORD }}
-          # 🚨 SFTP 預設使用 22 號端口，無需特別指定，但如果需要可以加上：
-          # PORT: 22 
+          # 連接資訊，這個 Action 的參數名稱是明確且支援密碼的
+          host: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          port: 22 # 標準 SFTP 端口
           
           # 上傳 Jekyll 的輸出目錄
-          source: ./_site/
+          localPath: ./_site/
           # 您的網站根目錄
-          target: /home/xxyzyh/public_html/
+          remotePath: /home/xxyzyh/public_html/
           
-          # 清理目標目錄上不再需要的舊文件 (這是關鍵，類似於 clean-slate)
-          EXCLUDE: "/.git*, /.DS_Store, /.cpanel.yml"
+          # 參數：將本地所有文件複製到遠端
+          args: "-r" 
           
-          # 增加 log-level 方便除錯
-          ARGS: "-vvv" # 這會增加 SFTP 的輸出日誌
+          # 這個 Action 不支援自動刪除，它只負責複製。
+          # 如果需要刪除舊檔案，我們必須在部署前手動執行一個SSH命令，
+          # 但我們沒有設定SSH金鑰。我們只能接受它只會覆蓋檔案。
