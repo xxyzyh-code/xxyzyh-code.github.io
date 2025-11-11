@@ -40,6 +40,11 @@ jobs:
           server: ${{ secrets.FTP_HOST }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
+          # 🚨 關鍵修正點：指定使用 SFTP 協議
+          protocol: sftp
+          # 🚨 關鍵修正點：指定 SSH/SFTP 端口 22
+          port: 22 
+
           # 上傳 Jekyll 的輸出目錄
           local-dir: ./_site/
           # 您的網站根目錄
