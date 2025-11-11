@@ -9,41 +9,50 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: ⬇️ Checkout GitHub repo
-        # 拉取整個倉庫內容
         uses: actions/checkout@v4
         with:
           fetch-depth: 0 
 
-      - name: 🔑 Set up SSH Key for GitLab
-        # 使用專門的 Action 導入私密金鑰
+      - name: 🔑 Set up SSH Key and Known Hosts
+        # 使用 webfactory/ssh-agent@v0.9.1 導入私密金鑰
         uses: webfactory/ssh-agent@v0.9.1
         with:
-          # 🚨 引用我們剛剛設置的私密金鑰
           ssh-private-key: ${{ secrets.GITLAB_SSH_PRIVATE_KEY }}
-          # 允許 Git 信任 GitLab 的 SSH 指紋，避免首次連線確認
-          known-hosts-path: '/dev/null' 
+          # 🚨 關鍵改變：這裡設置為手動配置 Known Hosts
+          known-hosts-path: /dev/null
+
+      - name: 📝 Add GitLab Host Key to Known Hosts
+        # 這是為了避免 "Host key verification failed." 錯誤
+        run: |
+          # 獲取 GitLab.com 的指紋並寫入 known_hosts，讓 SSH 自動信任它
+          mkdir -p ~/.ssh
+          echo "gitlab.com ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQIzbBv2sB...[中間省略，這是官方指紋]" >> ~/.ssh/known_hosts
+          echo "gitlab.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAfuIDUo...[中間省略，這是官方指紋]" >> ~/.ssh/known_hosts
           
+          # 為了簡化，可以使用 ssh-keyscan (更自動，但有時在 CI 中被禁用)
+          # ssh-keyscan -t rsa,ed25519 gitlab.com >> ~/.ssh/known_hosts
+          
+          # 設置正確的權限
+          chmod 600 ~/.ssh/known_hosts
+
       - name: 🔄 Deploy to GitLab via SSH
         run: |
           # 設置 Git 身份
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           
-          # 🚨 關鍵：使用 SSH URL 進行推送
-          # 格式：git@gitlab.com:user/repo.git
+          # 使用 SSH URL 進行推送
           GITLAB_REPO_SSH="git@gitlab.com:xxyzyh/my-blog.git"
           
-          # 添加遠程倉庫並推送
           git remote add gitlab "$GITLAB_REPO_SSH"
           echo "🚀 Pushing entire GitHub repository to GitLab via SSH..."
           
           # 嘗試推送
-          # 如果 GitLab 上的 Deploy Key 權限設定正確，這次就會成功
           git push --force gitlab main:main
           
           if [ $? -eq 0 ]; then
-            echo "✅ Synchronization complete! GitLab CI/CD should now start building your Jekyll site."
+            echo "✅ Synchronization complete! SSH push successful."
           else
-            echo "❌ Synchronization FAILED. Check SSH Key setup on both sides and GitLab Write Access."
+            echo "❌ Synchronization FAILED. Check permissions or SSH Key."
             exit 1
           fi
