@@ -20,20 +20,21 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           
-          # 🚨 關鍵解決方案：使用 tr -d 清理 Secret 中的所有控制字元（包括回車和換行）
-          # 這會確保 Token 值是一個純淨的字串，不會破壞 Bash 命令結構
-          CLEAN_TOKEN=$(echo -n "${{ secrets.GITLAB_TOKEN }}" | tr -d '[:cntrl:]')
+          # 🚨 關鍵解決方案：精確清理換行符，並去除所有空格
+          # -n 確保沒有尾隨換行，tr -d '\n\r ' 確保去除所有換行和空格
+          CLEAN_TOKEN=$(echo -n "${{ secrets.GITLAB_TOKEN }}" | tr -d '\n\r ')
           
           # 1. 對清洗後的 Token 進行 URL 編碼
           # 這是為了確保 Token 中的所有特殊字元都能被 Git 正確解析
           GITLAB_TOKEN_ENCODED=$(echo -n "$CLEAN_TOKEN" | xxd -p | sed 's/\(..\)/%\1/g')
           
           # 2. 構建最終 URL (務必替換 YOUR_GITLAB_USERNAME)
-          # 注意：我們使用單引號 ('...') 來包圍變數賦值，確保 $GITLAB_REPO 變數的結構完整
+          # 注意：我們現在可以相信變數是乾淨的，但仍使用雙引號
           GITLAB_REPO="https://xxyzyh:$GITLAB_TOKEN_ENCODED@gitlab.com/xxyzyh/my-blog.git"
           
           # 3. 添加遠程倉庫並推送
-          git remote add gitlab "$GITLAB_REPO" # 🚨 注意：這裡也給 $GITLAB_REPO 加上了雙引號
+          # 在這裡，我們需要確保 git remote add 看不到任何換行符
+          git remote add gitlab "$GITLAB_REPO"
           echo "🚀 Pushing code to GitLab repository..."
           
           # 嘗試推送
@@ -42,7 +43,6 @@ jobs:
           if [ $? -eq 0 ]; then
             echo "✅ Synchronization complete!"
           else
-            echo "❌ Synchronization FAILED. Token or Protected Branch Issue."
+            echo "❌ Synchronization FAILED. Token Cleanup/Permission Issue."
             exit 1
           fi
-          
