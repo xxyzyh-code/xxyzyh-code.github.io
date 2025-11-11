@@ -14,27 +14,20 @@ jobs:
           fetch-depth: 0 
 
       - name: 🔑 Set up SSH Key and Known Hosts
-        # 使用 webfactory/ssh-agent@v0.9.1 導入私密金鑰
         uses: webfactory/ssh-agent@v0.9.1
         with:
           ssh-private-key: ${{ secrets.GITLAB_SSH_PRIVATE_KEY }}
-          # 🚨 關鍵改變：這裡設置為手動配置 Known Hosts
-          known-hosts-path: /dev/null
-
+          # 🚨 關鍵改變：不使用 known-hosts-path 參數，讓下一步手動配置
+          
       - name: 📝 Add GitLab Host Key to Known Hosts
-        # 這是為了避免 "Host key verification failed." 錯誤
         run: |
-          # 獲取 GitLab.com 的指紋並寫入 known_hosts，讓 SSH 自動信任它
+          # 創建 .ssh 目錄
           mkdir -p ~/.ssh
-          echo "gitlab.com ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQIzbBv2sB...[中間省略，這是官方指紋]" >> ~/.ssh/known_hosts
-          echo "gitlab.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAfuIDUo...[中間省略，這是官方指紋]" >> ~/.ssh/known_hosts
-          
-          # 為了簡化，可以使用 ssh-keyscan (更自動，但有時在 CI 中被禁用)
-          # ssh-keyscan -t rsa,ed25519 gitlab.com >> ~/.ssh/known_hosts
-          
+          # 🚨 獲取 GitLab 伺服器的指紋並添加到 known_hosts
+          ssh-keyscan gitlab.com >> ~/.ssh/known_hosts
           # 設置正確的權限
           chmod 600 ~/.ssh/known_hosts
-
+          
       - name: 🔄 Deploy to GitLab via SSH
         run: |
           # 設置 Git 身份
@@ -53,6 +46,6 @@ jobs:
           if [ $? -eq 0 ]; then
             echo "✅ Synchronization complete! SSH push successful."
           else
-            echo "❌ Synchronization FAILED. Check permissions or SSH Key."
+            echo "❌ Synchronization FAILED. Final check of Private Key and GitLab Deploy Key Write Access."
             exit 1
           fi
