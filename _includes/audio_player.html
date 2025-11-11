@@ -1208,6 +1208,45 @@ audio.addEventListener('pause', () => {
 audio.addEventListener('ended', saveSettings);
 playlistSearchInput.addEventListener('input', debounce(filterPlaylist, 300));
 
+    // ⭐️ 關鍵修正：導航按鈕的事件監聽器
+if (prevButton) {
+    prevButton.addEventListener('click', () => {
+        playPreviousTrack();
+        // 點擊上一曲後，確保模式切換到自由模式（可選，但更符合用戶習慣）
+        if (playMode !== 3) {
+            playMode = 3; 
+            updateModeUI();
+            saveSettings();
+        }
+    });
+}
+
+if (nextButton) {
+    nextButton.addEventListener('click', () => {
+        playNextTrack();
+        // 點擊下一曲後，確保模式切換到自由模式（可選，但更符合用戶習慣）
+        if (playMode !== 3) {
+            playMode = 3; 
+            updateModeUI();
+            saveSettings();
+        }
+    });
+}
+
+if (modeButton) {
+    modeButton.addEventListener('click', togglePlayMode);
+}
+
+if (dataModeToggleBtn) {
+    // ⭐️ 注意：由於 toggleDataMode 是異步函數，不需要 debounce
+    dataModeToggleBtn.addEventListener('click', toggleDataMode);
+}
+
+// ⭐️ 新增：綁定定時器按鈕，因為它是全局函數
+if (timerToggleButton) {
+    timerToggleButton.addEventListener('click', toggleTimerMenu);
+}
+
 // --- *** 異步初始化函數 *** ---
 
 async function initializePlayer(isManualToggle = false) {
