@@ -9,31 +9,35 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: ⬇️ Checkout GitHub repo
-        # 使用 actions/checkout@v4 確保程式碼被拉取
+        # 拉取整個倉庫，fetch-depth: 0 對於同步很重要
         uses: actions/checkout@v4
-        # 設置 fetch-depth: 0 確保拉取完整的 Git 歷史，有助於推送
         with:
           fetch-depth: 0 
 
-      - name: 🔄 Deploy to GitLab via Action
-        uses: wangchao/git-push-action@v2
+      - name: 🔄 Sync to GitLab Pages Repo
+        # 使用 cp-git-sync/git-sync-action 來處理複雜的認證和推送
+        uses: cp-git-sync/git-sync-action@v1.0.0 # 使用穩定版本
         with:
-          # 🚨 關鍵：直接將 GitLab Token 作為參數傳入
-          # Action 會自己處理認證和 URL 格式
-          token: ${{ secrets.GITLAB_TOKEN }}
-          # 🚨 關鍵：目標倉庫 URL (請確保你將 xxyzyh 替換為你的 GitLab 使用者名稱)
-          remote_url: 'https://gitlab.com/xxyzyh/my-blog.git'
-          # 使用你的 GitLab 使用者名稱作為推送用戶
-          remote_user: 'xxyzyh' 
-          # 設置本地分支和遠程分支都是 main
-          remote_branch: 'main'
-          local_branch: 'main'
-          # 強制推送以覆蓋潛在的歷史不一致
-          force: true
-          # 設置提交用戶和電子郵件
+          # 🚨 關鍵參數 1: 設置 Gitlab 倉庫 URL
+          # 確保替換 YOUR_GITLAB_USERNAME 為你的 GitLab 使用者名稱
+          # 格式: https://USERNAME:TOKEN@DOMAIN/PATH.git
+          source_repo: 'https://xxyzyh:${{ secrets.GITLAB_TOKEN }}@gitlab.com/xxyzyh/my-blog.git'
+          
+          # 🚨 關鍵參數 2: 設置 Gitlab Token 作為推送密碼
+          source_token: ${{ secrets.GITLAB_TOKEN }}
+          
+          # 🚨 關鍵參數 3: 設置目標分支
+          source_branch: 'main'
+          
+          # 設置推送用戶資訊
           commit_user_name: 'github-actions[bot]'
           commit_user_email: '41898282+github-actions[bot]@users.noreply.github.com'
           
-      - name: ✅ Synchronization Status
-        run: echo "🎉 Code synchronization attempt complete!"
+          # 設置 Force Push，確保覆蓋 GitLab 上的內容
+          force_push: true
+          
+          # 設置為單向同步，只從 GitHub 推送到 GitLab
+          mode: 'mirror'
 
+      - name: ✅ Synchronization Status
+        run: echo "🎉 Code synchronization attempt complete! Check GitLab CI/CD pipeline."
