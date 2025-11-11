@@ -1165,6 +1165,12 @@ audio.addEventListener('play', () => {
         listenIntervalId = setInterval(updateTotalListenTime, 1000);
     }
     
+    // ⭐️ 核心新增: 啟動積分計時器
+    if (scoreTimerIntervalId === null) {
+        // 每 1 秒檢查一次，累積到 60 秒才計分
+        scoreTimerIntervalId = setInterval(updateMusicScore, 1000); 
+    }
+    
     // ⭐️ 核心新增: 發送數據到數據庫
     if (currentTrackIndex >= 0 && currentTrackIndex < currentPlaylist.length) {
         // 使用 track.id 作為 song_id 傳入
@@ -1179,6 +1185,13 @@ audio.addEventListener('pause', () => {
         clearInterval(listenIntervalId);
         listenIntervalId = null;
     }
+    
+        // 2. ⭐️ 核心新增: 停止積分計時器
+    if (scoreTimerIntervalId !== null) {
+        clearInterval(scoreTimerIntervalId);
+        scoreTimerIntervalId = null;
+    }
+    
     saveSettings();
 });
 
