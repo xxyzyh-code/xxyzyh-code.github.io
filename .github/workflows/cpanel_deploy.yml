@@ -33,26 +33,24 @@ jobs:
         env:
           JEKYLL_ENV: production
       
-      - name: 🚀 Deploy built files to cPanel /public_html
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.0
+      - name: 🚀 Deploy built files to cPanel /public_html (via SFTP)
+        # 🚨 關鍵修正點：更換為 SFTP 專用 Action
+        uses: easingthemes/ssh-deploy@main 
         with:
           # 連接資訊 (使用 GitHub Secrets)
-          server: ${{ secrets.FTP_HOST }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          # 🚨 關鍵修正點：指定使用 SFTP 協議
-          protocol: sftp
-          # 🚨 關鍵修正點：指定 SSH/SFTP 端口 22
-          port: 22 
-
+          SSH_HOST: ${{ secrets.FTP_HOST }}
+          SSH_USERNAME: ${{ secrets.FTP_USERNAME }}
+          SSH_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+          # 🚨 SFTP 預設使用 22 號端口，無需特別指定，但如果需要可以加上：
+          # PORT: 22 
+          
           # 上傳 Jekyll 的輸出目錄
-          local-dir: ./_site/
+          source: ./_site/
           # 您的網站根目錄
-          server-dir: /public_html/
-          # 刪除目標目錄上不再需要的舊文件
-          log-level: verbose
-          # 清理 public_html 避免 Index of / 錯誤
-          exclude: |
-            **/.git*
-            **/.DS_Store
-            **/.cpanel.yml
+          target: /home/xxyzyh/public_html/
+          
+          # 清理目標目錄上不再需要的舊文件 (這是關鍵，類似於 clean-slate)
+          EXCLUDE: "/.git*, /.DS_Store, /.cpanel.yml"
+          
+          # 增加 log-level 方便除錯
+          ARGS: "-vvv" # 這會增加 SFTP 的輸出日誌
