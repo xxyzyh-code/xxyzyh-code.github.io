@@ -667,6 +667,10 @@ function updateTimerCountdown() {
     }
 }
 
+let totalListenMinutes = 0;
+let totalListenSeconds = 0; // 程式夥伴: 新增此變數來追蹤本次播放時間 (秒)
+let listenIntervalId = null; 
+    
 audio.addEventListener('play', () => {
     if (listenIntervalId === null) {
         listenIntervalId = setInterval(updateTotalListenTime, 1000);
