@@ -80,6 +80,7 @@
     if (typeof window.addBlogScore === 'function') {
         
         // ⭐️ 關鍵 1: 獲取當前文章的唯一 ID (使用 Liquid 獲取 Jekyll 的 page.url)
+        // 使用 page.url 作為唯一 key 是最好的做法
         const currentArticleId = '{{ page.url }}'; 
         const READ_LOG_KEY = 'read_log';
         
@@ -94,30 +95,35 @@
             console.error("載入閱讀紀錄失敗:", e);
         }
         
-        // 判斷是否為首次閱讀
-        let isFirstRead = !readLog[currentArticleId];
+        // 判斷是否為首次閱讀（此 Session 中是否需要觸發 blog_count 增加）
+        let isFirstReadSession = !readLog[currentArticleId];
         
         // ⭐️ 關鍵 3: 閱讀計分主邏輯 (每分鐘執行一次)
         let readTimerInterval = null;
-        let secondsElapsed = 0;
+        let secondsAccumulator = 0; // 累積器
         
         function trackReadingTime() {
-            secondsElapsed++;
+            secondsAccumulator++;
             
             // 每 60 秒計分
-            if (secondsElapsed % 60 === 0) {
+            if (secondsAccumulator >= 60) {
                 
-                // 呼叫 gamificationModule 裡的計分函數
-                const success = addBlogScore(isFirstRead);
+                // 呼叫 gamificationModule 裡的計分函數，並傳入是否為首次閱讀的狀態
+                // 只有第一次計分時，isFirstReadSession 才是 true
+                const success = addBlogScore(isFirstReadSession);
+                
+                // 將累積器歸零，準備下一次計分
+                secondsAccumulator = 0;
                 
                 if (success) {
-                    console.log(`閱讀計分成功。首次閱讀狀態: ${isFirstRead ? '是' : '否'}`);
+                    console.log(`閱讀計分成功。首次閱讀狀態 (是否已計入文章數): ${isFirstReadSession ? '是' : '否'}`);
                     
-                    // 首次計分成功後，更新閱讀紀錄並儲存
-                    if (isFirstRead) {
+                    // 首次計分成功後，更新閱讀紀錄並儲存，確保文章篇數只計一次
+                    if (isFirstReadSession) {
                         readLog[currentArticleId] = true;
                         localStorage.setItem(READ_LOG_KEY, JSON.stringify(readLog));
-                        isFirstRead = false; // 之後的計分不再是「首次」
+                        // ⭐️ 關鍵修正：本次文章的「文章篇數」已計入，將狀態設為 false
+                        isFirstReadSession = false; 
                     }
                 } else {
                     console.log("閱讀積分已達到每日上限，停止計時。");
@@ -129,6 +135,7 @@
         
         function startTracking() {
             if (readTimerInterval === null) {
+                // ⭐️ 修正：確保計時器使用 1000 毫秒（1 秒）的間隔
                 readTimerInterval = setInterval(trackReadingTime, 1000);
                 console.log("程式夥伴: 文章閱讀計時器已啟動。");
             }
@@ -138,7 +145,9 @@
             if (readTimerInterval !== null) {
                 clearInterval(readTimerInterval);
                 readTimerInterval = null;
-                console.log("程式夥伴: 文章閱讀計時器已停止。");
+                // ⭐️ 修正：暫停時，將累積的秒數清零，避免切換頁面回來時立刻計分
+                secondsAccumulator = 0;
+                console.log("程式夥伴: 文章閱讀計時器已停止，累積秒數已清零。");
             }
         }
         
@@ -153,6 +162,10 @@
 
         // 頁面載入時啟動計時器
         startTracking();
+        
+        // 額外處理：當用戶離開頁面時，清除計時器
+        window.addEventListener('beforeunload', stopTracking);
+        
     } else {
         console.warn("程式夥伴: 遊戲化模組未完全載入。文章計分未啟動。");
     }
