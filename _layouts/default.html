@@ -85,38 +85,50 @@
         window.addBlogScore = addBlogScore;
 
         console.log("程式夥伴: 遊戲化模組已在 Base Layout 中啟動。");
+        
         //===========================================
-        // 程式夥伴: 遊戲化儀表板展開/收起邏輯 (START)
+        // 程式夥伴: 遊戲化儀表板展開/收起與狀態保存邏輯 (START)
         // ===========================================
         document.addEventListener('DOMContentLoaded', () => {
             const headerToggle = document.getElementById('game-header-toggle');
             const content = document.getElementById('game-content');
             const collapseIcon = document.getElementById('game-collapse-icon');
             
-            // 確保元素都存在
+            const STATE_KEY = 'gamification_dashboard_state'; // 🎯 新增: LocalStorage 鍵值
+            
             if (headerToggle && content && collapseIcon) {
-                // 預設將內容區塊設置為收起狀態 (如果你希望預設是收起的)
-                // content.classList.add('collapsed'); 
-                // collapseIcon.classList.add('rotated'); // 箭頭指向上方
+                
+                // --- 1. 載入狀態 (Persistence Check) ---
+                const savedState = localStorage.getItem(STATE_KEY);
+                
+                // 如果 localStorage 記錄了 'collapsed' 狀態，則在載入時應用它
+                if (savedState === 'collapsed') {
+                    content.classList.add('collapsed'); 
+                    collapseIcon.classList.add('rotated'); 
+                } 
+                // 否則，它會維持預設的展開狀態 (無 class)
 
+                // --- 2. 點擊邏輯 (Toggle and Save) ---
                 headerToggle.addEventListener('click', () => {
                     // 1. 切換內容區塊的 'collapsed' 類別
                     content.classList.toggle('collapsed');
                     
                     // 2. 根據內容區塊的新狀態，切換圖示的 'rotated' 類別
-                    if (content.classList.contains('collapsed')) {
+                    const isCollapsed = content.classList.contains('collapsed');
+
+                    if (isCollapsed) {
                         collapseIcon.classList.add('rotated');
+                        // 3. 儲存新狀態到 LocalStorage
+                        localStorage.setItem(STATE_KEY, 'collapsed');
                     } else {
                         collapseIcon.classList.remove('rotated');
+                        // 3. 儲存新狀態到 LocalStorage
+                        localStorage.setItem(STATE_KEY, 'expanded');
                     }
                 });
             }
         });
       
-        // ===========================================
-        // 程式夥伴: 每日簽到邏輯 (START)
-        // ===========================================
-        
         function setupCheckInModal() {
             // 延遲執行確保數據模型已從 LocalStorage 載入
             setTimeout(() => {
