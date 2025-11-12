@@ -68,16 +68,41 @@ const CONFIG = {
         { level: 30, required: 8943000 },
         // ...
     ],
-    // 徽章條件 (以分鐘計)
+    // 徽章條件 (以分鐘/篇數/天數計)
     ACHIEVEMENTS: {
-        'FIRST_READ': { name: '首次閱讀', condition: 1, type: 'blog_count' }, 
-        'MUSIC_MASTER': { name: '音樂達人', condition: 500, type: 'music_time' }, 
-        'POMODORO_PRO': { name: '番茄高手', condition: 1000, type: 'pomodoro_time' }, 
-        'SCORE_MASTER': { name: '積分大師', condition: 5000, type: 'total_score' } 
+        // --- 1. total_score (累積總分) ---
+        'SCORE_NOVICE': { name: '積分新手', condition: 500, type: 'total_score' }, 
+        'SCORE_VETERAN': { name: '經驗老手', condition: 2000, type: 'total_score' }, 
+        'SCORE_MASTER': { name: '積分大師', condition: 5000, type: 'total_score' }, // 沿用舊名
+        'SCORE_LEGEND': { name: '傳說玩家', condition: 10000, type: 'total_score' },
+        
+        // --- 2. blog_count (閱讀文章篇數) ---
+        'FIRST_READ': { name: '首次閱讀', condition: 1, type: 'blog_count' }, // 沿用舊名
+        'ARTICLE_EXPLORER': { name: '文章探險家', condition: 10, type: 'blog_count' },
+        'KNOWLEDGE_SEEKER': { name: '知識追尋者', condition: 50, type: 'blog_count' },
+        'READING_GRANDMASTER': { name: '閱讀宗師', condition: 100, type: 'blog_count' },
+        
+        // --- 3. music_time (累積音樂時間 - 分鐘) ---
+        'MUSIC_NOVICE': { name: '音樂新手', condition: 50, type: 'music_time' },
+        'MELODY_TRAVELER': { name: '旋律旅人', condition: 200, type: 'music_time' },
+        'MUSIC_MASTER': { name: '音樂達人', condition: 500, type: 'music_time' }, // 沿用舊名
+        'MELODY_GRANDMASTER': { name: '旋律大師', condition: 1000, type: 'music_time' },
+        
+        // --- 4. pomodoro_time (累積番茄鐘時間 - 分鐘) ---
+        'POMODORO_NOVICE': { name: '番茄新手', condition: 100, type: 'pomodoro_time' },
+        'TIME_TRAVELER': { name: '時間旅人', condition: 500, type: 'pomodoro_time' },
+        'POMODORO_PRO': { name: '番茄高手', condition: 1000, type: 'pomodoro_time' }, // 沿用舊名
+        'TIME_GRANDMASTER': { name: '時間宗師', condition: 2000, type: 'pomodoro_time' },
+        
+        // --- 5. consecutive_days (連續簽到天數 - 天) ---
+        'CHECKIN_NOVICE': { name: '每日新手', condition: 2, type: 'consecutive_days' },
+        'CHECKIN_PERSISTER': { name: '堅持者', condition: 7, type: 'consecutive_days' },
+        'CHECKIN_MASTER': { name: '連簽達人', condition: 30, type: 'consecutive_days' },
+        'CHECKIN_GRANDMASTER': { name: '習慣宗師', condition: 100, type: 'consecutive_days' },
     },
     STORAGE_KEY: 'game_stats'
 };
-
+ 
 // ===================================
 // 數據模型與儲存
 // ===================================
