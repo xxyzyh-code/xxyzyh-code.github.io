@@ -1,22 +1,15 @@
----
----
-
 <!doctype html>
 {% include copyright.html %}
 <html lang="{{ site.locale | replace: "_", "-" | default: "en" }}" class="no-js">
-<head>
+  <head>
     {% include head.html %}
     
     {% if page.permalink == '/music/' %}
     <link rel="stylesheet" href="/assets/css/theme.css">
     <link rel="stylesheet" href="/assets/css/custom_player.css">
     {% endif %}
-
-    <link rel="stylesheet" href="/assets/css/gamification.css"> 
-    
     {% include head/custom.html %}
-</head>
-
+  </head>
 
   <body class="layout--{{ page.layout | default: layout.layout }}{% if page.classes or layout.classes %}{{ page.classes | default: layout.classes | join: ' ' | prepend: ' ' }}{% endif %}" dir="{% if site.rtl %}rtl{% else %}ltr{% endif %}">
     {% include_cached skip-links.html %}
@@ -42,20 +35,24 @@
 
     <div id="gamification-dashboard" class="gamification-dashboard">
     <div class="header" onclick="document.getElementById('game-content').classList.toggle('collapsed')">
-        <span id="level-display"></span>  <span class="daily-score-summary" id="daily-score-display"></span> <span class="collapse-icon">▼</span>
+        <span id="level-display">Level 0</span>
+        <span class="daily-score-summary" id="daily-score-display">今日積分: 0 分</span>
+        <span class="collapse-icon">▼</span>
     </div>
     
     <div id="game-content" class="content">
         
         <div class="score-row">
-            <span id="total-score-display"></span> </div>
+            <span id="total-score-display">總積分: 0 分</span>
+        </div>
 
         <div class="progress-container">
             <div id="level-progress-bar" class="progress-bar"></div>
         </div>
         <div class="progress-text-row">
             <span class="level-label">升級進度</span>
-            <span id="level-progress-text"></span> </div>
+            <span id="level-progress-text">(0 / 100)</span>
+        </div>
         
         <div class="section-title">
             🏆 我的徽章 
@@ -67,7 +64,6 @@
 
     </div>
 </div>
-
 
 <div id="game-notification" class="game-notification">
     </div>
