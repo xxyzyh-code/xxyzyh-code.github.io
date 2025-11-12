@@ -69,6 +69,19 @@
 
     {% include scripts.html %}
 
+    <script type="module">
+        import { initializeGamificationModule, addBlogScore } from '/assets/js/gamificationModule.js';
+        
+        // 1. 初始化模組 (會載入用戶狀態並更新 UI 儀表板)
+        document.addEventListener('DOMContentLoaded', initializeGamificationModule);
+
+        // 2. 匯出 addBlogScore 到全局 window，供後續非 module 腳本使用
+        window.addBlogScore = addBlogScore;
+
+        console.log("程式夥伴: 遊戲化模組已在 Base Layout 中啟動。");
+    </script>
+
+
     {% if page.path contains '_posts/' %}
     <script>
     // ===========================================
@@ -76,7 +89,7 @@
     // 條件檢查: 頁面路徑包含 '_posts/' (文章頁面)
     // ===========================================
 
-    // 檢查 addBlogScore 函數是否已經透過 clock.js 載入
+    // 現在 window.addBlogScore 已經被上面的 module 腳本確保存在！
     if (typeof window.addBlogScore === 'function') {
         
         // ⭐️ 關鍵 1: 獲取當前文章的唯一 ID (使用 Liquid 獲取 Jekyll 的 page.url)
@@ -109,8 +122,7 @@
             if (secondsAccumulator >= 60) {
                 
                 // 呼叫 gamificationModule 裡的計分函數，並傳入是否為首次閱讀的狀態
-                // 只有第一次計分時，isFirstReadSession 才是 true
-                const success = addBlogScore(isFirstReadSession);
+                const success = window.addBlogScore(isFirstReadSession); // 👈 使用 window 上的函數
                 
                 // 將累積器歸零，準備下一次計分
                 secondsAccumulator = 0;
@@ -135,7 +147,6 @@
         
         function startTracking() {
             if (readTimerInterval === null) {
-                // ⭐️ 修正：確保計時器使用 1000 毫秒（1 秒）的間隔
                 readTimerInterval = setInterval(trackReadingTime, 1000);
                 console.log("程式夥伴: 文章閱讀計時器已啟動。");
             }
@@ -145,13 +156,13 @@
             if (readTimerInterval !== null) {
                 clearInterval(readTimerInterval);
                 readTimerInterval = null;
-                // ⭐️ 修正：暫停時，將累積的秒數清零，避免切換頁面回來時立刻計分
+                // 暫停時，將累積的秒數清零
                 secondsAccumulator = 0;
                 console.log("程式夥伴: 文章閱讀計時器已停止，累積秒數已清零。");
             }
         }
         
-        // ⭐️ 關鍵 4: 監聽網頁可見性 (防止用戶切換標籤頁時繼續計分)
+        // 監聽網頁可見性
         document.addEventListener('visibilitychange', () => {
             if (document.visibilityState === 'visible') {
                 startTracking();
@@ -167,6 +178,7 @@
         window.addEventListener('beforeunload', stopTracking);
         
     } else {
+        // 現在這個警告應該不會再出現了！
         console.warn("程式夥伴: 遊戲化模組未完全載入。文章計分未啟動。");
     }
     </script>
