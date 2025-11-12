@@ -536,38 +536,48 @@ function updateUI() {
     const currentLevel = stats.lifetime.level;
     const currentScore = stats.lifetime.total_score;
     let nextLevelReq = CONFIG.LEVEL_REQUIREMENTS.find(req => req.level === currentLevel + 1);
-
-    document.getElementById('level-display').textContent = `Level ${currentLevel}`;
-    document.getElementById('total-score-display').textContent = `總積分: ${currentScore} 分`;
-
-    // 2. 進度條計算
+    
+    // 獲取所有 DOM 元素
+    const levelDisplay = document.getElementById('level-display');
+    const totalScoreDisplay = document.getElementById('total-score-display');
+    const dailySummaryHeader = document.getElementById('daily-score-summary-header'); // 🎯 新的 Header 簡報元素
+    const dailyLogDisplay = document.getElementById('daily-log-display');             // 🎯 新的日誌詳情元素
     const progressBar = document.getElementById('level-progress-bar');
     const progressText = document.getElementById('level-progress-text');
+    const achievementList = document.getElementById('achievement-list');
+    const achievementProgressDisplay = document.getElementById('achievement-progress-text'); // 🎯 新的徽章進度元素
 
-    if (nextLevelReq) {
-        const prevLevelReq = CONFIG.LEVEL_REQUIREMENTS.find(req => req.level === currentLevel) || { required: 0 };
-        const scoreNeededForThisLevel = nextLevelReq.required - prevLevelReq.required;
-        const scoreEarnedInThisLevel = currentScore - prevLevelReq.required;
+    // 確保元素存在再更新，避免錯誤
+    if (levelDisplay) levelDisplay.textContent = `Level ${currentLevel}`;
+    if (totalScoreDisplay) totalScoreDisplay.textContent = `總積分: ${currentScore} 分`;
 
-        const progressPercent = Math.min(100, (scoreEarnedInThisLevel / scoreNeededForThisLevel) * 100);
 
-        progressBar.style.width = `${progressPercent}%`;
-        progressText.textContent = `(${scoreEarnedInThisLevel} / ${scoreNeededForThisLevel})`;
-    } else {
-        progressBar.style.width = '100%';
-        progressText.textContent = ' (已達當前最高等級)';
+    // 2. 進度條計算 (邏輯不變)
+    if (progressBar && progressText) {
+        if (nextLevelReq) {
+            const prevLevelReq = CONFIG.LEVEL_REQUIREMENTS.find(req => req.level === currentLevel) || { required: 0 };
+            const scoreNeededForThisLevel = nextLevelReq.required - prevLevelReq.required;
+            const scoreEarnedInThisLevel = currentScore - prevLevelReq.required;
+
+            const progressPercent = Math.min(100, (scoreEarnedInThisLevel / scoreNeededForThisLevel) * 100);
+
+            progressBar.style.width = `${progressPercent}%`;
+            progressText.textContent = `(${scoreEarnedInThisLevel} / ${scoreNeededForThisLevel})`;
+        } else {
+            progressBar.style.width = '100%';
+            progressText.textContent = ' (已達當前最高等級)';
+        }
     }
 
-    // 3. 每日積分提示 (顯示動態上限和活動狀態)
-    const dailyScoreDisplay = document.getElementById('daily-score-display');
-    
+
+    // 3. 每日積分提示 (拆分 Header 與 Log 區塊)
     const weekendActive = isWeekend();
     const annualMultiplier = getAnnualEventMultiplier();
     
     // 只有週末活動影響時長上限
     const limitMultiplier = weekendActive ? CONFIG.WEEKEND_BOOST.LIMIT_MULTIPLIER : 1;
     
-    // 決定 UI 提示標籤，優先顯示年度活動
+    // 決定 UI 提示標籤
     let uiTag = '';
     if (annualMultiplier > 1.0) {
         uiTag = ' ✨年度活動!';
@@ -575,36 +585,46 @@ function updateUI() {
         uiTag = ' ✨週末加速中!';
     }
     
-    // 🚩 NEW: 獲取等級時長獎勵
     const levelBonus = getLevelLimitBonus();
+    let bonusTag = levelBonus > 0 ? ` (等級獎勵: +${levelBonus}分鐘)` : '';
 
-    // 計算實際每日上限 (基礎 + 等級獎勵) * 乘數
-    const baseLimitBlog = CONFIG.DAILY_LIMIT_MINUTES.BLOG + levelBonus;
-    const baseLimitMusic = CONFIG.DAILY_LIMIT_MINUTES.MUSIC + levelBonus;
-    const baseLimitPomodoro = CONFIG.DAILY_LIMIT_MINUTES.POMODORO + levelBonus;
-    
-    const actualLimitBlog = Math.floor(baseLimitBlog * limitMultiplier);
-    const actualLimitMusic = Math.floor(baseLimitMusic * limitMultiplier);
-    const actualLimitPomodoro = Math.floor(baseLimitPomodoro * limitMultiplier);
+    // 計算實際每日上限
+    const actualLimitBlog = Math.floor((CONFIG.DAILY_LIMIT_MINUTES.BLOG + levelBonus) * limitMultiplier);
+    const actualLimitMusic = Math.floor((CONFIG.DAILY_LIMIT_MINUTES.MUSIC + levelBonus) * limitMultiplier);
+    const actualLimitPomodoro = Math.floor((CONFIG.DAILY_LIMIT_MINUTES.POMODORO + levelBonus) * limitMultiplier);
 
     // 計算剩餘時間 
     const remainingBlog = actualLimitBlog - stats.daily.blog_time;
     const remainingMusic = actualLimitMusic - stats.daily.music_time;
     const remainingPomodoro = actualLimitPomodoro - stats.daily.pomodoro_time;
     
-    let bonusTag = levelBonus > 0 ? ` (等級獎勵: +${levelBonus}分鐘)` : '';
+    
+    // 🎯 Header 顯示：只顯示今日積分 (精簡版)
+    if (dailySummaryHeader) {
+        dailySummaryHeader.innerHTML = `<strong>今日積分: ${stats.daily.score} 分</strong>${uiTag}`;
+    }
 
-    dailyScoreDisplay.innerHTML = `
-        <strong>今日積分: ${stats.daily.score} 分${uiTag}</strong>
-        ${bonusTag}
-        <br>閱讀：剩餘 ${Math.max(0, remainingBlog)} 分鐘 (上限 ${actualLimitBlog} 分鐘)
-        <br>音樂：剩餘 ${Math.max(0, remainingMusic)} 分鐘 (上限 ${actualLimitMusic} 分鐘)
-        <br>番茄鐘：剩餘 ${Math.max(0, remainingPomodoro)} 分鐘 (上限 ${actualLimitPomodoro} 分鐘)
-        <br><small style="opacity: 0.7;">待計入餘額: ${stats.daily.score_remainder.toFixed(2)} 分</small>
-    `;
+    // 🎯 Log 顯示：顯示所有詳細資訊
+    if (dailyLogDisplay) {
+        dailyLogDisplay.innerHTML = `
+            ${bonusTag ? `<small style="display: block; color: #ff9800; margin-bottom: 5px;">${bonusTag}</small>` : ''}
+            閱讀：剩餘 ${Math.max(0, remainingBlog)} 分鐘 (上限 ${actualLimitBlog} 分鐘)
+            <br>音樂：剩餘 ${Math.max(0, remainingMusic)} 分鐘 (上限 ${actualLimitMusic} 分鐘)
+            <br>番茄鐘：剩餘 ${Math.max(0, remainingPomodoro)} 分鐘 (上限 ${actualLimitPomodoro} 分鐘)
+            <br><small style="opacity: 0.7;">待計入餘額: ${stats.daily.score_remainder.toFixed(2)} 分</small>
+        `;
+    }
 
-    // 4. 徽章顯示
-    const achievementList = document.getElementById('achievement-list');
+
+    // 4. 徽章顯示 (重新引入進度計算)
+    const totalAchievements = Object.keys(CONFIG.ACHIEVEMENTS).length; 
+    const earnedAchievements = stats.lifetime.achievements.length;    
+    const progressStatus = `${earnedAchievements} / ${totalAchievements}`;
+    
+    if (achievementProgressDisplay) {
+        achievementProgressDisplay.textContent = ` (${progressStatus})`; // 更新進度文本
+    }
+    
     if(achievementList) {
         achievementList.innerHTML = stats.lifetime.achievements.map(key => {
             const name = CONFIG.ACHIEVEMENTS[key].name;
@@ -613,6 +633,7 @@ function updateUI() {
         }).join('');
     }
 }
+
 
 
 // ===================================
