@@ -84,7 +84,7 @@
         // 條件檢查必須使用 Liquid 判斷是否為文章頁面
         // ===========================================
         
-        {% if page.layout == "post" or page.layout == "single" %}
+{% if (page.layout == "post" or page.layout == "single") and page.path contains '_posts/' %}
         
             // ⭐️ 修正: 所有變數都必須在頂層定義，才能被後續的函數存取 (Scope)
             const progressBar = document.getElementById('read-progress-bar');
@@ -199,7 +199,8 @@
         
     </script>
         
-    {% if page.layout == "post" or page.layout == "single" %}
+{% if (page.layout == "post" or page.layout == "single") and page.path contains '_posts/' %}
+    
     <div id="read-progress-bar-container">
         <div id="read-progress-bar"></div>
         <div id="read-progress-text"></div>
