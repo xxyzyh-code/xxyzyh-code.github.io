@@ -37,8 +37,10 @@
     </div>
 
 <div id="gamification-dashboard" class="gamification-dashboard">
-    <div class="header" onclick="document.getElementById('game-content').classList.toggle('collapsed')">
-        <span id="level-display"></span>  <span class="daily-score-summary" id="daily-score-summary-header"></span> <span class="collapse-icon">▼</span>
+    <div class="header" id="game-header-toggle">
+        <span id="level-display"></span>  
+        <span class="daily-score-summary" id="daily-score-summary-header"></span> 
+        <span class="collapse-icon" id="game-collapse-icon">▼</span>
     </div>
     
     <div id="game-content" class="content">
@@ -72,7 +74,6 @@
         import { 
             initializeGamificationModule, 
             addBlogScore, 
-            // ⭐️ 新增：導入簽到相關函數
             getCheckInStatus, 
             addCheckInScore 
         } from '/assets/js/gamificationModule.js';
@@ -84,7 +85,34 @@
         window.addBlogScore = addBlogScore;
 
         console.log("程式夥伴: 遊戲化模組已在 Base Layout 中啟動。");
+        //===========================================
+        // 程式夥伴: 遊戲化儀表板展開/收起邏輯 (START)
+        // ===========================================
+        document.addEventListener('DOMContentLoaded', () => {
+            const headerToggle = document.getElementById('game-header-toggle');
+            const content = document.getElementById('game-content');
+            const collapseIcon = document.getElementById('game-collapse-icon');
+            
+            // 確保元素都存在
+            if (headerToggle && content && collapseIcon) {
+                // 預設將內容區塊設置為收起狀態 (如果你希望預設是收起的)
+                // content.classList.add('collapsed'); 
+                // collapseIcon.classList.add('rotated'); // 箭頭指向上方
 
+                headerToggle.addEventListener('click', () => {
+                    // 1. 切換內容區塊的 'collapsed' 類別
+                    content.classList.toggle('collapsed');
+                    
+                    // 2. 根據內容區塊的新狀態，切換圖示的 'rotated' 類別
+                    if (content.classList.contains('collapsed')) {
+                        collapseIcon.classList.add('rotated');
+                    } else {
+                        collapseIcon.classList.remove('rotated');
+                    }
+                });
+            }
+        });
+      
         // ===========================================
         // 程式夥伴: 每日簽到邏輯 (START)
         // ===========================================
@@ -384,6 +412,28 @@
         font-size: 14px;
         color: #666;
     }
+          /* 🎯 新增/修正：遊戲化儀表板的折疊圖標樣式 */
+    .gamification-dashboard .header {
+        cursor: pointer; /* 讓使用者知道可以點擊 */
+        user-select: none;
+    }
+
+    .gamification-dashboard .collapse-icon {
+        display: inline-block;
+        transition: transform 0.2s ease-in-out; /* 平滑過渡 */
+        transform: rotate(0deg); /* 預設 ▼ (向下展開) */
+    }
+
+    /* 當內容收起時，圖標旋轉 180 度 (變成 ▲，指向上方) */
+    .gamification-dashboard .collapse-icon.rotated {
+        transform: rotate(180deg); 
+    }
+    
+    /* 內容區塊的收起樣式，確保隱藏 */
+    #game-content.collapsed {
+        display: none !important; /* 確保收起時內容消失 */
+    }
+
     </style>
 
   </body>
