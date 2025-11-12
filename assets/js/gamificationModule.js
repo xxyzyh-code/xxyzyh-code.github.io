@@ -369,7 +369,7 @@ function updateUI() {
     document.getElementById('level-display').textContent = `Level ${currentLevel}`;
     document.getElementById('total-score-display').textContent = `總積分: ${currentScore} 分`;
 
-    // 2. 進度條
+    // 2. 進度條 
     const progressBar = document.getElementById('level-progress-bar');
     const progressText = document.getElementById('level-progress-text');
 
@@ -388,20 +388,35 @@ function updateUI() {
         progressText.textContent = ' (已達當前最高等級)';
     }
 
-    // 3. 每日積分提示
+    // 3. 每日積分提示 (⭐️ 修正此處以完整顯示週末加速後的上限和標籤)
     const dailyScoreDisplay = document.getElementById('daily-score-display');
-    const remainingBlog = CONFIG.DAILY_LIMIT_MINUTES.BLOG - stats.daily.blog_time;
-    const remainingMusic = CONFIG.DAILY_LIMIT_MINUTES.MUSIC - stats.daily.music_time;
-    const remainingPomodoro = CONFIG.DAILY_LIMIT_MINUTES.POMODORO - stats.daily.pomodoro_time;
     
+    // 取得動態上限
+    const weekendActive = isWeekend();
+    const multiplier = weekendActive ? CONFIG.WEEKEND_BOOST.LIMIT_MULTIPLIER : 1;
+
+    // 計算週末加速後的實際每日上限 
+    const actualLimitBlog = Math.floor(CONFIG.DAILY_LIMIT_MINUTES.BLOG * multiplier);
+    const actualLimitMusic = Math.floor(CONFIG.DAILY_LIMIT_MINUTES.MUSIC * multiplier);
+    const actualLimitPomodoro = Math.floor(CONFIG.DAILY_LIMIT_MINUTES.POMODORO * multiplier);
+
+    // 計算剩餘時間 
+    const remainingBlog = actualLimitBlog - stats.daily.blog_time;
+    const remainingMusic = actualLimitMusic - stats.daily.music_time;
+    const remainingPomodoro = actualLimitPomodoro - stats.daily.pomodoro_time;
+    
+    // 週末提示標籤
+    const weekendTag = weekendActive ? ' ✨週末加速中!' : ''; // 加上空格
+
+    // 🚩將 actualLimit 和 weekendTag 顯示出來
     dailyScoreDisplay.innerHTML = `
-        <strong>今日積分: ${stats.daily.score} 分</strong>
-        <br>閱讀：剩餘 ${Math.max(0, remainingBlog)} 分鐘
-        <br>音樂：剩餘 ${Math.max(0, remainingMusic)} 分鐘
-        <br>番茄鐘：剩餘 ${Math.max(0, remainingPomodoro)} 分鐘
+        <strong>今日積分: ${stats.daily.score} 分${weekendTag}</strong>
+        <br>閱讀：剩餘 ${Math.max(0, remainingBlog)} 分鐘 (上限 ${actualLimitBlog} 分鐘)
+        <br>音樂：剩餘 ${Math.max(0, remainingMusic)} 分鐘 (上限 ${actualLimitMusic} 分鐘)
+        <br>番茄鐘：剩餘 ${Math.max(0, remainingPomodoro)} 分鐘 (上限 ${actualLimitPomodoro} 分鐘)
     `;
 
-    // 4. 徽章顯示
+    // 4. 徽章顯示 
     const achievementList = document.getElementById('achievement-list');
     if(achievementList) {
         achievementList.innerHTML = stats.lifetime.achievements.map(key => {
@@ -411,7 +426,6 @@ function updateUI() {
         }).join('');
     }
 }
-
 
 // ===================================
 // 啟動與匯出
