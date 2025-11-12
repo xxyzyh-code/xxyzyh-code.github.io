@@ -36,31 +36,31 @@
       </footer>
     </div>
 
-    <div id="gamification-dashboard" class="gamification-dashboard">
+<div id="gamification-dashboard" class="gamification-dashboard">
     <div class="header" onclick="document.getElementById('game-content').classList.toggle('collapsed')">
-        <span id="level-display">Level 0</span>
-        <span class="daily-score-summary" id="daily-score-display">今日積分: 0 分</span>
-        <span class="collapse-icon">▼</span>
+        <span id="level-display"></span>  <span class="daily-score-summary" id="daily-score-summary-header"></span> <span class="collapse-icon">▼</span>
     </div>
     
     <div id="game-content" class="content">
         
+        <div id="daily-log-display" class="score-row daily-score-log-row">
+            </div>
+
         <div class="score-row">
-            <span id="total-score-display">總積分: 0 分</span>
-        </div>
+            <span id="total-score-display"></span> </div>
 
         <div class="progress-container">
             <div id="level-progress-bar" class="progress-bar"></div>
         </div>
         <div class="progress-text-row">
             <span class="level-label">升級進度</span>
-            <span id="level-progress-text">(0 / 100)</span>
-        </div>
+            <span id="level-progress-text"></span> </div>
         
-        <div class="section-title">🏆 我的徽章</div>
+        <div class="section-title">
+            🏆 我的徽章 
+            <span id="achievement-progress-text" style="font-size: 0.9em; font-weight: normal; color: #ff9800;"></span> </div>
         <div id="achievement-list" class="achievement-list">
-            </div>
-
+        </div>
     </div>
 </div>
 
