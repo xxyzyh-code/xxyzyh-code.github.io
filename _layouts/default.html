@@ -69,16 +69,78 @@
     {% include scripts.html %}
 
     <script type="module">
-        import { initializeGamificationModule, addBlogScore } from '/assets/js/gamificationModule.js';
+        import { 
+            initializeGamificationModule, 
+            addBlogScore, 
+            // ⭐️ 新增：導入簽到相關函數
+            getCheckInStatus, 
+            addCheckInScore 
+        } from '/assets/js/gamificationModule.js';
         
-        // 1. 初始化模組 (必須先執行，才能更新 UI)
+        // 1. 初始化模組 (保持不變)
         document.addEventListener('DOMContentLoaded', initializeGamificationModule);
 
-        // 2. 匯出 addBlogScore 到全局 window (如果其他地方需要，保留此行)
+        // 2. 匯出 addBlogScore 到全局 window (保持不變)
         window.addBlogScore = addBlogScore;
 
         console.log("程式夥伴: 遊戲化模組已在 Base Layout 中啟動。");
 
+        // ===========================================
+        // 程式夥伴: 每日簽到邏輯 (START)
+        // ===========================================
+        
+        function setupCheckInModal() {
+            // 延遲執行確保數據模型已從 LocalStorage 載入
+            setTimeout(() => {
+                
+                const modal = document.getElementById('checkin-modal');
+                const closeBtn = document.querySelector('#checkin-modal .close-btn');
+                const checkinBtn = document.getElementById('checkin-button');
+                const messageEl = document.getElementById('checkin-message');
+                const daysDisplayEl = document.getElementById('consecutive-days-display');
+                
+                // 獲取當前簽到狀態
+                const status = getCheckInStatus();
+                
+                daysDisplayEl.textContent = status.consecutiveDays;
+                
+                if (status.canCheckIn) {
+                    // 顯示簽到訊息
+                    messageEl.innerHTML = `今天是你連續關注我的博客網站的第 **${status.consecutiveDays}** 天，<br>點擊按鈕領取今日獎勵 **${status.score}** 積分！`;
+                    checkinBtn.textContent = `點擊簽到 (${status.score} 積分)`;
+                    modal.style.display = 'block'; // 顯示彈窗
+                } else {
+                    // 已經簽到，不顯示 Modal
+                    modal.style.display = 'none';
+                }
+            
+                // 處理簽到按鈕點擊
+                checkinBtn.onclick = () => {
+                    const success = addCheckInScore();
+                    if (success) {
+                        modal.style.display = 'none';
+                        // 確保簽到成功後，dashboard 的積分立刻更新
+                        // (雖然 addCheckInScore 內部已呼叫 updateUI，但保險起見保留)
+                        // updateUI() - 無需手動呼叫，因為它不在這個 Module 的 Scope 內
+                    }
+                };
+                
+                // 處理關閉按鈕
+                closeBtn.onclick = () => {
+                    modal.style.display = 'none';
+                };
+
+                // 點擊 Modal 外部也關閉
+                window.onclick = (event) => {
+                    if (event.target == modal) {
+                        modal.style.display = 'none';
+                    }
+                };
+            }, 500); // 延遲 500ms 確保數據模型已載入
+        }
+
+        // 確保 DOM 載入後才設置 Modal
+        document.addEventListener('DOMContentLoaded', setupCheckInModal);
         // ===========================================
         // 程式夥伴: 閱讀計分邏輯 (確保在模組環境中啟動)
         // 條件檢查必須使用 Liquid 判斷是否為文章頁面
@@ -244,6 +306,85 @@
         }
     </style>
     {% endif %}
+
+    <div id="checkin-modal" class="checkin-modal">
+        <div class="checkin-content">
+            <span class="close-btn">&times;</span>
+            <h3 id="checkin-title">📅 每日簽到獎勵</h3>
+            <p id="checkin-message"></p>
+            <button id="checkin-button" class="checkin-btn">點擊簽到</button>
+            <p class="consecutive-info">🔥 連續簽到天數: <span id="consecutive-days-display">0</span> 天</p>
+        </div>
+    </div>
+
+    <style>
+    /* CSS for the Check-in Modal */
+    .checkin-modal {
+        display: none; /* 預設隱藏 */
+        position: fixed;
+        z-index: 2000; /* 確保在最上層 */
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0,0,0,0.6); /* 半透明背景 */
+    }
+
+    .checkin-content {
+        background-color: #fefefe;
+        margin: 15% auto; /* 置中 */
+        padding: 25px;
+        border: 1px solid #888;
+        width: 80%; /* 寬度 */
+        max-width: 400px;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        text-align: center;
+        line-height: 1.5; /* 確保訊息更易讀 */
+    }
+
+    .close-btn {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+    }
+
+    .close-btn:hover,
+    .close-btn:focus {
+        color: #000;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .checkin-btn {
+        background-color: #ff9800; /* 橙色 */
+        color: white;
+        padding: 10px 20px;
+        margin: 10px 0;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: bold;
+        transition: background-color 0.3s;
+    }
+
+    .checkin-btn:hover {
+        background-color: #e68900;
+    }
+
+    .checkin-btn:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+    }
+
+    .consecutive-info {
+        font-size: 14px;
+        color: #666;
+    }
+    </style>
 
   </body>
 </html>
