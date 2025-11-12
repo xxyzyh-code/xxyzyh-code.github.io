@@ -16,7 +16,7 @@ const CONFIG = {
         MUSIC: 25, // 4分/分鐘 * 25分鐘 = 100分
         POMODORO: 40 // 2分/分鐘 * 40分鐘 = 80分
     },
-        // ⭐️ 新增：週末加速活動配置 (僅限週六/週日)
+    // ⭐️ 週末加速活動配置 (僅限週六/週日)
     WEEKEND_BOOST: {
         LIMIT_MULTIPLIER: 1.5, // 得分時長上限 × 1.5
         SCORE_MULTIPLIER: 1.2  // 單位 XP × 1.2
@@ -52,6 +52,8 @@ let stats = {
         blog_time: 0,
         music_time: 0,
         pomodoro_time: 0,
+        // 🚩 新增：累積尚未計入總分的浮點數積分餘額
+        score_remainder: 0.0, 
     },
     // 永久統計
     lifetime: {
@@ -60,10 +62,10 @@ let stats = {
         blog_count: 0, // 閱讀文章篇數
         music_time: 0, // 累積音樂時間 (分鐘)
         pomodoro_time: 0, // 累積番茄鐘時間 (分鐘)
-        achievements: [], // 👈 這裡必須加逗號！
-        // ⭐️ 新增：追蹤簽到所需字段
-        last_check_in: '',      // 上次簽到日期 (格式: YYYY-MM-DD)
-        consecutive_days: 0     // 連續簽到天數
+        achievements: [], 
+        // 追蹤簽到所需字段
+        last_check_in: '',      
+        consecutive_days: 0     
     }
 };
 
@@ -75,8 +77,11 @@ function loadStats() {
         const savedStats = localStorage.getItem(CONFIG.STORAGE_KEY);
         if (savedStats) {
             stats = JSON.parse(savedStats);
+            // 處理舊數據結構：如果沒有 score_remainder 則初始化為 0.0
+            if (stats.daily.score_remainder === undefined) {
+                 stats.daily.score_remainder = 0.0;
+            }
         } else {
-            // ⭐️ 修正 B: 如果沒有儲存的 stats (首次載入)，則確保等級為 1
             stats.lifetime.level = 1; 
         }
         
@@ -89,14 +94,11 @@ function loadStats() {
                 blog_time: 0,
                 music_time: 0,
                 pomodoro_time: 0,
+                // 🚩 確保重置時，浮點數餘額也歸零
+                score_remainder: 0.0, 
             };
-            // 提示用戶重置訊息 (可選的 UI 提示)
             console.log("程式夥伴: 每日積分已重置！");
         }
-        
-        // ⭐️ 修正 C: 移除多餘的 Level 0 檢查邏輯。
-        // checkLevelUp() 會處理 Level 1 升級到 Level 2 的情況。
-        // 如果舊的 stats 檔案被載入，但 total_score 達到要求，checkLevelUp() 仍會被積分函數呼叫並正確升級。
 
     } catch (e) {
         console.error("載入遊戲化數據失敗:", e);
@@ -115,7 +117,7 @@ function saveStats() {
 }
 
 // ===================================
-// ⭐️ 新增：週末判斷邏輯
+// 週末判斷邏輯
 // ===================================
 /**
  * @description 判斷當前日期是否為週六 (6) 或週日 (0)。
@@ -128,7 +130,7 @@ function isWeekend() {
 }
 
 // ===================================
-// 等級與徽章邏輯
+// 等級與徽章邏輯 
 // ===================================
 
 /**
@@ -141,9 +143,7 @@ function checkLevelUp() {
     if (nextLevelReq && stats.lifetime.total_score >= nextLevelReq.required) {
         stats.lifetime.level = nextLevelReq.level;
         saveStats();
-        // 💡 提示：這裡應觸發升級動畫/彈窗
         displayNotification(`🎉 恭喜！你的等級升級到 Level ${stats.lifetime.level}！`, 'level-up');
-        // 遞迴檢查是否能連續升級
         checkLevelUp(); 
     }
 }
@@ -160,7 +160,6 @@ function checkAchievements() {
         if (!stats.lifetime.achievements.includes(key)) {
             let valueToCheck = 0;
             
-            // 根據徽章類型檢查對應的永久統計數據
             if (achievement.type === 'total_score') {
                 valueToCheck = stats.lifetime.total_score;
             } else if (achievement.type === 'music_time') {
@@ -174,20 +173,18 @@ function checkAchievements() {
             if (valueToCheck >= achievement.condition) {
                 stats.lifetime.achievements.push(key);
                 newAchievement = true;
-                // 💡 提示：這裡應觸發徽章動畫/彈窗
                 displayNotification(`🏆 獲得新徽章：${achievement.name}！`, 'achievement');
             }
         }
     }
     if (newAchievement) {
         saveStats();
-        // 💡 提示：更新 UI
         updateUI();
     }
 }
 
 // ===================================
-// 核心積分計算與公共 API
+// 核心積分計算與公共 API (已修正為浮點數累積)
 // ===================================
 
 /**
@@ -200,50 +197,52 @@ function checkAchievements() {
 function addScore(type, minutes = 1, isNewArticle = false) {
     const dailyTimeKey = `${type.toLowerCase()}_time`; // e.g., 'blog_time'
     
-    // ⭐️ 核心修改：判斷是否為週末，並獲取加速係數
+    // 週末加速邏輯 
     const weekendActive = isWeekend();
-    
     let limitMinutes = CONFIG.DAILY_LIMIT_MINUTES[type];
     let scorePerMinute = CONFIG.SCORE_PER_MINUTE[type];
 
-    // 如果是週末，應用加速規則
     if (weekendActive) {
-        // 時長上限 × 1.5 (取整以避免浮點數問題，但保留計算精度)
         limitMinutes = Math.floor(limitMinutes * CONFIG.WEEKEND_BOOST.LIMIT_MULTIPLIER); 
-        // 單位積分 × 1.2 (取整，你可能需要考慮保留小數點，這裡為了簡潔直接向下取整)
-        // 為了避免損失精度，我們建議保留小數，但最終分數仍應是整數，所以讓分數部分使用 Math.floor/Math.round
         scorePerMinute = scorePerMinute * CONFIG.WEEKEND_BOOST.SCORE_MULTIPLIER;
-        
-        // 可選：輸出提示，方便開發者確認加速是否生效
         console.log(`[週末加速] ${type}：新上限 ${limitMinutes} 分鐘，新單位 XP ${scorePerMinute.toFixed(2)} 分/分鐘`);
     }
 
     
-    // 1. 檢查是否達到每日時長上限
-    // 使用動態調整後的 limitMinutes 進行檢查
+    // 1. 檢查是否達到每日時長上限 (使用動態上限)
     if (stats.daily[dailyTimeKey] >= limitMinutes) {
-        // console.log(`每日 ${type} 積分已達上限，不再計分。`);
         return false;
     }
     
     // 2. 累計每日時長
     stats.daily[dailyTimeKey] += minutes;
     
-    // 3. 計算並累計每日積分 (上限檢查)
-    // 使用動態調整後的 scorePerMinute 進行計算
-    let scoreToAdd = scorePerMinute * minutes;
+    // 3. 計算並累計每日積分 (🚩 核心修正: 處理浮點數累積)
+    let rawScoreToAdd = scorePerMinute * minutes;
     
     // 如果累計時長超過上限，則只計算剩餘的積分
     if (stats.daily[dailyTimeKey] > limitMinutes) {
         const excessMinutes = stats.daily[dailyTimeKey] - limitMinutes;
-        // 減去超出的積分 (同樣使用加速後的 scorePerMinute)
-        scoreToAdd -= (scorePerMinute * excessMinutes);
+        rawScoreToAdd -= (scorePerMinute * excessMinutes);
     }
     
-    // 最終得分轉換為整數，確保計分系統不會出現小數
-    scoreToAdd = Math.floor(scoreToAdd);
+    if (rawScoreToAdd <= 0) {
+        // 確保時長累計後，如果分數 <= 0 也能儲存
+        saveStats();
+        return false; 
+    }
+
+    // 🚩 核心邏輯：將浮點數分數加到餘額中
+    stats.daily.score_remainder += rawScoreToAdd;
+
+    // 提取整數分數部分
+    let scoreToAdd = Math.floor(stats.daily.score_remainder);
 
     if (scoreToAdd > 0) {
+        // 更新餘額：減去已經提取的整數分數
+        stats.daily.score_remainder -= scoreToAdd; 
+        
+        // 累計分數
         stats.daily.score += scoreToAdd;
         stats.lifetime.total_score += scoreToAdd;
         
@@ -259,14 +258,22 @@ function addScore(type, minutes = 1, isNewArticle = false) {
         checkLevelUp();
         checkAchievements();
         updateUI();
-        // console.log(`增加 ${type} 積分 ${scoreToAdd} 分。當日總分: ${stats.daily.score}`);
+        
+        console.log(`[XP 累積] 餘額增加 ${rawScoreToAdd.toFixed(2)}。計入 ${scoreToAdd} 分。新餘額 ${stats.daily.score_remainder.toFixed(2)}。`);
         return true;
     }
+    
+    // 如果沒有累積到足夠的整數分，但餘額已增加，也需要儲存
+    if (rawScoreToAdd > 0) {
+         saveStats();
+         return true;
+    }
+    
     return false;
 }
 
 // ===================================
-// UI 更新與提示 (簡化版，你可以優化樣式)
+// UI 更新與提示 (已修正為動態顯示上限)
 // ===================================
 
 /**
@@ -344,7 +351,7 @@ export function addCheckInScore() {
     stats.lifetime.last_check_in = new Date().toLocaleDateString('en-CA');
     stats.lifetime.consecutive_days = status.consecutiveDays;
     
-    // 2. 發放積分 (直接增加到總分，簽到沒有每日時長限制)
+    // 2. 發放積分 
     stats.daily.score += status.score;
     stats.lifetime.total_score += status.score;
 
@@ -358,10 +365,10 @@ export function addCheckInScore() {
 }
 
 /**
- * @description 更新所有遊戲化相關的前端顯示。
+ * @description 更新所有遊戲化相關的前端顯示。(已修正為動態顯示上限)
  */
 function updateUI() {
-    // 1. 等級和總積分
+    // 1. 等級和總積分 
     const currentLevel = stats.lifetime.level;
     const currentScore = stats.lifetime.total_score;
     let nextLevelReq = CONFIG.LEVEL_REQUIREMENTS.find(req => req.level === currentLevel + 1);
@@ -374,7 +381,6 @@ function updateUI() {
     const progressText = document.getElementById('level-progress-text');
 
     if (nextLevelReq) {
-        // 計算當前級別所需的進度
         const prevLevelReq = CONFIG.LEVEL_REQUIREMENTS.find(req => req.level === currentLevel) || { required: 0 };
         const scoreNeededForThisLevel = nextLevelReq.required - prevLevelReq.required;
         const scoreEarnedInThisLevel = currentScore - prevLevelReq.required;
@@ -388,10 +394,9 @@ function updateUI() {
         progressText.textContent = ' (已達當前最高等級)';
     }
 
-    // 3. 每日積分提示 (⭐️ 修正此處以完整顯示週末加速後的上限和標籤)
+    // 3. 每日積分提示 (動態顯示上限)
     const dailyScoreDisplay = document.getElementById('daily-score-display');
     
-    // 取得動態上限
     const weekendActive = isWeekend();
     const multiplier = weekendActive ? CONFIG.WEEKEND_BOOST.LIMIT_MULTIPLIER : 1;
 
@@ -406,14 +411,15 @@ function updateUI() {
     const remainingPomodoro = actualLimitPomodoro - stats.daily.pomodoro_time;
     
     // 週末提示標籤
-    const weekendTag = weekendActive ? ' ✨週末加速中!' : ''; // 加上空格
+    const weekendTag = weekendActive ? ' ✨週末加速中!' : ''; 
 
-    // 🚩將 actualLimit 和 weekendTag 顯示出來
+    // 🚩 顯示 actualLimit 和 weekendTag
     dailyScoreDisplay.innerHTML = `
         <strong>今日積分: ${stats.daily.score} 分${weekendTag}</strong>
         <br>閱讀：剩餘 ${Math.max(0, remainingBlog)} 分鐘 (上限 ${actualLimitBlog} 分鐘)
         <br>音樂：剩餘 ${Math.max(0, remainingMusic)} 分鐘 (上限 ${actualLimitMusic} 分鐘)
         <br>番茄鐘：剩餘 ${Math.max(0, remainingPomodoro)} 分鐘 (上限 ${actualLimitPomodoro} 分鐘)
+        <br><small style="opacity: 0.7;">待計入餘額: ${stats.daily.score_remainder.toFixed(2)} 分</small>
     `;
 
     // 4. 徽章顯示 
@@ -421,14 +427,14 @@ function updateUI() {
     if(achievementList) {
         achievementList.innerHTML = stats.lifetime.achievements.map(key => {
             const name = CONFIG.ACHIEVEMENTS[key].name;
-            // 這裡可以替換為漂亮的圖示
             return `<span title="${name}" class="badge-icon">🌟</span>`; 
         }).join('');
     }
 }
 
+
 // ===================================
-// 啟動與匯出
+// 啟動與匯出 
 // ===================================
 
 /**
@@ -445,8 +451,6 @@ export function initializeGamificationModule() {
  * @param {boolean} isNewArticle - 是否為首次閱讀此文章 (用於計算 lifetime.blog_count)
  */
 export function addBlogScore(isNewArticle = false) {
-    // ⭐️ 修正：接收 isNewArticle 參數，並將其傳遞給底層 addScore 函數
-    // 確保文章時長和 blog_count 都能正確累計
     return addScore('BLOG', 1, isNewArticle);
 }
 
@@ -466,7 +470,7 @@ export function addPomodoroScore(isBreakMode) {
     return addScore('POMODORO', 1);
 }
 
-// 供其他模組獲取當前統計數據 (可選)
+// 供其他模組獲取當前統計數據 （可選）
 export function getStats() {
     return stats;
 }
