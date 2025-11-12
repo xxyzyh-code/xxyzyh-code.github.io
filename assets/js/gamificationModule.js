@@ -16,6 +16,11 @@ const CONFIG = {
         MUSIC: 25, // 4分/分鐘 * 25分鐘 = 100分
         POMODORO: 40 // 2分/分鐘 * 40分鐘 = 80分
     },
+        // ⭐️ 新增：週末加速活動配置 (僅限週六/週日)
+    WEEKEND_BOOST: {
+        LIMIT_MULTIPLIER: 1.5, // 得分時長上限 × 1.5
+        SCORE_MULTIPLIER: 1.2  // 單位 XP × 1.2
+    },
     // 等級所需總積分
     LEVEL_REQUIREMENTS: [
         { level: 1, required: 0 },
@@ -110,6 +115,19 @@ function saveStats() {
 }
 
 // ===================================
+// ⭐️ 新增：週末判斷邏輯
+// ===================================
+/**
+ * @description 判斷當前日期是否為週六 (6) 或週日 (0)。
+ * @returns {boolean} 是否為週末
+ */
+function isWeekend() {
+    // 0 = Sunday, 6 = Saturday
+    const dayOfWeek = new Date().getDay();
+    return dayOfWeek === 0 || dayOfWeek === 6;
+}
+
+// ===================================
 // 等級與徽章邏輯
 // ===================================
 
@@ -181,10 +199,28 @@ function checkAchievements() {
  */
 function addScore(type, minutes = 1, isNewArticle = false) {
     const dailyTimeKey = `${type.toLowerCase()}_time`; // e.g., 'blog_time'
-    const limitMinutes = CONFIG.DAILY_LIMIT_MINUTES[type];
-    const scorePerMinute = CONFIG.SCORE_PER_MINUTE[type];
+    
+    // ⭐️ 核心修改：判斷是否為週末，並獲取加速係數
+    const weekendActive = isWeekend();
+    
+    let limitMinutes = CONFIG.DAILY_LIMIT_MINUTES[type];
+    let scorePerMinute = CONFIG.SCORE_PER_MINUTE[type];
+
+    // 如果是週末，應用加速規則
+    if (weekendActive) {
+        // 時長上限 × 1.5 (取整以避免浮點數問題，但保留計算精度)
+        limitMinutes = Math.floor(limitMinutes * CONFIG.WEEKEND_BOOST.LIMIT_MULTIPLIER); 
+        // 單位積分 × 1.2 (取整，你可能需要考慮保留小數點，這裡為了簡潔直接向下取整)
+        // 為了避免損失精度，我們建議保留小數，但最終分數仍應是整數，所以讓分數部分使用 Math.floor/Math.round
+        scorePerMinute = scorePerMinute * CONFIG.WEEKEND_BOOST.SCORE_MULTIPLIER;
+        
+        // 可選：輸出提示，方便開發者確認加速是否生效
+        console.log(`[週末加速] ${type}：新上限 ${limitMinutes} 分鐘，新單位 XP ${scorePerMinute.toFixed(2)} 分/分鐘`);
+    }
+
     
     // 1. 檢查是否達到每日時長上限
+    // 使用動態調整後的 limitMinutes 進行檢查
     if (stats.daily[dailyTimeKey] >= limitMinutes) {
         // console.log(`每日 ${type} 積分已達上限，不再計分。`);
         return false;
@@ -194,14 +230,19 @@ function addScore(type, minutes = 1, isNewArticle = false) {
     stats.daily[dailyTimeKey] += minutes;
     
     // 3. 計算並累計每日積分 (上限檢查)
+    // 使用動態調整後的 scorePerMinute 進行計算
     let scoreToAdd = scorePerMinute * minutes;
     
     // 如果累計時長超過上限，則只計算剩餘的積分
     if (stats.daily[dailyTimeKey] > limitMinutes) {
         const excessMinutes = stats.daily[dailyTimeKey] - limitMinutes;
+        // 減去超出的積分 (同樣使用加速後的 scorePerMinute)
         scoreToAdd -= (scorePerMinute * excessMinutes);
     }
     
+    // 最終得分轉換為整數，確保計分系統不會出現小數
+    scoreToAdd = Math.floor(scoreToAdd);
+
     if (scoreToAdd > 0) {
         stats.daily.score += scoreToAdd;
         stats.lifetime.total_score += scoreToAdd;
