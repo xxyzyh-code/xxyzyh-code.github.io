@@ -55,7 +55,7 @@ let stats = {
         blog_count: 0, // 閱讀文章篇數
         music_time: 0, // 累積音樂時間 (分鐘)
         pomodoro_time: 0, // 累積番茄鐘時間 (分鐘)
-        achievements: []
+        achievements: [], // 👈 這裡必須加逗號！
         // ⭐️ 新增：追蹤簽到所需字段
         last_check_in: '',      // 上次簽到日期 (格式: YYYY-MM-DD)
         consecutive_days: 0     // 連續簽到天數
@@ -244,6 +244,76 @@ function displayNotification(message, type) {
     setTimeout(() => {
         notifElement.style.display = 'none';
     }, 5000); 
+}
+
+/**
+ * @description 供外部調用，處理每日簽到積分邏輯。
+ * @returns {{canCheckIn: boolean, consecutiveDays: number, score: number}} 簽到狀態
+ */
+export function getCheckInStatus() {
+    const today = new Date().toLocaleDateString('en-CA');
+    
+    // 1. 檢查今日是否已簽到
+    const alreadyCheckedIn = stats.lifetime.last_check_in === today;
+    
+    // 2. 計算連續天數
+    let currentConsecutiveDays = stats.lifetime.consecutive_days;
+    
+    if (!alreadyCheckedIn) {
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yesterdayStr = yesterday.toLocaleDateString('en-CA');
+        
+        // 檢查簽到是否連續
+        if (stats.lifetime.last_check_in === yesterdayStr) {
+            currentConsecutiveDays += 1; // 連續簽到 +1
+        } else if (stats.lifetime.last_check_in !== '') {
+            currentConsecutiveDays = 1; // 簽到中斷，重新計為第 1 天
+        } else {
+            currentConsecutiveDays = 1; // 首次簽到
+        }
+    }
+    
+    // 3. 計算獎勵積分 (每連續簽到一天獎勵 5 積分，上限 25 積分，即連續 5 天後穩定)
+    const baseScore = 5;
+    const maxConsecutiveBonus = 5; 
+    const bonusDays = Math.min(currentConsecutiveDays, maxConsecutiveBonus);
+    const score = baseScore * bonusDays;
+    
+    return {
+        canCheckIn: !alreadyCheckedIn,
+        consecutiveDays: currentConsecutiveDays,
+        score: score
+    };
+}
+
+/**
+ * @description 執行每日簽到並發放積分。
+ * @returns {boolean} 是否成功簽到
+ */
+export function addCheckInScore() {
+    const status = getCheckInStatus();
+    
+    if (!status.canCheckIn) {
+        displayNotification('❌ 今天你已經簽到過了！明天再來吧。', 'warning');
+        return false;
+    }
+
+    // 1. 更新統計數據
+    stats.lifetime.last_check_in = new Date().toLocaleDateString('en-CA');
+    stats.lifetime.consecutive_days = status.consecutiveDays;
+    
+    // 2. 發放積分 (直接增加到總分，簽到沒有每日時長限制)
+    stats.daily.score += status.score;
+    stats.lifetime.total_score += status.score;
+
+    saveStats();
+    checkLevelUp();
+    checkAchievements();
+    updateUI();
+
+    displayNotification(`✅ 簽到成功！連續第 ${status.consecutiveDays} 天，獲得 ${status.score} 積分！`, 'success');
+    return true;
 }
 
 /**
