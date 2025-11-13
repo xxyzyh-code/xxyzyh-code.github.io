@@ -19,7 +19,10 @@ const CONFIG = {
     // ⭐️ 專為等級時長設計的配置
     LEVEL_LIMIT_BONUS: [
         { level: 10, bonusMinutes: 5 }, // 達到 Level 10，每項增加 5 分鐘
-        { level: 20, bonusMinutes: 5 }, // 達到 Level 20，每項再增加 5 分鐘 (共 10 分鐘)
+        // 🚩 UPGRADE 1: 引入 Level 20 的 XP 乘數
+        { level: 20, bonusMinutes: 5, scoreMultiplier: 1.1 }, 
+        // 額外新增 Level 30 的進一步乘數作為最高獎勵
+        { level: 30, bonusMinutes: 5, scoreMultiplier: 1.2 },
     ],
     // ⭐️ 活動配置 A：週末加速活動 (僅限週六/週日)
     WEEKEND_BOOST: {
@@ -73,7 +76,7 @@ const CONFIG = {
         { level: 30, required: 8943000 },
         // ...
     ],
-    // 徽章條件 (以分鐘/篇數/天數計)
+    // 徽章條件 (保持不變)
     ACHIEVEMENTS: {
         // --- 1. total_score 累積總分 (XP) ---
         'SCORE_NOVICE': { name: '積分新手', condition: 500, type: 'total_score' }, 
@@ -114,7 +117,7 @@ const CONFIG = {
 };
 
 // ===================================
-// 數據模型與儲存
+// 數據模型與儲存 (保持不變)
 // ===================================
 let stats = {
     // 每日統計
@@ -195,7 +198,7 @@ function saveStats() {
 }
 
 // ===================================
-// 活動判斷邏輯
+// 活動判斷邏輯 (保持不變)
 // ===================================
 /**
  * @description 判斷當前日期是否為週六 (6) 或週日 (0)。
@@ -249,6 +252,26 @@ function getLevelLimitBonus() {
     }
     return totalBonus;
 }
+
+/**
+ * @description 🚩 NEW: 根據當前等級，計算永久的基礎 XP 乘數。
+ * @returns {number} 最終永久基礎 XP 乘數 (預設 1.0)
+ */
+function getLevelScoreMultiplier() {
+    const currentLevel = stats.lifetime.level;
+    let totalMultiplier = 1.0;
+    
+    // 遍歷所有等級獎勵配置
+    for (const item of CONFIG.LEVEL_LIMIT_BONUS) {
+        // 確保乘數存在且等級達到
+        if (item.scoreMultiplier && currentLevel >= item.level) {
+            // 注意：這裡使用乘法疊加，因為是永久性增益
+            totalMultiplier *= item.scoreMultiplier;
+        }
+    }
+    return totalMultiplier;
+}
+
 
 /**
  * @description 檢查等級是否提升。
@@ -327,10 +350,13 @@ function addScore(type, minutes = 1, isNewArticle = false) {
     const weekendActive = isWeekend();
     const annualMultiplier = getAnnualEventMultiplier();
     
-    // 🚩 NEW: 獲取等級時長獎勵
+    // 🚩 獲取等級時長獎勵
     const levelBonusMinutes = getLevelLimitBonus();
+    // 🚩 NEW: 獲取永久等級 XP 乘數
+    const levelScoreMultiplier = getLevelScoreMultiplier();
 
-    // 1. 計算最終得分乘數 (取週末和年度活動中最高的乘數來獎勵用戶)
+
+    // 1. 計算最終得分乘數 (取週末和年度活動中最高的乘數)
     let finalScoreMultiplier = 1.0;
     let eventTag = '';
     
@@ -355,6 +381,11 @@ function addScore(type, minutes = 1, isNewArticle = false) {
         }
     }
     
+    // 🚩 UPGRADE 2: 將永久等級 XP 乘數疊加在活動乘數之上！
+    // 這樣它既不會干擾最高乘數的「取高」邏輯，又保證了 L20+ 用戶的永久效益。
+    finalScoreMultiplier *= levelScoreMultiplier; 
+
+
     // 2. 計算最終時長上限
     // 獲取基礎配置
     let baseLimitMinutes = CONFIG.DAILY_LIMIT_MINUTES[type];
@@ -371,7 +402,9 @@ function addScore(type, minutes = 1, isNewArticle = false) {
     scorePerMinute = scorePerMinute * finalScoreMultiplier;
     
     if (finalScoreMultiplier > 1.0 || levelBonusMinutes > 0) {
-        console.log(`[${eventTag || '等級獎勵'}] ${type}：新上限 ${limitMinutes} 分鐘 (基礎 ${baseLimitMinutes} + 等級獎勵 ${levelBonusMinutes})，新單位 XP ${scorePerMinute.toFixed(2)} 分/分鐘`);
+        // 增加新的 Log 提示等級乘數
+        const levelMTag = levelScoreMultiplier > 1.0 ? ` (Lvl XP x${levelScoreMultiplier.toFixed(2)})` : '';
+        console.log(`[${eventTag || '等級獎勵'}] ${type}：新上限 ${limitMinutes} 分鐘 (基礎 ${baseLimitMinutes} + 等級獎勵 ${levelBonusMinutes})，新單位 XP ${scorePerMinute.toFixed(2)} 分/分鐘${levelMTag}`);
     }
 
     // 3. 檢查是否達到每日時長上限
@@ -437,8 +470,10 @@ function addScore(type, minutes = 1, isNewArticle = false) {
 }
 
 // ===================================
-// UI 更新與提示
+// UI 更新與提示 (保持不變)
 // ===================================
+// 由於 UI 更新邏輯只需要調用 getLevelLimitBonus()，它不需要知道 getLevelScoreMultiplier()，
+// 故 updateUI 保持不變，UI 提示會自動更新時長上限。
 
 /**
  * @description 顯示前端提示。
@@ -586,7 +621,13 @@ function updateUI() {
     }
     
     const levelBonus = getLevelLimitBonus();
-    let bonusTag = levelBonus > 0 ? ` (等級獎勵: +${levelBonus}分鐘)` : '';
+    const levelScoreM = getLevelScoreMultiplier(); // 獲取等級 XP 乘數
+    let bonusTag = levelBonus > 0 ? ` (等級時長: +${levelBonus}分鐘)` : '';
+    // 顯示等級 XP 乘數，讓用戶知道自己的永久特權
+    if (levelScoreM > 1.0) {
+         bonusTag += ` (等級效率: x${levelScoreM.toFixed(2)})`;
+    }
+
 
     // 計算實際每日上限
     const actualLimitBlog = Math.floor((CONFIG.DAILY_LIMIT_MINUTES.BLOG + levelBonus) * limitMultiplier);
@@ -635,9 +676,8 @@ function updateUI() {
 }
 
 
-
 // ===================================
-// 啟動與匯出
+// 啟動與匯出 (保持不變)
 // ===================================
 
 /**
