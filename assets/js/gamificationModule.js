@@ -1,5 +1,3 @@
-// assets/js/gamificationModule.js
-
 // ===================================
 // 核心配置 (規格與等級)
 // ===================================
@@ -19,10 +17,9 @@ const CONFIG = {
     // ⭐️ 專為等級時長設計的配置
     LEVEL_LIMIT_BONUS: [
         { level: 10, bonusMinutes: 5 }, // 達到 Level 10，每項增加 5 分鐘
-        // 🚩 UPGRADE 1: 引入 Level 20 的 XP 乘數
-        { level: 20, bonusMinutes: 5, scoreMultiplier: 1.1 }, 
-        // 額外新增 Level 30 的進一步乘數作為最高獎勵
-        { level: 30, bonusMinutes: 5, scoreMultiplier: 1.2 },
+        // 🚩 修正：將 Level 20/30 的 XP 乘數設計為 "加法疊加" 的百分比增益
+        { level: 20, bonusMinutes: 5, scoreMultiplier: 1.1 }, // +10% 增益
+        { level: 30, bonusMinutes: 5, scoreMultiplier: 1.1 }, // 再 +10% 增益
     ],
     // ⭐️ 活動配置 A：週末加速活動 (僅限週六/週日)
     WEEKEND_BOOST: {
@@ -254,22 +251,24 @@ function getLevelLimitBonus() {
 }
 
 /**
- * @description 🚩 NEW: 根據當前等級，計算永久的基礎 XP 乘數。
+ * @description 🚩 MODIFIED: 根據當前等級，計算永久的基礎 XP 乘數（使用加法模式）。
  * @returns {number} 最終永久基礎 XP 乘數 (預設 1.0)
  */
 function getLevelScoreMultiplier() {
     const currentLevel = stats.lifetime.level;
-    let totalMultiplier = 1.0;
+    let bonusPercentage = 0.0; // 累計獎勵百分比 (例如 0.1 + 0.1 = 0.2)
     
     // 遍歷所有等級獎勵配置
     for (const item of CONFIG.LEVEL_LIMIT_BONUS) {
         // 確保乘數存在且等級達到
         if (item.scoreMultiplier && currentLevel >= item.level) {
-            // 注意：這裡使用乘法疊加，因為是永久性增益
-            totalMultiplier *= item.scoreMultiplier;
+            // 🚩 關鍵修正：累加額外增益 (例如 1.1 -> 0.1, 1.1 -> 0.1)
+            // L30 用戶總增益：0.1 + 0.1 = 0.2
+            bonusPercentage += (item.scoreMultiplier - 1.0);
         }
     }
-    return totalMultiplier;
+    // 最終乘數 = 1.0 + 累加的百分比
+    return 1.0 + bonusPercentage; 
 }
 
 
@@ -382,7 +381,6 @@ function addScore(type, minutes = 1, isNewArticle = false) {
     }
     
     // 🚩 UPGRADE 2: 將永久等級 XP 乘數疊加在活動乘數之上！
-    // 這樣它既不會干擾最高乘數的「取高」邏輯，又保證了 L20+ 用戶的永久效益。
     finalScoreMultiplier *= levelScoreMultiplier; 
 
 
@@ -472,8 +470,6 @@ function addScore(type, minutes = 1, isNewArticle = false) {
 // ===================================
 // UI 更新與提示 (保持不變)
 // ===================================
-// 由於 UI 更新邏輯只需要調用 getLevelLimitBonus()，它不需要知道 getLevelScoreMultiplier()，
-// 故 updateUI 保持不變，UI 提示會自動更新時長上限。
 
 /**
  * @description 顯示前端提示。
@@ -551,15 +547,34 @@ export function addCheckInScore() {
     stats.lifetime.consecutive_days = status.consecutiveDays;
     
     // 2. 發放積分 (直接增加，簽到不受時長限制)
-    stats.daily.score += status.score;
-    stats.lifetime.total_score += status.score;
+    
+    // 🚩 建議升級：讓簽到積分也受到永久等級 XP 乘數的加成
+    const checkInScoreBase = status.score;
+    const levelMultiplier = getLevelScoreMultiplier(); // 獲取 L20/L30 乘數
+    
+    let rawScoreToAdd = checkInScoreBase * levelMultiplier;
+    
+    // 處理浮點數餘額
+    stats.daily.score_remainder += rawScoreToAdd;
+    let scoreToAdd = Math.floor(stats.daily.score_remainder);
+
+    if (scoreToAdd > 0) {
+        stats.daily.score_remainder -= scoreToAdd;
+        stats.daily.score += scoreToAdd;
+        stats.lifetime.total_score += scoreToAdd;
+        
+        console.log(`[XP 累積] 簽到積分：基礎 ${checkInScoreBase} x Lvl x${levelMultiplier.toFixed(2)} = ${rawScoreToAdd.toFixed(2)}。計入 ${scoreToAdd} 分。新餘額 ${stats.daily.score_remainder.toFixed(2)}。`);
+    } else {
+        // 雖然分數不足 1 分，但餘額已累計，仍視為成功
+         console.log(`[XP 累積] 簽到積分：基礎 ${checkInScoreBase} x Lvl x${levelMultiplier.toFixed(2)} = ${rawScoreToAdd.toFixed(2)}。分數不足 1 分，只累計到餘額。新餘額 ${stats.daily.score_remainder.toFixed(2)}。`);
+    }
 
     saveStats();
     checkLevelUp();
     checkAchievements(); // 簽到完成後立即檢查連簽徽章
     updateUI();
 
-    displayNotification(`✅ 簽到成功！連續第 ${status.consecutiveDays} 天，獲得 ${status.score} 積分！`, 'success');
+    displayNotification(`✅ 簽到成功！連續第 ${status.consecutiveDays} 天，獲得約 ${rawScoreToAdd.toFixed(1)} 積分獎勵！`, 'success');
     return true;
 }
 
@@ -622,6 +637,7 @@ function updateUI() {
     
     const levelBonus = getLevelLimitBonus();
     const levelScoreM = getLevelScoreMultiplier(); // 獲取等級 XP 乘數
+    
     let bonusTag = levelBonus > 0 ? ` (等級時長: +${levelBonus}分鐘)` : '';
     // 顯示等級 XP 乘數，讓用戶知道自己的永久特權
     if (levelScoreM > 1.0) {
