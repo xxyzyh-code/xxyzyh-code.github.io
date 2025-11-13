@@ -16,10 +16,11 @@ const CONFIG = {
     },
     // ⭐️ 專為等級時長設計的配置
     LEVEL_LIMIT_BONUS: [
-        { level: 10, bonusMinutes: 5 }, // 達到 Level 10，每項增加 5 分鐘
-        // 🚩 修正：將 Level 20/30 的 XP 乘數設計為 "加法疊加" 的百分比增益
-        { level: 20, bonusMinutes: 5, scoreMultiplier: 1.1 }, // +10% 增益
-        { level: 30, bonusMinutes: 5, scoreMultiplier: 1.1 }, // 再 +10% 增益
+        { level: 10, bonusMinutes: 5 }, 
+        { level: 20, bonusMinutes: 5, scoreMultiplier: 1.1 }, // L20: +5分鐘, 總XP: 1.1 (累積 0.1)
+        { level: 30, bonusMinutes: 5, scoreMultiplier: 1.1 }, // L30: +5分鐘, 總XP: 1.2 (累積 0.2)
+        // 🚩 NEW: Level 40 的額外增益
+        { level: 40, bonusMinutes: 5, scoreMultiplier: 1.2 }, // L40: +5分鐘, 總XP: 1.4 (累積 0.4)
     ],
     // ⭐️ 活動配置 A：週末加速活動 (僅限週六/週日)
     WEEKEND_BOOST: {
@@ -71,6 +72,16 @@ const CONFIG = {
         { level: 28, required: 4147000 },
         { level: 29, required: 6065000 },
         { level: 30, required: 8943000 },
+        { level: 31, required: 12967000 },
+        { level: 32, required: 18543000 },
+        { level: 33, required: 25960000 },
+        { level: 34, required: 35825000 },
+        { level: 35, required: 48722000 },
+        { level: 36, required: 65287000 },
+        { level: 37, required: 86179000 },
+        { level: 38, required: 112033000 },
+        { level: 39, required: 143400000 },
+        { level: 40, required: 180684000 },
         // ...
     ],
     // 徽章條件 (保持不變)
