@@ -21,3 +21,41 @@
   from = "/api/track"
   to = "/.netlify/functions/api-track"
   status = 200
+# =========================
+# 🔑 緩存策略開始
+# =========================
+
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "public, max-age=600"
+
+[[headers]]
+  for = "/*.css"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"
+
+[[headers]]
+  for = "/*.js"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"
+
+[[headers]]
+  for = "/*.@(png|jpg|jpeg|gif|svg|webp|ico|json|xml|txt)"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*.@(mp3|m4a|wav|ogg)"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/favicon.ico"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/social-share.png"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
