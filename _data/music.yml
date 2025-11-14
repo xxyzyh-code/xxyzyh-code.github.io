@@ -1,25 +1,32 @@
 # data/music.yml
 - title: Alive in the summer time
   artist: AI
-  url: "https://raw.githubusercontent.com/xxyzyh-code/music/main/Alive in the summer time.m4a"
+  url: "https://cdn.jsdelivr.net/gh/xxyzyh-code/music@main/Alive%20in%20the%20summer%20time.m4a"
+
 - title: Breakbeat background
   artist: AI
-  url: "https://raw.githubusercontent.com/xxyzyh-code/music/main/Breakbeat background.m4a"
+  url: "https://cdn.jsdelivr.net/gh/xxyzyh-code/music@main/Breakbeat%20background.m4a"
+
 - title: The best moments in life
   artist: AI
-  url: "https://raw.githubusercontent.com/xxyzyh-code/music/main/The best moments in life.m4a"
+  url: "https://cdn.jsdelivr.net/gh/xxyzyh-code/music@main/The%20best%20moments%20in%20life.m4a"
+
 - title: Time to travel
   artist: AI
-  url: "https://raw.githubusercontent.com/xxyzyh-code/music/main/Time to travel.m4a"
+  url: "https://cdn.jsdelivr.net/gh/xxyzyh-code/music@main/Time%20to%20travel.m4a"
+
 - title: Elegance
   artist: AI
-  url: "https://raw.githubusercontent.com/xxyzyh-code/music/main/Elegance.m4a"
-- title: The More I Know You,Jesus
+  url: "https://cdn.jsdelivr.net/gh/xxyzyh-code/music@main/Elegance.m4a"
+
+- title: The More I Know You, Jesus
   artist: ReavoWorship
-  url: "https://raw.githubusercontent.com/xxyzyh-code/music/main/The More I Know You.mp3"
+  url: "https://cdn.jsdelivr.net/gh/xxyzyh-code/music@main/The%20More%20I%20Know%20You.mp3"
+
 - title: Jesus Walks With Me
   artist: Be Still Studios
-  url: "https://raw.githubusercontent.com/xxyzyh-code/music/main/Jesus Walks With Me.mp3"
+  url: "https://cdn.jsdelivr.net/gh/xxyzyh-code/music@main/Jesus%20Walks%20With%20Me.mp3"
+
 - title: Hallelujah Forevermore
   artist: Be Still Studios
-  url: "https://raw.githubusercontent.com/xxyzyh-code/music/main/Hallelujah Forevermore.mp3"
+  url: "https://cdn.jsdelivr.net/gh/xxyzyh-code/music@main/Hallelujah%20Forevermore.mp3"
