@@ -3,7 +3,7 @@ layout: home
 author_profile: true
 header:
   overlay_color: "#333"
-  overlay_image: /assets/images/unsplash-bg.jpg
+  overlay_image: "https://cdn.jsdelivr.net/gh/xxyzyh-code/xxyzyh-code.github.io@main/assets/images/unsplash-bg.jpg"
 title: "欢迎来到我的博客首页"
 excerpt: "记录思考、创作与探索的足迹。"
 entries_layout: list
