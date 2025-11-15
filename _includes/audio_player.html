@@ -1169,3 +1169,15 @@
         handleUrlAnchor(true);
     });
 </script>
+<script>
+    // 檢查瀏覽器是否支援 Service Worker
+    if ("serviceWorker" in navigator) {
+        // 註冊 Service Worker。如果您的 service-worker.js 在根目錄，請使用 /service-worker.js
+        navigator.serviceWorker.register("/service-worker.js")
+            .then(reg => console.log("SW 註冊成功", reg))
+            .catch(err => console.error("SW 註冊失敗", err));
+    }
+</script>
+
+</body> 
+</html>
