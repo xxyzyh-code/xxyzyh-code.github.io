@@ -1,0 +1,29 @@
+# =========================
+# 🔑 Cloudflare Pages 緩存策略
+# =========================
+
+# 1. HTML 文件：短期緩存 (10 分鐘)
+/*.html
+  Cache-Control: public, max-age=600
+
+# 2. CSS/JS 文件：較長緩存 (1 天)
+/*.css
+  Cache-Control: public, max-age=86400
+
+/*.js
+  Cache-Control: public, max-age=86400
+
+# 3. 圖片/文本等靜態資源：長期緩存 (1 年) + Immutable
+/*.@(png|jpg|jpeg|gif|svg|webp|ico|json|xml|txt)
+  Cache-Control: public, max-age=31536000, immutable
+
+# 4. 音頻等大文件：長期緩存 (1 年) + Immutable
+# 你可以根據你的大文件類型增加 .mp4 或 .webm
+/*.@(mp3|m4a|wav|ogg)
+  Cache-Control: public, max-age=31536000, immutable
+
+# 5. 特定文件
+/favicon.ico
+  Cache-Control: public, max-age=31536000, immutable
+/social-share.png
+  Cache-Control: public, max-age=31536000, immutable
