@@ -20,7 +20,7 @@ toc_icon: "list"
 header:
   overlay_color: "#000"
   overlay_filter: "0.3"
-  overlay_image: /assets/images/blog-header.jpg
+  overlay_image: "https://cdn.jsdelivr.net/gh/xxyzyh-code/xxyzyh-code.github.io@main/assets/images/blog-header.jpg"
 robots: "noindex, nofollow" 
 seo:
   noindex: true
