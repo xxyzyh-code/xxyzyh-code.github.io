@@ -65,7 +65,25 @@
         </div>
     </div>
 </div>
-
+    
+<button id="install-btn" style="
+  display: none;
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  padding: 10px 16px;
+  background-color: #ff9800; /* 與您的簽到按鈕顏色一致 */
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  z-index: 9999;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+">
+  安裝博客 App
+</button>
+    
 <div id="game-notification" class="game-notification">
     </div>
     {% include scripts.html %}
@@ -310,6 +328,46 @@
         });
     }
 </script>
+
+    <script>
+    // PWA 安裝提示邏輯
+    let deferredPrompt;
+    const installBtn = document.getElementById('install-btn');
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+        // 阻止 Chrome/Edge/Firefox 自動彈出提示
+        e.preventDefault(); 
+        
+        // 儲存事件，以便稍後手動觸發安裝
+        deferredPrompt = e;
+        
+        // 顯示我們自定義的安裝按鈕
+        if(installBtn) {
+            installBtn.style.display = 'block'; 
+        }
+        console.log("PWA: 發現可安裝狀態，顯示安裝按鈕。");
+    });
+
+    if(installBtn) {
+        installBtn.addEventListener('click', () => {
+            installBtn.style.display = 'none'; // 隱藏按鈕
+            
+            if (deferredPrompt) {
+                deferredPrompt.prompt(); // 彈出瀏覽器原生的安裝提示
+
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('用戶接受安裝 PWA');
+                    } else {
+                        console.log('用戶拒絕安裝 PWA');
+                    }
+                    deferredPrompt = null;
+                });
+            }
+        });
+    }
+</script>
+
     
 {% if (page.layout == "post" or page.layout == "single") and page.path contains '_posts/' %}
     
