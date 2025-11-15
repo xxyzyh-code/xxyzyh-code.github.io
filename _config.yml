@@ -22,7 +22,6 @@ plugins:
 include:
   - _pages
   - _data
-  - _headers 
 
 # 🚀 【關鍵變動】：新增 'api/' 到排除列表，阻止 Jekyll 處理這個資料夾
 exclude:
