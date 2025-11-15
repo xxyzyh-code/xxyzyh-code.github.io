@@ -1,4 +1,0 @@
-name = "cachejs"
-main = "cloudflare-worker/cache.js"
-compatibility_date = "2025-11-14"
-workers_dev = true
