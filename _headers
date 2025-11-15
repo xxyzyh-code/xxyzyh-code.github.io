@@ -2,28 +2,116 @@
 # 🔑 Cloudflare Pages 緩存策略
 # =========================
 
-# 1. HTML 文件：短期緩存 (10 分鐘)
 /*.html
   Cache-Control: public, max-age=600
 
-# 2. CSS/JS 文件：較長緩存 (1 天)
+/*/*.html
+  Cache-Control: public, max-age=600
+
+
+# =======================
+# CSS / JS （1 天）
+# =======================
 /*.css
-  Cache-Control: public, max-age=86400
+  Cache-Control: public, max-age=86400, immutable
+
+/*/*.css
+  Cache-Control: public, max-age=86400, immutable
 
 /*.js
-  Cache-Control: public, max-age=86400
+  Cache-Control: public, max-age=86400, immutable
 
-# 3. 圖片/文本等靜態資源：長期緩存 (1 年) + Immutable
-/*.@(png|jpg|jpeg|gif|svg|webp|ico|json|xml|txt)
+/*/*.js
+  Cache-Control: public, max-age=86400, immutable
+
+
+# =======================
+# 圖片（1 年）
+# =======================
+/*.png
+  Cache-Control: public, max-age=31536000, immutable
+/*/*.png
   Cache-Control: public, max-age=31536000, immutable
 
-# 4. 音頻等大文件：長期緩存 (1 年) + Immutable
-# 你可以根據你的大文件類型增加 .mp4 或 .webm
-/*.@(mp3|m4a|wav|ogg)
+/*.jpg
+  Cache-Control: public, max-age=31536000, immutable
+/*/*.jpg
   Cache-Control: public, max-age=31536000, immutable
 
-# 5. 特定文件
+/*.jpeg
+  Cache-Control: public, max-age=31536000, immutable
+/*/*.jpeg
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.gif
+  Cache-Control: public, max-age=31536000, immutable
+/*/*.gif
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.svg
+  Cache-Control: public, max-age=31536000, immutable
+/*/*.svg
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.webp
+  Cache-Control: public, max-age=31536000, immutable
+/*/*.webp
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.ico
+  Cache-Control: public, max-age=31536000, immutable
+/*/*.ico
+  Cache-Control: public, max-age=31536000, immutable
+
+
+# =======================
+# 文本資源（1 年）
+# =======================
+/*.json
+  Cache-Control: public, max-age=31536000, immutable
+/*/*.json
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.xml
+  Cache-Control: public, max-age=31536000, immutable
+/*/*.xml
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.txt
+  Cache-Control: public, max-age=31536000, immutable
+/*/*.txt
+  Cache-Control: public, max-age=31536000, immutable
+
+
+# =======================
+# 音頻資源（1 年）
+# =======================
+/*.mp3
+  Cache-Control: public, max-age=31536000, immutable
+/*/*.mp3
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.m4a
+  Cache-Control: public, max-age=31536000, immutable
+/*/*.m4a
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.wav
+  Cache-Control: public, max-age=31536000, immutable
+/*/*.wav
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.ogg
+  Cache-Control: public, max-age=31536000, immutable
+/*/*.ogg
+  Cache-Control: public, max-age=31536000, immutable
+
+
+# =======================
+# 特定文件（1 年）
+# =======================
 /favicon.ico
   Cache-Control: public, max-age=31536000, immutable
+
 /social-share.png
   Cache-Control: public, max-age=31536000, immutable
