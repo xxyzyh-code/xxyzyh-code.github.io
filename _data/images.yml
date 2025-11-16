@@ -1,0 +1,11 @@
+- id: header_bg
+  sources:
+    - "https://cdn.jsdelivr.net/gh/xxyzyh-code/xxyzyh-code.github.io@main/assets/images/unsplash-bg.jpg"
+    - "https://cdn.statically.io/gh/xxyzyh-code/xxyzyh-code.github.io/main/assets/images/unsplash-bg.jpg"
+    - "https://raw.githubusercontent.com/xxyzyh-code/xxyzyh-code.github.io/main/assets/images/unsplash-bg.jpg"
+
+- id: post_cover_1
+  sources:
+    - "https://cdn.jsdelivr.net/gh/xxyzyh-code/images@main/post1.jpg"
+    - "https://cdn.statically.io/gh/xxyzyh-code/images/main/post1.jpg"
+    - "https://raw.githubusercontent.com/xxyzyh-code/images/main/post1.jpg"
