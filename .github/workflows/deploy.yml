@@ -41,7 +41,9 @@ jobs:
 
     # 6. 执行 Jekyll 构建 (核心：耗时操作在 GitHub 执行)
     - name: Build Jekyll site
-      run: bundle exec jekyll build
+      run: |
+        bundle exec jekyll build
+        ls -l _site  # 确认 _site 目录是否生成
 
     # 7. 部署到 Netlify (使用预先构建的 _site 目录)
     - name: Deploy to Netlify
