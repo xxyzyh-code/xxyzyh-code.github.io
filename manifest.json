@@ -2,10 +2,10 @@
   "name": "小写博客主人",
   "short_name": "博客",
   "start_url": "/",
-  "scope": "/", 
+  "scope": "/",
   "id": "/",
-"lang": "zh-CN",
-"description": "这是一个由 Jekyll 构建的静态博客应用",
+  "lang": "zh-CN",
+  "description": "这是一个由 Jekyll 构建的静态博客应用",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#333333",
@@ -24,8 +24,8 @@
       "src": "https://cdn.jsdelivr.net/gh/xxyzyh-code/xxyzyh-code.github.io@main/assets/images/avatar-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "maskable" 
+      "purpose": "maskable"
     }
   ],
-  "orientation": "portrait" 
+  "orientation": "portrait"
 }
