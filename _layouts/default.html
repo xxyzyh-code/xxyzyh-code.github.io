@@ -45,9 +45,19 @@
 <script>
   document.addEventListener("DOMContentLoaded", function() {
     const footerContainer = document.getElementById('footer') || document.querySelector('.site-footer');
-    if (footerContainer) footerContainer.remove();
+    if (footerContainer) {
+      footerContainer.remove();
+
+      // 新建空占位 div
+      const placeholder = document.createElement('div');
+      placeholder.id = 'footer-placeholder';
+      placeholder.style.height = '80px'; // 占位高度
+      placeholder.style.background = 'transparent';
+      document.body.appendChild(placeholder);
+    }
   });
 </script>
+    
 <div id="gamification-dashboard" class="gamification-dashboard">
     <div class="header" id="game-header-toggle">
         <span id="level-display"></span>  
@@ -504,13 +514,6 @@
         font-size: 14px;
         color: #666;
     }
-    /* 頁腳區塊透明：視覺優化 */
-      .site-footer {
-  background: transparent;
-  color: inherit;
-  border: none;
-  padding: 0;  /* 如果想完全消失 */
-      }
           /* 🎯 新增/修正：遊戲化儀表板的折疊圖標樣式 */
     .gamification-dashboard .header {
         cursor: pointer; /* 讓使用者知道可以點擊 */
