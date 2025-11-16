@@ -46,14 +46,17 @@
   document.addEventListener("DOMContentLoaded", function() {
     const footerContainer = document.getElementById('footer') || document.querySelector('.site-footer');
     if (footerContainer) {
-      footerContainer.remove();
-
-      // 新建空占位 div
+      // 创建占位 div
       const placeholder = document.createElement('div');
       placeholder.id = 'footer-placeholder';
-      placeholder.style.height = '80px'; // 占位高度
+      placeholder.style.height = '80px';  // 调整高度
       placeholder.style.background = 'transparent';
-      document.body.appendChild(placeholder);
+
+      // 将占位 div 插入 footerContainer 前
+      footerContainer.parentNode.insertBefore(placeholder, footerContainer);
+
+      // 移除原 footer
+      footerContainer.remove();
     }
   });
 </script>
