@@ -1,7 +1,7 @@
 [build]
   # 💡 關鍵變動：將建構命令替換為 'true'，
   # 告訴 Netlify：檔案已經預先建構完成，無需再執行耗時的 Jekyll build。
-  command = "true"
+  command = ""
   publish = "_site"
   functions = "netlify/functions"
 
