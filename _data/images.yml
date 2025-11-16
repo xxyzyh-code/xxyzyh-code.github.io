@@ -1,11 +1,22 @@
+# 首頁 Header
 - id: header_bg
+  alt: "網站首頁背景"
   sources:
     - "https://cdn.jsdelivr.net/gh/xxyzyh-code/xxyzyh-code.github.io@main/assets/images/unsplash-bg.jpg"
     - "https://cdn.statically.io/gh/xxyzyh-code/xxyzyh-code.github.io/main/assets/images/unsplash-bg.jpg"
     - "https://raw.githubusercontent.com/xxyzyh-code/xxyzyh-code.github.io/main/assets/images/unsplash-bg.jpg"
 
+# 文章封面
 - id: post_cover_1
+  alt: "我的第一篇文章封面"
   sources:
     - "https://cdn.jsdelivr.net/gh/xxyzyh-code/images@main/post1.jpg"
     - "https://cdn.statically.io/gh/xxyzyh-code/images/main/post1.jpg"
     - "https://raw.githubusercontent.com/xxyzyh-code/images/main/post1.jpg"
+
+- id: my_new_picture
+  alt: "描述文字"
+  sources:
+    - "https://cdn.jsdelivr.net/.../image.jpg"
+    - "https://cdn.statically.io/.../image.jpg"
+    - "https://raw.githubusercontent.com/.../image.jpg"
