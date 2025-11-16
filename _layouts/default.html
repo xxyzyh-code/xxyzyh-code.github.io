@@ -6,7 +6,11 @@
 <html lang="{{ site.locale | replace: "_", "-" | default: "en" }}" class="no-js">
   <head>
     {% include head.html %}
-    
+
+    <link rel="manifest" href="/manifest.json"> 
+    <meta name="theme-color" content="#333333">
+    <link rel="apple-touch-icon" href="/assets/images/avatar-192.png">
+
     {% if page.permalink == '/music/' %}
     <link rel="stylesheet" href="/assets/css/theme.css">
     <link rel="stylesheet" href="/assets/css/custom_player.css">
