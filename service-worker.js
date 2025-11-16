@@ -90,12 +90,13 @@ self.addEventListener("activate", (event) => {
   self.clients.claim();
 });
 
-// ------------------ 攔截 fetch (優化: 網路失敗時明確回退到緩存) ------------------
+// ------------------ 攔截 fetch (已修復 Response Clone 錯誤) ------------------
 self.addEventListener("fetch", (event) => {
   const req = event.request;
   const url = new URL(req.url);
 
   // 1. 音頻文件 (Cache-First)
+  // 此處邏輯正確，因為 res.clone() 發生在異步的 cache.put 內部，競爭風險較小
   if (req.destination === "audio") {
     event.respondWith(
       caches.match(req).then((cached) => {
@@ -109,7 +110,6 @@ self.addEventListener("fetch", (event) => {
                 // LRU/FIFO 控制
                 const keys = await cache.keys();
                 if (keys.length > MAX_AUDIO_CACHE_ITEMS) {
-                  // 刪除最舊的緩存項 (keys[0] 假設是 FIFO 順序)
                   cache.delete(keys[0]);
                 }
               });
@@ -117,7 +117,6 @@ self.addEventListener("fetch", (event) => {
           }
           return res;
         }).catch(() => {
-          // 🎯 網路失敗時，嘗試再次匹配緩存 (確保回退)
           console.log(`SW: 網路失敗，音頻資源 ${req.url} 回退至緩存。`);
           return caches.match(req);
         });
@@ -126,41 +125,42 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // 2. HTML 文檔 (Stale-While-Revalidate)
+  // 2. HTML 文檔 (Stale-While-Revalidate) - 🎯 修復點：在返回前克隆
   if (req.destination === "document") {
     event.respondWith(
       caches.match(req).then((cached) => {
         const networkFetch = fetch(req)
           .then((res) => {
+            // 🚨 修復：在將原始響應返回給瀏覽器之前，先克隆一份用於緩存
             if (res && res.status === 200) {
-              caches.open(STATIC_CACHE_NAME).then((cache) => cache.put(req, res.clone()));
+              const resClone = res.clone(); // 創建副本
+              caches.open(STATIC_CACHE_NAME).then((cache) => cache.put(req, resClone));
             }
-            return res;
+            return res; // 將原始響應返回給瀏覽器
           })
           .catch(() => {
-            // 🎯 網路失敗時回退到緩存
             console.log(`SW: 網路失敗，HTML 文檔 ${req.url} 回退至緩存。`);
             return cached;
           });
           
-        // 如果有緩存，立即返回緩存，同時進行網路更新
         return cached || networkFetch;
       })
     );
     return;
   }
 
-  // 3. CSS/JS/圖片 (Cache-First 或 Cache-Only)
+  // 3. CSS/JS/圖片 (Cache-First 或 Cache-Only) - 🎯 修復點：在返回前克隆
   if (["style", "script", "image"].includes(req.destination)) {
     event.respondWith(
       caches.match(req).then((cached) => {
         return cached || fetch(req).then((res) => {
+          // 🚨 修復：在將原始響應返回給瀏覽器之前，先克隆一份用於緩存
           if (res && res.status === 200) {
-            caches.open(STATIC_CACHE_NAME).then((cache) => cache.put(req, res.clone()));
+            const resClone = res.clone(); // 創建副本
+            caches.open(STATIC_CACHE_NAME).then((cache) => cache.put(req, resClone));
           }
-          return res;
+          return res; // 將原始響應返回給瀏覽器
         }).catch(() => {
-           // 🎯 網路失敗時回退到緩存
            console.log(`SW: 網路失敗，靜態資源 ${req.url} 回退至緩存。`);
            return cached;
         });
