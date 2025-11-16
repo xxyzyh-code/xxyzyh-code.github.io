@@ -258,11 +258,3 @@ body {
     --accent-hover: #C62828;
 }
 
-/* 完全隐藏 Minimal Mistakes 页脚块 */
-.site-footer {
-  display: none !important;   /* 隐藏整个容器块 */
-  background: transparent !important; /* 背景透明 */
-  padding: 0 !important;
-  margin: 0 !important;
-  border: none !important;
-}
