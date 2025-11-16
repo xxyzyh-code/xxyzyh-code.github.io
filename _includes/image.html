@@ -1,0 +1,5 @@
+        //圖像三線CDN穩定保存
+{% assign img = site.data.images | where: "id", include.id | first %}
+<img src="{{ img.sources[0] }}" 
+     onerror="this.onerror=null;this.src='{{ img.sources[1] }}';this.onerror=function(){this.src='{{ img.sources[2] }}';}" 
+     alt="{{ include.alt | default: '' }}">
