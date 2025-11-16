@@ -49,24 +49,6 @@ author:
       - label: "Twitter"
         url: "https://twitter.com/yhz926"
 
-navigation:
-  main:
-    - title: "首页"
-      url: /
-    - title: "关于我"
-      url: /about/
-    - title: "联系我"
-      url: /contact/
-    - title: "标签"
-      url: /tags/
-    - title: "分类"
-      url: /categories/
-    - title: "存档"
-      url: /archives/
-    - title: "搜索"
-      url: /search/
-
-
 defaults:
   # 1. 针对所有文章 (posts) 设置默认封锁
   - scope:
