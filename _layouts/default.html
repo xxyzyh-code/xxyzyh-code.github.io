@@ -33,13 +33,21 @@
       </div>
     {% endif %}
 
-    <div id="footer" class="page__footer">
-      <footer>
-        {% include footer/custom.html %}
-        {% include_cached footer.html %}
-      </footer>
-    </div>
+<!-- 页脚容器仍保留 Liquid，但 JS 会动态移除 -->
+<div id="footer" class="page__footer">
+  <footer>
+    {% include footer/custom.html %}
+    {% include_cached footer.html %}
+  </footer>
+</div>
 
+<!-- 动态移除页脚块 -->
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const footerContainer = document.getElementById('footer') || document.querySelector('.site-footer');
+    if (footerContainer) footerContainer.remove();
+  });
+</script>
 <div id="gamification-dashboard" class="gamification-dashboard">
     <div class="header" id="game-header-toggle">
         <span id="level-display"></span>  
