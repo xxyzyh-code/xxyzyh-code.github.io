@@ -1,7 +1,7 @@
 <div id="custom-audio-player">
     <h3>我的音樂播放器</h3>
     
-    <audio id="main-audio" controls src="{{ site.data.music[0].url }}">
+    <audio id="main-audio" controls>
         您的瀏覽器不支持 HTML5 音頻。
     </audio>
     
@@ -112,7 +112,8 @@
             id: track.id || `s${index}`, 
             title: track.title,
             artist: track.artist,
-            url: track.url,
+            // 🌟 CDN 備援修復 2: 使用 sources 陣列替換單一 url 🌟
+            sources: track.sources, 
             originalIndex: index 
         }));
     })(); 
@@ -243,7 +244,30 @@
         if (index >= 0 && index < currentPlaylist.length) { 
             currentTrackIndex = index;
             const track = currentPlaylist[index]; 
-            audio.src = track.url;
+            
+            // 🌟 CDN 備援修復 3: 在播放前，動態插入 <source> 標籤 🌟
+            // 1. 清除舊的 <source> 標籤
+            audio.innerHTML = ''; 
+            
+            // 2. 添加新的 <source> 標籤
+            if (track.sources && Array.isArray(track.sources)) {
+                track.sources.forEach(src => {
+                    const sourceEl = document.createElement('source');
+                    sourceEl.src = src;
+                    // 嘗試從 URL 擴展名推斷 type
+                    const ext = src.split('.').pop(); 
+                    sourceEl.type = `audio/${ext}`; 
+                    audio.appendChild(sourceEl);
+                });
+            } else {
+                 // 備用：如果 sources 丟失或無效
+                 console.error(`歌曲 ${track.title} 缺少 sources 陣列!`);
+                 audio.src = ''; 
+            }
+            
+            // 3. 讓瀏覽器重新載入新的音源列表
+            audio.load();
+
             playerTitle.textContent = `正在播放：${track.title}`;
             audio.play().catch(error => {
                 console.error("自動播放失敗，可能是瀏覽器限制：", error);
@@ -750,7 +774,8 @@
                  currentTrackIndex = 0; 
                  
                  const track = currentPlaylist[0]; 
-                 audio.src = track.url; 
+                 // 🌟 CDN 備援修復 4: 移除 audio.src 設置 🌟
+                 // 舊代碼: audio.src = track.url; 
                  audio.pause(); 
             }
         } else {
@@ -768,7 +793,8 @@
             
             if (currentTrackIndex >= 0 && currentTrackIndex < currentPlaylist.length) {
                 const track = currentPlaylist[currentTrackIndex]; 
-                audio.src = track.url;
+                // 🌟 CDN 備援修復 4: 移除 audio.src 設置 🌟
+                // 舊代碼: audio.src = track.url;
             } else {
                 currentTrackIndex = -1;
             }
@@ -896,7 +922,11 @@
         // 7. 確保音源和標題正確 (在初始化中會覆蓋，但在切換數據模式時需要)
         if (currentTrackIndex !== -1 && currentTrackIndex < currentPlaylist.length) {
             const track = currentPlaylist[currentTrackIndex];
-            audio.src = track.url; 
+            
+            // 🌟 CDN 備援修復 5: 不在此處直接設定 audio.src 🌟
+            // 舊代碼: audio.src = track.url; 
+            
+            // 確保 UI 標題更新
             if (!audio.paused) {
                 playerTitle.textContent = `正在播放：${track.title} (歌單已排序)`;
             } else if (!playlistSearchInput.value.trim()){ // 僅在非篩選狀態下更新標題
@@ -1083,6 +1113,36 @@
         
         saveSettings();
     });
+    
+    // 🌟 CDN 備援修復 7: 添加瀏覽器 fallback 錯誤監聽 🌟
+    audio.addEventListener('error', (e) => {
+        // 當前播放器來源載入失敗時，瀏覽器會自動嘗試下一個 <source> 標籤。
+        // 這個錯誤事件會在所有來源都嘗試失敗時才會觸發，或者在音頻解碼等問題發生時觸發。
+        // 我們依賴瀏覽器的原生邏輯，只記錄錯誤。
+        if (e.target.error) {
+            switch (e.target.error.code) {
+                case e.target.error.MEDIA_ERR_ABORTED:
+                    console.warn('音頻載入被終止。');
+                    break;
+                case e.target.error.MEDIA_ERR_NETWORK:
+                    console.error('音頻網絡錯誤：無法獲取音源文件。所有來源可能都已失敗或 CDN 服務中斷。');
+                    playerTitle.textContent = `播放失敗：網絡錯誤或 CDN 連結失效。`;
+                    break;
+                case e.target.error.MEDIA_ERR_DECODE:
+                    console.error('音頻解碼錯誤：文件可能損壞或格式不支持。');
+                    playerTitle.textContent = `播放失敗：文件解碼錯誤。`;
+                    break;
+                case e.target.error.MEDIA_ERR_SRC_NOT_SUPPORTED:
+                    console.error('音頻格式不受支持或所有備援來源均已耗盡。');
+                    playerTitle.textContent = `播放失敗：音源格式不受支持或所有備援失敗。`;
+                    break;
+                default:
+                    console.error(`發生未知播放錯誤 (代碼: ${e.target.error.code})`);
+                    playerTitle.textContent = `播放失敗：未知錯誤。`;
+                    break;
+            }
+        }
+    }, true); // 使用捕獲階段確保錯誤被捕獲
 
     audio.addEventListener('ended', saveSettings);
     playlistSearchInput.addEventListener('input', debounce(filterPlaylist, 300));
@@ -1137,7 +1197,25 @@
         // 5. 最終設置播放器狀態
         if (currentTrackIndex >= 0 && currentTrackIndex < currentPlaylist.length) {
             const track = currentPlaylist[currentTrackIndex];
-            audio.src = track.url; 
+            
+            // 🌟 CDN 備援修復 6: 在初始化時，手動設定 <source> 並載入 🌟
+            // 舊代碼: audio.src = track.url; 
+            
+            if (track.sources && Array.isArray(track.sources)) {
+                audio.innerHTML = ''; 
+                track.sources.forEach(src => {
+                    const sourceEl = document.createElement('source');
+                    sourceEl.src = src;
+                    const ext = src.split('.').pop(); 
+                    sourceEl.type = `audio/${ext}`; 
+                    audio.appendChild(sourceEl);
+                });
+                audio.load();
+            } else {
+                 audio.src = ''; // 確保清除無效來源
+                 playerTitle.textContent = `上次播放：${track.title} (無有效音源)`;
+            }
+            
             playerTitle.textContent = `上次播放：${track.title}`;
             
             // 處理上次播放的時間點
