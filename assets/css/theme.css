@@ -257,3 +257,11 @@ body {
     --accent-color: #D32F2F;     /* 深紅色作為強調色 */
     --accent-hover: #C62828;
 }
+
+/* *** 透明化頁腳區塊 *** */
+.site-footer {
+  background: transparent;
+  color: inherit;
+  border: none;
+  padding: 0;  /* 如果想完全消失 */
+}
