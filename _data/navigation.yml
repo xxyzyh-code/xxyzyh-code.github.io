@@ -5,9 +5,9 @@ main:
   - title: "🏠 首页"
     url: /
   - title: "🎵靜態音樂站"
-        url: /music/
-  - title: "🔮數字時鐘"
-        url: /clock/
+    url: /music/
+  - title: "⏰數字時鐘"
+    url: /clock/
   - title: "🏷️ 標籤列表"
     url: /tags/
   - title: "📅 文章歸檔"
