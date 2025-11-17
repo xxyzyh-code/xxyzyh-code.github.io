@@ -77,6 +77,29 @@
     <span role="status" aria-live="polite">總時長: <span id="total-listen-time">0 分鐘</span></span>
     <span role="status" aria-live="polite">剩餘: <span id="remaining-timer">--:--</span></span>
 </div>
+
+<div id="lyrics-container" style="
+    height: 100px; 
+    overflow-y: scroll; 
+    text-align: center; 
+    padding: 10px 0;
+    font-size: 1.1em;
+    border-top: 1px solid #ccc;
+    border-bottom: 1px solid #ccc;
+    margin: 10px 0;
+    line-height: 1.5;
+    position: relative; /* 確保子元素可以絕對定位 */
+">
+    <div id="lyrics-content" style="
+        min-height: 100%; 
+        width: 100%; 
+        display: flex;
+        flex-direction: column;
+        justify-content: center; /* 讓初始內容垂直居中 */
+    ">
+        <p id="lyrics-placeholder">載入中... 請選擇一首歌曲播放。</p>
+    </div>
+</div>
 <ul id="playlist" role="list">
     </ul>
 </div>
