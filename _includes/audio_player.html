@@ -1,4 +1,4 @@
-<div id="custom-audio-player">
+<div id="custom-audio-player" role="region" aria-label="音樂播放器和播放列表">
     <h3>我的音樂播放器</h3>
     
     <audio id="main-audio" controls>
@@ -8,20 +8,28 @@
     <div id="player-controls" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px;">
         
         <div id="nav-main-group" style="display: flex; justify-content: center; align-items: center; gap: 15px;">
-            <span id="prev-button" onclick="playPreviousTrack()" style="cursor: pointer; font-size: 1.2em;">
+            <button id="prev-button" onclick="playPreviousTrack()" 
+                    style="cursor: pointer; font-size: 1.2em; border: none; background: none;" 
+                    aria-label="播放上一曲">
                 ⏪ 上一曲
-            </span>
-            <span id="mode-button" onclick="togglePlayMode()" style="cursor: pointer;">
+            </button>
+            
+            <button id="mode-button" onclick="togglePlayMode()" 
+                    style="cursor: pointer; border: none; background: none;" 
+                    aria-live="polite" aria-label="切換播放模式">
                 [ 模式: 順序 ]
-            </span>
-            <span id="next-button" onclick="playNextTrack()" style="cursor: pointer; font-size: 1.2em;">
+            </button>
+            
+            <button id="next-button" onclick="playNextTrack()" 
+                    style="cursor: pointer; font-size: 1.2em; border: none; background: none;" 
+                    aria-label="播放下一曲">
                 下一曲 ⏩
-            </span>
+            </button>
         </div>
         
         <div id="mode-switcher-group" style="display: flex; justify-content: center; margin-top: 5px;">
             <div id="data-mode-switcher">
-                <button id="data-mode-toggle-btn" onclick="toggleDataMode()" style="cursor: pointer;">
+                <button id="data-mode-toggle-btn" onclick="toggleDataMode()" style="cursor: pointer;" aria-live="polite">
                     數據模式: <span id="current-data-mode">[本地統計]</span>
                 </button>
             </div>
@@ -30,32 +38,32 @@
         <div id="aux-controls-group" style="display: flex; justify-content: space-between; align-items: center; margin-top: 5px;">
             
             <div id="theme-switcher" style="position: relative;">
-                <button id="theme-toggle-btn" style="cursor: pointer;">
+                <button id="theme-toggle-btn" style="cursor: pointer;" aria-expanded="false" aria-controls="theme-menu">
                     主題：<span id="current-theme-name">白色 (自動)</span>
                 </button>
-                <div id="theme-menu" class="hidden-menu" style="position: absolute; z-index: 10; left: 0;">
-                    <span class="theme-option" data-theme="light">白色</span>
-                    <span class="theme-option" data-theme="dark">黑色</span>
-                    <span class="theme-option" data-theme="grey">灰色</span>
-                    <span class="theme-option" data-theme="blue">藍色</span>
-                    <span class="theme-option" data-theme="green">綠色</span>
-                    <span class="theme-option" data-theme="purple">紫色</span>
-                    <span class="theme-option" data-theme="pink">粉色</span>
-                    <span class="theme-option" data-theme="yellow">黄色</span>
-                    <span class="theme-option" data-theme="red">紅色</span>
+                <div id="theme-menu" class="hidden-menu" role="menu" style="position: absolute; z-index: 10; left: 0;">
+                    <span class="theme-option" data-theme="light" role="menuitem" tabindex="0">白色</span>
+                    <span class="theme-option" data-theme="dark" role="menuitem" tabindex="0">黑色</span>
+                    <span class="theme-option" data-theme="grey" role="menuitem" tabindex="0">灰色</span>
+                    <span class="theme-option" data-theme="blue" role="menuitem" tabindex="0">藍色</span>
+                    <span class="theme-option" data-theme="green" role="menuitem" tabindex="0">綠色</span>
+                    <span class="theme-option" data-theme="purple" role="menuitem" tabindex="0">紫色</span>
+                    <span class="theme-option" data-theme="pink" role="menuitem" tabindex="0">粉色</span>
+                    <span class="theme-option" data-theme="yellow" role="menuitem" tabindex="0">黄色</span>
+                    <span class="theme-option" data-theme="red" role="menuitem" tabindex="0">紅色</span>
                 </div>
             </div>
             
             <div id="sleep-timer-area" style="position: relative;">
-                <button id="timer-toggle-btn" style="cursor: pointer;"> 
+                <button id="timer-toggle-btn" style="cursor: pointer;" aria-expanded="false" aria-controls="timer-menu">
                     定時 (未設定)
                 </button>
                 
-                <div id="timer-menu" class="hidden-menu" style="position: absolute; z-index: 10; right: 0;">
-                    <span class="menu-item" onclick="setSleepTimer(10)">10 分鐘後關閉</span>
-                    <span class="menu-item" onclick="setSleepTimer(30)">30 分鐘後關閉</span>
-                    <span class="menu-item" onclick="setSleepTimer(60)">60 分鐘後關閉</span>
-                    <span class="menu-item" onclick="clearSleepTimer(); toggleTimerMenu();">取消定時</span>
+                <div id="timer-menu" class="hidden-menu" role="menu" style="position: absolute; z-index: 10; right: 0;">
+                    <span class="menu-item" onclick="setSleepTimer(10)" role="menuitem" tabindex="0">10 分鐘後關閉</span>
+                    <span class="menu-item" onclick="setSleepTimer(30)" role="menuitem" tabindex="0">30 分鐘後關閉</span>
+                    <span class="menu-item" onclick="setSleepTimer(60)" role="menuitem" tabindex="0">60 分鐘後關閉</span>
+                    <span class="menu-item" onclick="clearSleepTimer(); toggleTimerMenu();" role="menuitem" tabindex="0">取消定時</span>
                 </div>
             </div>
         </div>
@@ -66,10 +74,10 @@
 </div>
     
 <div id="stats-bar">
-    <span>總時長: <span id="total-listen-time">0 分鐘</span></span>
-    <span>剩餘: <span id="remaining-timer">--:--</span></span>
+    <span role="status" aria-live="polite">總時長: <span id="total-listen-time">0 分鐘</span></span>
+    <span role="status" aria-live="polite">剩餘: <span id="remaining-timer">--:--</span></span>
 </div>
-<ul id="playlist">
+<ul id="playlist" role="list">
     </ul>
 </div>
 
