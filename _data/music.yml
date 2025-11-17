@@ -39,7 +39,7 @@
     - "https://cdn.jsdelivr.net/gh/xxyzyh-code/music@main/The%20More%20I%20Know%20You.mp3"
     - "https://cdn.statically.io/gh/xxyzyh-code/music/main/The%20More%20I%20Know%20You.mp3"
     - "https://raw.githubusercontent.com/xxyzyh-code/music/main/The%20More%20I%20Know%20You.mp3"
-  lrcPath: "/assets/lyrics/The More I Know You.lrc"
+  lrcPath:"https://cdn.jsdelivr.net/gh/xxyzyh-code/xxyzyh-code.github.io@main/assets/lyrics/The%20More%20I%20Know%20You.lrc"
 
 - title: Jesus Walks With Me
   artist: Be Still Studios
