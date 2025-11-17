@@ -522,8 +522,12 @@ function renderPlaylist() {
         fragment.appendChild(li);
     });
     
-    DOM_ELEMENTS.playlistUl.appendChild(fragment);
-    updatePlaylistHighlight(true);
+    DOM_ELEMENTS.playlistUl.appendChild(fragment);    
+    // 🌟 修正：將高光操作延遲到當前同步代碼塊完成之後執行
+    // 這樣可以確保瀏覽器有時間處理新的 DOM 結構，避免時序問題。
+    setTimeout(() => {
+        updatePlaylistHighlight(true);
+    }, 0); 
 }
 
 function sortPlaylistByPlayCount() {
