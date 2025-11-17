@@ -142,14 +142,6 @@ export const getState = () => ({
 });
 
 export const setState = (newState) => {
-    Object.assign(
-        {
-            currentPlaylist, currentTrackIndex, playMode, dataMode, 
-            trackPlayCounts, globalTrackPlayCounts, sleepTimerId, endTime, countdownIntervalId,
-            listenIntervalId, scoreTimerIntervalId, scoreAccumulatorSeconds
-        }, 
-        newState
-    );
     if (newState.currentPlaylist !== undefined) currentPlaylist = newState.currentPlaylist;
     if (newState.currentTrackIndex !== undefined) currentTrackIndex = newState.currentTrackIndex;
     if (newState.playMode !== undefined) playMode = newState.playMode;
