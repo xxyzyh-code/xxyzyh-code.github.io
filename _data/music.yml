@@ -47,7 +47,8 @@
     - "https://cdn.jsdelivr.net/gh/xxyzyh-code/music@main/Jesus%20Walks%20With%20Me.mp3"
     - "https://cdn.statically.io/gh/xxyzyh-code/music/main/Jesus%20Walks%20With%20Me.mp3"
     - "https://raw.githubusercontent.com/xxyzyh-code/music/main/Jesus%20Walks%20With%20Me.mp3"
-
+  lrcPath: "https://cdn.jsdelivr.net/gh/xxyzyh-code/xxyzyh-code.github.io@main/assets/lyrics/Jesus%20Walks%20With%20Me.lrc"
+  
 - title: Hallelujah Forevermore
   artist: Be Still Studios
   sources:
