@@ -468,7 +468,7 @@ function renderPlaylist() {
     currentPlaylist.forEach((track, index) => {
         const li = document.createElement('li');
         li.setAttribute('data-index', index); 
-        li.setAttribute('tabindex', '0'); // 🌟 A11Y 增強：允許聚焦
+        li.setAttribute('tabindex', '0'); // A11Y 增強：允許聚焦
         const { originalText, playCount } = getTrackDisplayInfo(track);
         
         li.textContent = originalText;
@@ -493,7 +493,7 @@ function renderPlaylist() {
         
         li.addEventListener('click', playTrackAction);
         
-        // 🌟 A11Y 增強：支持鍵盤 Enter/Space 觸發點擊
+        // A11Y 增強：支持鍵盤 Enter/Space 觸發點擊
         li.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault(); 
@@ -560,8 +560,7 @@ function filterPlaylist() {
 
         setState({ currentPlaylist: newPlaylist });
 
-        // 停止計時器邏輯：暫停播放時應當處理計時器，這裡只處理搜索時的特殊情況
-        // 🌟 建議的 UX 修正：如果當前播放的歌曲仍在列表中，不應強制暫停。
+        // 🌟 修正後的邏輯: 即使歌曲仍在列表中，列表上下文已變，強制暫停以保持狀態一致性。
         const { currentTrackIndex, currentPlaylist } = getState();
         const currentlyPlayingOriginalIndex = currentTrackIndex !== -1 && currentPlaylist[currentTrackIndex] 
             ? currentPlaylist[currentTrackIndex].originalIndex 
@@ -569,21 +568,18 @@ function filterPlaylist() {
         
         const newIndex = newPlaylist.findIndex(track => track.originalIndex === currentlyPlayingOriginalIndex);
 
-        if (newIndex !== -1) {
-            // 歌曲仍在列表中，保持播放狀態
-            setState({ currentTrackIndex: newIndex });
-            DOM_ELEMENTS.playerTitle.textContent = `已根據篩選建立新歌單 (${newPlaylist.length} 首)。`;
-        } else if (newPlaylist.length === 0) {
+        // 無論歌曲是否仍在過濾列表中，都要暫停並重設索引/提示用戶點擊
+        DOM_ELEMENTS.audio.pause(); 
+        handlePause(); // 停止所有計時器
+
+        if (newPlaylist.length === 0) {
             DOM_ELEMENTS.playerTitle.textContent = `未找到與 "${searchText}" 相關的歌曲。`;
-            DOM_ELEMENTS.audio.pause(); 
             setState({ currentTrackIndex: -1 });
-            handlePause(); // 停止所有計時器
         } else {
-             // 正在播放的歌曲被過濾掉，但有新歌曲
+             // 將 currentTrackIndex 設置為列表中的第一首歌曲，或者如果原歌曲仍在，則設置為其新索引
+             const targetIndex = newIndex !== -1 ? newIndex : 0;
+             setState({ currentTrackIndex: targetIndex }); 
              DOM_ELEMENTS.playerTitle.textContent = `已根據篩選建立新歌單 (${newPlaylist.length} 首)。請點擊播放。`;
-             setState({ currentTrackIndex: 0 }); 
-             DOM_ELEMENTS.audio.pause(); 
-             handlePause(); // 停止所有計時器
         }
         
     } else {
@@ -595,7 +591,8 @@ function filterPlaylist() {
         if (currentTrackIndex === -1 || currentTrackIndex >= currentPlaylist.length) {
             setState({ currentTrackIndex: 0 }); 
         }
-        // 不應在這裡強制暫停，應讓用戶自己決定
+        // 🌟 修正點: 移除這裡的 DOM_ELEMENTS.audio.pause()，不再強制暫停。
+        // 播放狀態將保持不變，且播放列表將恢復為 MASTER_TRACK_LIST 並重新排序。
     }
     
     sortPlaylistByPlayCount(); 
@@ -923,7 +920,7 @@ function bindEventListeners() {
         }
     });
     
-    // 🌟 A11Y 增強：主題菜單項
+    // A11Y 增強：主題菜單項
     DOM_ELEMENTS.themeOptions.forEach(option => {
         const clickAction = (e) => {
              const selectedTheme = e.currentTarget.getAttribute('data-theme');
@@ -943,7 +940,7 @@ function bindEventListeners() {
         });
     });
 
-    // 🌟 A11Y 增強：定時器菜單項
+    // A11Y 增強：定時器菜單項
     // 注意：定時器的菜單項因為是內聯 `onclick`，我們需要用不同的方式處理鍵盤事件。
     DOM_ELEMENTS.timerMenu.querySelectorAll('.menu-item').forEach(item => {
         item.addEventListener('keydown', (e) => {
@@ -988,7 +985,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
-// 🌟 核心優化：集中暴露給全局空間的函數 (供 HTML 內聯 onclick / URL 錨點使用)
+// 核心優化：集中暴露給全局空間的函數 (供 HTML 內聯 onclick / URL 錨點使用)
 const globalExposedFunctions = {
     playNextTrack,
     playPreviousTrack,
