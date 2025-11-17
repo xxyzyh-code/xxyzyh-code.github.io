@@ -60,11 +60,11 @@
                 </button>
                 
                 <div id="timer-menu" class="hidden-menu" role="menu" style="position: absolute; z-index: 10; right: 0;">
-                    <span class="menu-item" onclick="setSleepTimer(10)" role="menuitem" tabindex="0">10 分鐘後關閉</span>
-                    <span class="menu-item" onclick="setSleepTimer(30)" role="menuitem" tabindex="0">30 分鐘後關閉</span>
-                    <span class="menu-item" onclick="setSleepTimer(60)" role="menuitem" tabindex="0">60 分鐘後關閉</span>
-                    <span class="menu-item" onclick="clearSleepTimer(); toggleTimerMenu();" role="menuitem" tabindex="0">取消定時</span>
-                </div>
+    <span class="menu-item" onclick="setSleepTimer(10); event.stopPropagation();" role="menuitem" tabindex="0">10 分鐘後關閉</span>
+    <span class="menu-item" onclick="setSleepTimer(30); event.stopPropagation();" role="menuitem" tabindex="0">30 分鐘後關閉</span>
+    <span class="menu-item" onclick="setSleepTimer(60); event.stopPropagation();" role="menuitem" tabindex="0">60 分鐘後關閉</span>
+    <span class="menu-item" onclick="clearSleepTimer(); toggleTimerMenu(); event.stopPropagation();" role="menuitem" tabindex="0">取消定時</span>
+</div>
             </div>
         </div>
         
