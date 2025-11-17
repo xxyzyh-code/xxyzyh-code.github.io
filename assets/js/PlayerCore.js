@@ -132,8 +132,9 @@ function updatePlaylistHighlight(manualScroll = false) {
     });
     
     if (currentTrackIndex >= 0 && currentTrackIndex < currentPlaylist.length) {
-        // 使用 data-index 屬性來精確查找 DOM 元素，而不是依賴 Array.from(listItems) 的順序
-        const playingItem = DOM_ELEMENTS.playlistUl.querySelector(`li[data-index="${currentTrackIndex}"]`);
+// 修正：使用正在播放歌曲的 originalIndex 查找
+const currentlyPlayingOriginalIndex = currentPlaylist[currentTrackIndex].originalIndex; 
+const playingItem = DOM_ELEMENTS.playlistUl.querySelector(`li[data-original-index="${currentlyPlayingOriginalIndex}"]`);
         
         if (playingItem) {
             playingItem.classList.add('playing');
@@ -481,7 +482,9 @@ function renderPlaylist() {
 
     currentPlaylist.forEach((track, index) => {
         const li = document.createElement('li');
-        li.setAttribute('data-index', index); 
+        // 修正：
+        li.setAttribute('data-original-index', track.originalIndex); // 🌟 關鍵修正：使用固定索引
+        li.setAttribute('data-index', index); // 保留 data-index 給 playTrack(index) 傳參用，但高光不用它
         li.setAttribute('tabindex', '0'); // 🌟 A11Y 增強：允許聚焦
         
         const { originalText, playCount } = getTrackDisplayInfo(track);
