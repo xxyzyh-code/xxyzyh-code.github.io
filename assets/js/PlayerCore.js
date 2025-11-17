@@ -438,14 +438,32 @@ export function playTrack(index) {
              DOM_ELEMENTS.audio.src = ''; 
         }
                         // 🌟 新增：歌詞載入與解析邏輯 🌟
-        if (track.lrcPath) {
-            fetchLRC(track.lrcPath).then(lrcText => {
-                const parsedLRC = parseLRC(lrcText);
-                setState({ 
-                    currentLRC: parsedLRC, 
-                    currentLyricIndex: -1 // 重置索引
-                });
-                renderLyrics();
+if (track.lrcPath) {
+    console.log(`嘗試加載歌詞: ${track.lrcPath}`); // 步驟 1: 輸出路徑
+    fetchLRC(track.lrcPath).then(lrcText => {
+        // 步驟 2: 檢查是否成功獲取文本
+        if (lrcText) {
+             console.log("歌詞文本獲取成功，長度:", lrcText.length);
+        } else {
+             console.error("❌ 錯誤：fetchLRC 返回空或無效文本。");
+        }
+        
+        const parsedLRC = parseLRC(lrcText);
+        
+        // 步驟 3: 檢查解析結果
+        if (parsedLRC && parsedLRC.length > 0) {
+            console.log("✅ 歌詞解析成功，找到行數:", parsedLRC.length);
+        } else {
+            console.error("❌ 錯誤：歌詞解析失敗或解析結果為空！");
+        }
+        
+        setState({ 
+            currentLRC: parsedLRC, 
+            currentLyricIndex: -1
+        });
+        renderLyrics();
+    }).catch(error => {
+        console.error(`❌ 歌詞文件加載失敗 (${track.lrcPath}):`, error); // 步驟 4: 捕獲網絡錯誤
             });
         } else {
              // 如果沒有 lrcPath 或載入失敗，清空歌詞區域
