@@ -866,7 +866,8 @@ function incrementPlayCount() {
 }
 
 function handlePlay() {
-    let { listenIntervalId, scoreTimerIntervalId, currentTrackIndex, currentPlaylist } = getState();
+    let { listenIntervalId, scoreTimerIntervalId } = getState(); // 解構其他狀態
+    let { lyricsIntervalId } = getState(); // 🌟 確保在這裡解構 lyricsIntervalId
 
     if (listenIntervalId === null) {
         listenIntervalId = setInterval(updateTotalListenTime, 1000);
@@ -881,7 +882,7 @@ function handlePlay() {
     // 🌟 新增：啟動歌詞同步計時器 🌟
     if (lyricsIntervalId === null) {
         lyricsIntervalId = setInterval(syncLyrics, 100); // 100ms 頻率確保同步平滑
-        setState({ lyricsIntervalId });
+        setState({ lyricsIntervalId }); // 🌟 修正：通過 setState 更新全局狀態
     }
     // 🌟 新增結束 🌟
     
@@ -895,8 +896,8 @@ function handlePlay() {
 }
 
 function handlePause() {
-    const { listenIntervalId, scoreTimerIntervalId } = getState();
-    
+    const { listenIntervalId, scoreTimerIntervalId, lyricsIntervalId } = getState(); // 🌟 修正：確保解構 lyricsIntervalId
+
     if (listenIntervalId !== null) {
         clearInterval(listenIntervalId);
         setState({ listenIntervalId: null });
@@ -910,7 +911,7 @@ function handlePause() {
     // 🌟 新增：停止歌詞同步計時器 🌟
     if (lyricsIntervalId !== null) {
         clearInterval(lyricsIntervalId);
-        setState({ lyricsIntervalId: null });
+        setState({ lyricsIntervalId: null }); // 🌟 修正：通過 setState 更新全局狀態
     }
     // 🌟 新增結束 🌟
     
