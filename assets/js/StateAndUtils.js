@@ -149,7 +149,6 @@ export const getState = () => ({
     currentLRC, lyricsIntervalId, currentLyricIndex
 });
 
-});
 
 export const setState = (newState) => {
     if (newState.currentPlaylist !== undefined) currentPlaylist = newState.currentPlaylist;
@@ -171,7 +170,6 @@ export const setState = (newState) => {
     if (newState.currentLyricIndex !== undefined) currentLyricIndex = newState.currentLyricIndex;
 };
 
-};
 
 // 導出重置歌單
 export function resetCurrentPlaylist() {
