@@ -231,7 +231,10 @@ function updateTimerCountdown() {
 
 // --- 定時器函數 ---
 
-export function toggleTimerMenu() {
+export function toggleTimerMenu(e) {
+        if (e && typeof e.stopPropagation === 'function') {
+        e.stopPropagation(); // <--- 🚨 新增：防止點擊事件被干擾
+        }
     const isExpanded = DOM_ELEMENTS.timerMenu.classList.toggle('hidden-menu');
     // 🌟 A11Y 增強：設置 aria-expanded
     DOM_ELEMENTS.timerToggleButton.setAttribute('aria-expanded', !isExpanded);
@@ -920,7 +923,8 @@ function bindEventListeners() {
     DOM_ELEMENTS.playlistSearchInput.addEventListener('input', debounce(filterPlaylist, 300));
     
     // 主題切換事件
-    DOM_ELEMENTS.themeToggleBtn.addEventListener('click', () => {
+    DOM_ELEMENTS.themeToggleBtn.addEventListener('click', (e) => {
+       e.stopPropagation(); // <--- 🚨 新增：防止按鈕點擊時被全局點擊事件立即關閉
         const isExpanded = DOM_ELEMENTS.themeMenu.classList.toggle('hidden-menu');
         // 🌟 A11Y 增強：設置 aria-expanded
         DOM_ELEMENTS.themeToggleBtn.setAttribute('aria-expanded', !isExpanded); 
@@ -934,6 +938,7 @@ function bindEventListeners() {
     // 🌟 A11Y 增強：主題菜單項
     DOM_ELEMENTS.themeOptions.forEach(option => {
         const clickAction = (e) => {
+                    e.stopPropagation(); // <--- 🚨 新增：防止點擊事件被干擾
              const selectedTheme = e.currentTarget.getAttribute('data-theme');
              applyTheme(selectedTheme, true); 
              DOM_ELEMENTS.themeMenu.classList.add('hidden-menu'); 
