@@ -289,3 +289,57 @@ span[onclick]:focus, span[onclick]:active {
 .hidden-menu {
     display: none !important; /* ⭐️ 關鍵修正：確保它能覆蓋任何內聯或低優先級樣式 */
 }
+
+/* ------------------------------------ */
+/* 歌詞顯示樣式 */
+/* ------------------------------------ */
+
+.lyrics-container {
+    height: 120px; /* 統一高度，比 100px 稍高一點，讓滾動效果更明顯 */
+    overflow-y: scroll; /* 允許垂直滾動 */
+    margin: 15px 0;
+    padding: 10px 15px;
+    border-radius: 6px;
+    
+    /* 配合主題的背景和邊框 */
+    background-color: var(--card-bg); 
+    border: 1px solid var(--border-color); 
+    
+    /* 隱藏滾動條 */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE/Edge */
+}
+
+.lyrics-container::-webkit-scrollbar {
+    display: none; /* Chrome, Safari */
+}
+
+.lyrics-content p {
+    margin: 10px 0;
+    padding: 2px 0;
+    line-height: 1.6;
+    font-size: 1em;
+    
+    /* 配合主題的文字顏色 */
+    color: var(--text-color); 
+    opacity: 0.5; /* 未高亮歌詞透明度降低 */
+    transition: opacity 0.3s ease, color 0.3s ease, font-weight 0.3s ease;
+    text-align: center; 
+}
+
+.lyrics-content p#lyrics-placeholder {
+    opacity: 0.7;
+    font-style: italic;
+    color: var(--secondary-text);
+}
+
+/* 歌詞高亮樣式 */
+.lyrics-content p.current-line {
+    opacity: 1.0; 
+    
+    /* 使用正在播放的文字顏色作為強調色，確保主題兼容 */
+    color: var(--playing-text); 
+    font-size: 1.1em;
+    font-weight: bold;
+}
+
