@@ -234,14 +234,13 @@ function updateTimerCountdown() {
 // --- 定時器函數 ---
 
 export function toggleTimerMenu() {
-    const isExpanded = DOM_ELEMENTS.timerMenu.classList.toggle('hidden-menu');
-    DOM_ELEMENTS.timerToggleButton.setAttribute('aria-expanded', !isExpanded);
+    DOM_ELEMENTS.timerMenu.classList.toggle('hidden-menu');
     
     if (!DOM_ELEMENTS.themeMenu.classList.contains('hidden-menu')) {
         DOM_ELEMENTS.themeMenu.classList.add('hidden-menu');
-        DOM_ELEMENTS.themeToggleBtn.setAttribute('aria-expanded', false);
     }
 }
+window.toggleTimerMenu = toggleTimerMenu;
 
 export function setSleepTimer(minutes) {
     clearSleepTimer();
@@ -270,6 +269,7 @@ export function setSleepTimer(minutes) {
         DOM_ELEMENTS.audio.play();
     }
 }
+window.setSleepTimer = setSleepTimer;
 
 export function clearSleepTimer() {
     const { sleepTimerId, countdownIntervalId } = getState();
@@ -291,6 +291,7 @@ export function clearSleepTimer() {
     DOM_ELEMENTS.remainingTimerSpan.textContent = "--:--";
     DOM_ELEMENTS.playerTitle.textContent = "已取消定時器";
 }
+window.clearSleepTimer = clearSleepTimer;
 
 
 // --- 播放控制邏輯 ---
@@ -324,6 +325,7 @@ export function playTrack(index) {
                 const ext = src.split('.').pop().toLowerCase(); 
                 let type;
 
+                // 🌟 M4A/MP4 MIME 類型優化 🌟
                 if (ext === 'mp3') {
                     type = 'audio/mpeg';
                 } else if (ext === 'm4a' || ext === 'aac') {
@@ -388,6 +390,7 @@ export function playNextTrack() {
     }
     playTrack(nextIndex);
 }
+window.playNextTrack = playNextTrack;
 
 
 export function playPreviousTrack() {
@@ -416,9 +419,10 @@ export function playPreviousTrack() {
     }
     playTrack(prevIndex);
 }
+window.playPreviousTrack = playPreviousTrack;
 
 
-// --- 模式切換邏輯 ---
+// --- 模式切換邏輯 (導出給 HTML) ---
 
 export function togglePlayMode() {
     let { playMode } = getState();
@@ -429,6 +433,7 @@ export function togglePlayMode() {
     DOM_ELEMENTS.playerTitle.textContent = `已切換到 ${DOM_ELEMENTS.modeButton.textContent.replace('[ 模式: ', '').replace(' ]', '')}`;
     saveSettings(); 
 }
+window.togglePlayMode = togglePlayMode; 
 
 export async function toggleDataMode() {
     let { dataMode } = getState();
@@ -441,6 +446,7 @@ export async function toggleDataMode() {
     DOM_ELEMENTS.playerTitle.textContent = `數據模式已切換為：${(dataMode === 'global' ? '全球統計' : '本地統計')}`;
     await initializePlayer(true); 
 }
+window.toggleDataMode = toggleDataMode;
 
 
 // --- 播放列表顯示與排序邏輯 ---
@@ -468,7 +474,6 @@ function renderPlaylist() {
     currentPlaylist.forEach((track, index) => {
         const li = document.createElement('li');
         li.setAttribute('data-index', index); 
-        li.setAttribute('tabindex', '0'); // A11Y 增強：允許聚焦
         const { originalText, playCount } = getTrackDisplayInfo(track);
         
         li.textContent = originalText;
@@ -482,25 +487,14 @@ function renderPlaylist() {
             li.appendChild(countSpan);
         }
         
-        const playTrackAction = () => {
-             playTrack(index);
-             if (playMode !== 3) {
+        li.addEventListener('click', () => {
+            playTrack(index);
+            if (playMode !== 3) {
                  setState({ playMode: 3 }); 
                  updateModeUI();
                  saveSettings();
-             }
-        };
-        
-        li.addEventListener('click', playTrackAction);
-        
-        // A11Y 增強：支持鍵盤 Enter/Space 觸發點擊
-        li.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault(); 
-                playTrackAction();
             }
         });
-        
         fragment.appendChild(li);
     });
     
@@ -560,39 +554,35 @@ function filterPlaylist() {
 
         setState({ currentPlaylist: newPlaylist });
 
-        // 🌟 修正後的邏輯: 即使歌曲仍在列表中，列表上下文已變，強制暫停以保持狀態一致性。
-        const { currentTrackIndex, currentPlaylist } = getState();
-        const currentlyPlayingOriginalIndex = currentTrackIndex !== -1 && currentPlaylist[currentTrackIndex] 
-            ? currentPlaylist[currentTrackIndex].originalIndex 
-            : -1; 
-        
-        const newIndex = newPlaylist.findIndex(track => track.originalIndex === currentlyPlayingOriginalIndex);
-
-        // 無論歌曲是否仍在過濾列表中，都要暫停並重設索引/提示用戶點擊
-        DOM_ELEMENTS.audio.pause(); 
-        handlePause(); // 停止所有計時器
+        if (getState().listenIntervalId !== null) {
+            clearInterval(getState().listenIntervalId); 
+            setState({ listenIntervalId: null });
+        }
 
         if (newPlaylist.length === 0) {
             DOM_ELEMENTS.playerTitle.textContent = `未找到與 "${searchText}" 相關的歌曲。`;
+            DOM_ELEMENTS.audio.pause(); 
             setState({ currentTrackIndex: -1 });
+            
         } else {
-             // 將 currentTrackIndex 設置為列表中的第一首歌曲，或者如果原歌曲仍在，則設置為其新索引
-             const targetIndex = newIndex !== -1 ? newIndex : 0;
-             setState({ currentTrackIndex: targetIndex }); 
              DOM_ELEMENTS.playerTitle.textContent = `已根據篩選建立新歌單 (${newPlaylist.length} 首)。請點擊播放。`;
+             setState({ currentTrackIndex: 0 }); 
+             DOM_ELEMENTS.audio.pause(); 
         }
-        
     } else {
-        // 清空搜索欄
         resetCurrentPlaylist(); 
         DOM_ELEMENTS.playerTitle.textContent = "我的音樂播放器";
+        
+        if (getState().listenIntervalId !== null) {
+            clearInterval(getState().listenIntervalId); 
+            setState({ listenIntervalId: null });
+        }
         
         let { currentTrackIndex, currentPlaylist } = getState();
         if (currentTrackIndex === -1 || currentTrackIndex >= currentPlaylist.length) {
             setState({ currentTrackIndex: 0 }); 
         }
-        // 🌟 修正點: 移除這裡的 DOM_ELEMENTS.audio.pause()，不再強制暫停。
-        // 播放狀態將保持不變，且播放列表將恢復為 MASTER_TRACK_LIST 並重新排序。
+        DOM_ELEMENTS.audio.pause(); 
     }
     
     sortPlaylistByPlayCount(); 
@@ -626,6 +616,7 @@ export function loadTrack(originalIndex) {
         DOM_ELEMENTS.playerTitle.textContent = `錯誤：歌曲找不到。請手動點擊歌單中的其他歌曲。`;
     }
 }
+window.loadTrack = loadTrack;
 
 
 // --- 事件處理函數 ---
@@ -712,6 +703,7 @@ function handlePlay() {
     }
     
     if (scoreTimerIntervalId === null) {
+        // 假設 updateMusicScore 函數已定義或在 window 上
         scoreTimerIntervalId = setInterval(window.updateMusicScore || (() => console.warn('updateMusicScore not defined')), 1000); 
         setState({ scoreTimerIntervalId }); 
     }
@@ -856,6 +848,7 @@ async function initializePlayer(isManualToggle = false) {
                 const ext = src.split('.').pop().toLowerCase(); 
                 let type;
 
+                // 🌟 初始化時也使用修正後的 MIME 類型推斷 🌟
                 if (ext === 'mp3') {
                     type = 'audio/mpeg';
                 } else if (ext === 'm4a' || ext === 'aac') {
@@ -911,60 +904,27 @@ function bindEventListeners() {
     
     // 主題切換事件
     DOM_ELEMENTS.themeToggleBtn.addEventListener('click', () => {
-        const isExpanded = DOM_ELEMENTS.themeMenu.classList.toggle('hidden-menu');
-        DOM_ELEMENTS.themeToggleBtn.setAttribute('aria-expanded', !isExpanded); 
-        
+        DOM_ELEMENTS.themeMenu.classList.toggle('hidden-menu');
         if (!DOM_ELEMENTS.timerMenu.classList.contains('hidden-menu')) {
             DOM_ELEMENTS.timerMenu.classList.add('hidden-menu');
-            DOM_ELEMENTS.timerToggleButton.setAttribute('aria-expanded', false);
         }
     });
-    
-    // A11Y 增強：主題菜單項
     DOM_ELEMENTS.themeOptions.forEach(option => {
-        const clickAction = (e) => {
-             const selectedTheme = e.currentTarget.getAttribute('data-theme');
-             applyTheme(selectedTheme, true); 
-             DOM_ELEMENTS.themeMenu.classList.add('hidden-menu'); 
-             DOM_ELEMENTS.themeToggleBtn.setAttribute('aria-expanded', false);
-        };
-        
-        option.addEventListener('click', clickAction);
-        
-        // 支持鍵盤 Enter/Space 觸發
-        option.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault(); 
-                clickAction(e);
-            }
+        option.addEventListener('click', (e) => {
+            const selectedTheme = e.target.getAttribute('data-theme');
+            applyTheme(selectedTheme, true); 
+            DOM_ELEMENTS.themeMenu.classList.add('hidden-menu'); 
         });
     });
 
-    // A11Y 增強：定時器菜單項
-    // 注意：定時器的菜單項因為是內聯 `onclick`，我們需要用不同的方式處理鍵盤事件。
-    DOM_ELEMENTS.timerMenu.querySelectorAll('.menu-item').forEach(item => {
-        item.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault(); 
-                // 模擬點擊來觸發內聯 onclick
-                item.click(); 
-            }
-        });
-    });
-    
     // 全局點擊事件 (用於關閉菜單)
     document.addEventListener('click', (e) => {
         const target = e.target;
-        
-        // 關閉主題菜單
         if (!DOM_ELEMENTS.themeMenu.contains(target) && !DOM_ELEMENTS.themeToggleBtn.contains(target)) {
             DOM_ELEMENTS.themeMenu.classList.add('hidden-menu');
-            DOM_ELEMENTS.themeToggleBtn.setAttribute('aria-expanded', false);
         }
-        // 關閉定時器菜單
         if (!DOM_ELEMENTS.timerMenu.contains(target) && !DOM_ELEMENTS.timerToggleButton.contains(target)) {
             DOM_ELEMENTS.timerMenu.classList.add('hidden-menu');
-            DOM_ELEMENTS.timerToggleButton.setAttribute('aria-expanded', false);
         }
     });
 
@@ -983,24 +943,6 @@ document.addEventListener('DOMContentLoaded', () => {
     initializePlayer(); 
     handleUrlAnchor(true);
 });
-
-
-// 核心優化：集中暴露給全局空間的函數 (供 HTML 內聯 onclick / URL 錨點使用)
-const globalExposedFunctions = {
-    playNextTrack,
-    playPreviousTrack,
-    togglePlayMode,
-    toggleDataMode,
-    toggleTimerMenu,
-    setSleepTimer,
-    clearSleepTimer,
-    loadTrack 
-};
-
-Object.keys(globalExposedFunctions).forEach(key => {
-    window[key] = globalExposedFunctions[key];
-});
-
 
 // 導出 initializePlayer，以防外部代碼需要重新初始化
 export { initializePlayer };
