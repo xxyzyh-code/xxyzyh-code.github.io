@@ -11,6 +11,9 @@ import {
     totalListenMinutes, totalListenSeconds
 } from './StateAndUtils.js';
 
+// 🌟 修正步驟 1：添加一個全局標記，確保事件監聽器只綁定一次
+let hasInitializedListeners = false;
+
 // --- 數據模式相關函數 (API) ---
 
 function trackPlayToDatabase(song_id) {
@@ -905,8 +908,14 @@ async function initializePlayer(isManualToggle = false) {
     }
     
     initializeTheme();
-    bindEventListeners();
+    
+    // 🌟 修正步驟 2：只有在第一次初始化時才綁定事件
+    if (!hasInitializedListeners) {
+        bindEventListeners();
+        hasInitializedListeners = true;
+    }
 }
+
 
 function bindEventListeners() {
     // 播放器事件
@@ -931,10 +940,13 @@ function bindEventListeners() {
         
         if (!DOM_ELEMENTS.timerMenu.classList.contains('hidden-menu')) {
             DOM_ELEMENTS.timerMenu.classList.add('hidden-menu');
-            DOM_ELEMENTS.timerToggleButton.setAttribute('aria-expanded', false); // 🌟 A11Y 增強
+            DOM_ELEMENTS.timerToggleButton.setAttribute('aria-expanded', false); 
         }
     });
     
+    // 🌟 修正：直接將 toggleTimerMenu 函數作為事件處理器綁定
+    DOM_ELEMENTS.timerToggleButton.addEventListener('click', toggleTimerMenu);
+
     // 🌟 A11Y 增強：主題菜單項
     DOM_ELEMENTS.themeOptions.forEach(option => {
         const clickAction = (e) => {
@@ -1008,7 +1020,7 @@ const globalExposedFunctions = {
     playPreviousTrack,
     togglePlayMode,
     toggleDataMode,
-    toggleTimerMenu,
+    //toggleTimerMenu,
     setSleepTimer,
     clearSleepTimer,
     loadTrack 
