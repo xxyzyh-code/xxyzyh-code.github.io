@@ -981,21 +981,27 @@ function bindEventListeners() {
         });
     });
     
-    // 全局點擊事件 (用於關閉菜單)
-    document.addEventListener('click', (e) => {
-        const target = e.target;
-        
-        // 關閉主題菜單
-        if (!DOM_ELEMENTS.themeMenu.contains(target) && !DOM_ELEMENTS.themeToggleBtn.contains(target)) {
-            DOM_ELEMENTS.themeMenu.classList.add('hidden-menu');
-            DOM_ELEMENTS.themeToggleBtn.setAttribute('aria-expanded', false);
-        }
-        // 關閉定時器菜單
-        if (!DOM_ELEMENTS.timerMenu.contains(target) && !DOM_ELEMENTS.timerToggleButton.contains(target)) {
-            DOM_ELEMENTS.timerMenu.classList.add('hidden-menu');
-            DOM_ELEMENTS.timerToggleButton.setAttribute('aria-expanded', false);
-        }
-    });
+// --- 新的全局點擊事件：使用捕獲階段 (Capture Phase) ---
+// 全局點擊事件 (用於關閉菜單)。使用第三個參數 true 啟用捕獲階段。
+// 這樣可以確保 document 在所有子元素監聽器之前收到事件。
+document.addEventListener('click', (e) => {
+    const target = e.target;
+    
+    // 關閉主題菜單
+    // 檢查點擊目標是否在主題菜單或主題切換按鈕之外
+    if (!DOM_ELEMENTS.themeMenu.contains(target) && !DOM_ELEMENTS.themeToggleBtn.contains(target)) {
+        DOM_ELEMENTS.themeMenu.classList.add('hidden-menu');
+        DOM_ELEMENTS.themeToggleBtn.setAttribute('aria-expanded', false);
+    }
+    
+    // 關閉定時器菜單
+    // 檢查點擊目標是否在定時器菜單或定時器切換按鈕之外
+    if (!DOM_ELEMENTS.timerMenu.contains(target) && !DOM_ELEMENTS.timerToggleButton.contains(target)) {
+        DOM_ELEMENTS.timerMenu.classList.add('hidden-menu');
+        DOM_ELEMENTS.timerToggleButton.setAttribute('aria-expanded', false);
+    }
+}, true); // <-- 🚨 關鍵修正：將事件移動到捕獲階段
+
 
     // 每小時自動檢查主題
     setInterval(() => {
