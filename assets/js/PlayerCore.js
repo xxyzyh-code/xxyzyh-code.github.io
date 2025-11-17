@@ -441,9 +441,14 @@ export async function toggleDataMode() {
     updateDataModeUI();
     saveSettings(); 
     
+    // 🌟 修正步驟：在重新載入播放器（初始化）之前，明確停止所有計時器
+    // 這樣可以確保在音頻狀態重置時，計時器不會意外繼續運行。
+    handlePause(); 
+    
     DOM_ELEMENTS.playerTitle.textContent = `數據模式已切換為：${(dataMode === 'global' ? '全球統計' : '本地統計')}`;
     await initializePlayer(true); 
 }
+
 
 
 // --- 播放列表顯示與排序邏輯 ---
