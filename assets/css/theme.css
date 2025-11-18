@@ -12,6 +12,9 @@
     --hover-bg: #f1f1f1;      /* 列表懸停背景 */
     --playing-bg: #e0f7fa;    /* 正在播放背景 */
     --playing-text: #007bff;  /* 正在播放文字 */
+    /* ⭐️ 新增：歌詞高光文字顏色 (預設為正在播放的顏色) ⭐️ */
+    --lyric-highlight-text: #007bff; 
+
     
     /* ✅ 強調色變數：用於定時器按鈕等 */
     --accent-color: #007bff;
@@ -28,6 +31,9 @@ body.dark-theme {
     --hover-bg: #2a2a2a;
     --playing-bg: #004d40; 
     --playing-text: #80cbc4;
+    /* ⭐️ 新增：深色主題下，高光歌詞應為亮色 ⭐️ */
+    --lyric-highlight-text: #80cbc4; 
+
     
     /* ✅ 強調色變數 */
     --accent-color: #17a2b8; /* 青色，與深色背景對比 */
@@ -44,6 +50,9 @@ body.grey-theme {
     --hover-bg: #40444b;
     --playing-bg: #4e342e; 
     --playing-text: #ffccbc;
+    /* ⭐️ 新增：灰色主題下，高光歌詞應為亮色 ⭐️ */
+    --lyric-highlight-text: #ffccbc; 
+
     
     /* ✅ 強調色變數 */
     --accent-color: #8c8c8c; /* 中灰色 */
@@ -151,6 +160,9 @@ body {
     --border-color: #A3C9F2;     
     --secondary-text: #4C7099;   
     --playing-text: #007bff;     
+    /* ⭐️ 新增：藍色主題下，高光歌詞樣式 ⭐️ */
+    --lyric-highlight-text: #007bff; 
+
 
     --hover-bg: #CFE3F7;         
     --playing-bg: #E3F2FF;      
@@ -168,6 +180,8 @@ body {
     --border-color: #A0D3A0;     
     --secondary-text: #5BA85B;   
     --playing-text: #28a745;     
+    /* ⭐️ 新增：綠色主題下，高光歌詞樣式 ⭐️ */
+    --lyric-highlight-text: #28a745; 
     
     --hover-bg: #D9F7D9;         
     --playing-bg: #E6F5E6;       
@@ -191,6 +205,8 @@ body {
     --hover-bg: #E1BEE7;         /* 淺紫色懸停背景 */
     --playing-bg: #EDE7F6;       /* 非常淺的播放中背景 */
     --playing-text: #673AB7;     /* 播放中的文字/強調色：標準紫色 */
+    /* ⭐️ 新增：紫色主題下，高光歌詞樣式 ⭐️ */
+    --lyric-highlight-text: #673AB7; 
 
     /* 強調色 */
     --accent-color: #D81B60;     /* 亮眼的粉色/玫紅色作為強調色 */
@@ -211,6 +227,8 @@ body {
     --hover-bg: #F8BBD0;         /* 淺粉色懸停背景 */
     --playing-bg: #FFEBEE;       /* 非常淺的播放中背景 */
     --playing-text: #E91E63;     /* 播放中的文字/強調色：鮮豔粉色 */
+    /* ⭐️ 新增：粉色主題下，高光歌詞樣式 ⭐️ */
+    --lyric-highlight-text: #E91E63; 
 
     /* ✅ 強調色修正：使用柔和的紫紅色 */
     --accent-color: #9C27B0;     
@@ -232,6 +250,8 @@ body {
     --hover-bg: #FFCCBC;         /* 淺橘色懸停背景 */
     --playing-bg: #FFF8E1;       /* 非常淺的播放中背景 */
     --playing-text: #F4511E;     /* 播放中的文字/強調色：暖紅色 */
+    /* ⭐️ 新增：黃色主題下，高光歌詞樣式 ⭐️ */
+    --lyric-highlight-text: #F4511E; 
 
     /* 強調色 */
     --accent-color: #795548;     /* 棕色作為強調色，穩重且與暖色調協調 */
@@ -252,6 +272,8 @@ body {
     --hover-bg: #FFCDD2;         /* 淺紅色懸停背景 */
     --playing-bg: #EF5350;       /* 播放中背景：鮮紅 */
     --playing-text: #FFFFFF;     /* 播放中的文字：白色 */
+    /* ⭐️ 新增：紅色主題下，高光歌詞樣式 ⭐️ */
+    --lyric-highlight-text: #B71C1C; 
 
     /* 強調色 */
     --accent-color: #D32F2F;     /* 深紅色作為強調色 */
