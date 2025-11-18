@@ -818,6 +818,9 @@ function handleTrackEnd() {
     saveSettings(); 
     
     if (playMode === 1) { 
+        // ⭐️ 【核心修正】在單曲循環模式下，重置歌詞高亮索引 ⭐️
+        // 這將確保下一輪播放開始時，syncLyrics 會從頭開始尋找
+        setState({ currentLyricIndex: -1 }); 
         DOM_ELEMENTS.audio.currentTime = 0; 
         DOM_ELEMENTS.audio.play();
         updatePlaylistHighlight(); 
