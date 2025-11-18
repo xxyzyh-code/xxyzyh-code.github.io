@@ -96,4 +96,12 @@
     - "https://cdn.statically.io/gh/xxyzyh-code/music/main/My%20Shepherd.mp3"
     - "https://raw.githubusercontent.com/xxyzyh-code/music/main/My%20Shepherd.mp3"
   lrcPath: "https://cdn.jsdelivr.net/gh/xxyzyh-code/xxyzyh-code.github.io@main/assets/lyrics/My%20Shepherd.lrc"
-
+  
+- title: The First Sin,The Endless Love
+  artist: ReavoWorship
+  sources:
+    - "https://cdn.jsdelivr.net/gh/xxyzyh-code/music@main/The%20First%20Sin%20And%20Endless%20Love.mp3"
+    - "https://cdn.statically.io/gh/xxyzyh-code/music/main/The%20First%20Sin%20And%20Endless%20Love.mp3"
+    - "https://raw.githubusercontent.com/xxyzyh-code/music/main/The%20First%20Sin%20And%20Endless%20Love.mp3"
+  lrcPath: "https://cdn.jsdelivr.net/gh/xxyzyh-code/xxyzyh-code.github.io@main/assets/lyrics/The%20First%20Sin%20And%20Endless%20Love.lrc"
+  
