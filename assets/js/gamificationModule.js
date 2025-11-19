@@ -27,19 +27,74 @@ const CONFIG = {
         LIMIT_MULTIPLIER: 1.5, // 得分時長上限 × 1.5
         SCORE_MULTIPLIER: 1.2  // 單位 XP × 1.2
     },
-    // ⭐️ 活動配置 B：年度固定活動 (格式: 月-日，用來提供額外 XP 乘數)
-    ANNUAL_EVENTS: {
-        'YEAR_END_BOOST': { 
-            name: '年終衝刺日',
-            dates: ['12-24', '12-25', '12-31', '01-01'],
-            score_multiplier: 1.3 // 單位 XP × 1.3 (與週末活動取高者)
-        },
-        'SPRING_READ': { 
-            name: '春季閱讀日',
-            dates: ['04-23'],
-            score_multiplier: 1.5 
-        }
+// ⭐️ 活動配置 B：年度固定活動 (格式: 月-日，用來提供額外 XP 乘數)
+ANNUAL_EVENTS: {
+    'NEW_YEAR': {
+        name: '新年慶',
+        dates: ['01-01'],
+        score_multiplier: 1.4 // 單位 XP × 1.4 (與週末活動取高者)
     },
+    'EPIPHANY': {
+        name: '主顯節',
+        dates: ['01-06'],
+        score_multiplier: 1.6
+    },
+    'LUNAR_NEW_YEAR': {
+        name: '春節假日慶',
+        dates: ['02-14', '02-15', '02-16', '02-17', '02-18', '02-19', '02-20', '02-21', '02-22'],
+        score_multiplier: 1.5
+    },
+    'POETRY_DAY': {
+        name: '世界詩歌日',
+        dates: ['03-21'],
+        score_multiplier: 1.5
+    },
+    'CHILDRENS_BOOK_DAY': {
+        name: '國際兒童圖書日',
+        dates: ['04-02'],
+        score_multiplier: 1.5
+    },
+    'SPRING_READ': { 
+        name: '春季閱讀日',
+        dates: ['04-23'],
+        score_multiplier: 1.5 
+    },
+    'BIRTHDAY_WEEK': {
+        name: '生日周',
+        dates: ['09-23', '09-24', '09-25', '09-26', '09-27', '09-28', '09-29'],
+        score_multiplier: 1.4
+    },
+    'MID_AUTUMN': {
+        name: '中秋節',
+        dates: ['10-04', '10-05', '10-06'],
+        score_multiplier: 1.4
+    },
+    'NATIONAL_DAY': {
+        name: '國慶節',
+        dates: ['10-10', '10-11', '10-12'],
+        score_multiplier: 1.4
+    },
+    'HALLOWEEN': {
+        name: '萬聖節',
+        dates: ['10-31'],
+        score_multiplier: 1.5
+    },
+    'ALL_SAINTS': {
+        name: '萬聖日',
+        dates: ['11-01'],
+        score_multiplier: 1.5
+    },
+    'CHRISTMAS': {
+        name: '聖誕節',
+        dates: ['12-24', '12-25', '12-26'],
+        score_multiplier: 1.6
+    },
+    'YEAR_END_BOOST': { 
+        name: '年終衝刺日',
+        dates: ['12-27', '12-28', '12-29', '12-30', '12-31'],
+        score_multiplier: 1.3
+    }
+},
     // 等級所需總積分 (保持不變)
     LEVEL_REQUIREMENTS: [
         { level: 1, required: 0 },
