@@ -54,10 +54,20 @@ ANNUAL_EVENTS: {
         dates: ['04-02'],
         score_multiplier: 1.5
     },
+    'CHILDRENS_DAY': {
+        name: '兒童節',
+        dates: ['04-04'],
+        score_multiplier: 1.5
+    },
     'SPRING_READ': { 
         name: '春季閱讀日',
         dates: ['04-23'],
         score_multiplier: 1.5 
+    },
+    'LABOR_DAY': {
+        name: '勞動節',
+        dates: ['05-01'],
+        score_multiplier: 1.4
     },
     'BIRTHDAY_WEEK': {
         name: '生日周',
