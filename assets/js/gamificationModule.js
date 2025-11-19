@@ -29,6 +29,7 @@ const CONFIG = {
     },
 // ⭐️ 活動配置 B：年度固定活動 (格式: 月-日，用來提供額外 XP 乘數)
 ANNUAL_EVENTS: {
+    // 🎉 一月
     'NEW_YEAR': {
         name: '新年慶',
         dates: ['01-01'],
@@ -39,41 +40,89 @@ ANNUAL_EVENTS: {
         dates: ['01-06'],
         score_multiplier: 1.6
     },
+    'WINTER_PEACE': {
+        name: '冬季平安日',
+        dates: ['01-31'],
+        score_multiplier: 1.4
+    },
+
+    // 🧧 二月
     'LUNAR_NEW_YEAR': {
         name: '春節假日慶',
         dates: ['02-14', '02-15', '02-16', '02-17', '02-18', '02-19', '02-20', '02-21', '02-22'],
         score_multiplier: 1.5
+    },
+
+    // 🌱 三月
+    'SPRING_CREATION': {
+        name: '春季創作日',
+        dates: ['03-01'],
+        score_multiplier: 1.4
     },
     'POETRY_DAY': {
         name: '世界詩歌日',
         dates: ['03-21'],
         score_multiplier: 1.5
     },
+
+    // 📚 四月
     'CHILDRENS_BOOK_DAY': {
         name: '國際兒童圖書日',
         dates: ['04-02'],
         score_multiplier: 1.5
     },
-    'CHILDRENS_DAY': {
+    'CHILDRENS_DAY_TW': {
         name: '兒童節',
         dates: ['04-04'],
         score_multiplier: 1.5
     },
-    'SPRING_READ': { 
+    'SPRING_READ': {
         name: '春季閱讀日',
         dates: ['04-23'],
-        score_multiplier: 1.5 
+        score_multiplier: 1.5
     },
+
+    // 🛠️ 五月
     'LABOR_DAY': {
         name: '勞動節',
         dates: ['05-01'],
         score_multiplier: 1.4
     },
+    'SUMMER_GROWTH': {
+        name: '夏季成長日',
+        dates: ['05-31'],
+        score_multiplier: 1.4
+    },
+
+    // 👧 六月
+    'CHILDRENS_DAY_GLOBAL': {
+        name: '國際兒童節',
+        dates: ['06-01'],
+        score_multiplier: 1.5
+    },
+
+    // 🌞 七月
+    'MIDSUMMER_GRATITUDE': {
+        name: '仲夏感恩日',
+        dates: ['07-15'],
+        score_multiplier: 1.4
+    },
+
+    // 🌻 八月
+    'LATE_SUMMER_HOPE': {
+        name: '夏末希望日',
+        dates: ['08-20'],
+        score_multiplier: 1.4
+    },
+
+    // 🎂 九月
     'BIRTHDAY_WEEK': {
         name: '生日周',
         dates: ['09-23', '09-24', '09-25', '09-26', '09-27', '09-28', '09-29'],
         score_multiplier: 1.4
     },
+
+    // 🌕 十月
     'MID_AUTUMN': {
         name: '中秋節',
         dates: ['10-04', '10-05', '10-06'],
@@ -89,17 +138,31 @@ ANNUAL_EVENTS: {
         dates: ['10-31'],
         score_multiplier: 1.5
     },
+
+    // 🕯️ 十一月
     'ALL_SAINTS': {
         name: '萬聖日',
         dates: ['11-01'],
         score_multiplier: 1.5
+    },
+    'LATE_AUTUMN_REFLECTION': {
+        name: '晚秋靜思日',
+        dates: ['11-20'],
+        score_multiplier: 1.3
+    },
+
+    // 🎄 十二月
+    'WINTER_GRATITUDE': {
+        name: '冬季感恩日',
+        dates: ['12-10'],
+        score_multiplier: 1.3
     },
     'CHRISTMAS': {
         name: '聖誕節',
         dates: ['12-24', '12-25', '12-26'],
         score_multiplier: 1.6
     },
-    'YEAR_END_BOOST': { 
+    'YEAR_END_BOOST': {
         name: '年終衝刺日',
         dates: ['12-27', '12-28', '12-29', '12-30', '12-31'],
         score_multiplier: 1.3
