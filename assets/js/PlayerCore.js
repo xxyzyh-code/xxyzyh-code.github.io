@@ -14,9 +14,7 @@ import {
 // 🌟 核心修正 1：導入 LRC 模組和 AudioEngine 🌟
 import { fetchLRC, parseLRC } from './LrcParser.js'; 
 import { playAudioWithFallback } from './AudioEngine.js'; // 導入新的音頻引擎
-// 🌟 導入結束 🌟
 
-// 修正步驟 1：添加一個全局標記，確保事件監聽器只綁定一次
 let hasInitializedListeners = false;
 
 // --- 數據模式相關函數 (API) ---
@@ -152,7 +150,7 @@ function updatePlaylistHighlight(manualScroll = false) {
     }
 }
 
-// --- 歌詞渲染與同步輔助函數 (不變) ---
+// --- 歌詞渲染與同步輔助函數 ---
 
 function renderLyrics() {
     const { currentLRC } = getState();
@@ -185,7 +183,9 @@ function syncLyrics() {
 
     let nextIndex = currentLyricIndex;
 
-    const startIndex = Math.max(0, currentLyricIndex); 
+    // 🌟 修正 4：從一個安全的起始點開始搜索，減少無效迭代
+    // 預設從 -20 行開始搜索 (如果 currentLyricIndex > 20)
+    const startIndex = Math.max(0, currentLyricIndex - 20); 
 
     for (let i = startIndex; i < currentLRC.length; i++) {
         if (currentLRC[i].time <= currentTime) {
@@ -194,6 +194,7 @@ function syncLyrics() {
             break;
         }
     }
+    
     
     if (nextIndex !== currentLyricIndex) {
         setState({ currentLyricIndex: nextIndex });
@@ -391,20 +392,20 @@ function getNextRandomIndex() {
 export function playTrack(index) {
     const { currentPlaylist } = getState();
     if (index >= 0 && index < currentPlaylist.length) { 
-        setState({ currentTrackIndex: index });
+        setState({ 
+            currentTrackIndex: index,
+            // 🌟 修正 3：重置播放記錄標誌，新歌應被記錄
+            isTrackPlayRecorded: false 
+        });
         const track = currentPlaylist[index]; 
         
         // --- 核心修正 2：使用 AudioEngine 處理 CDN 備援 ---
-        // 舊的 <source> 標籤插入邏輯被移除
-        const sessionToken = playAudioWithFallback(track);
-        // 將新的 Session Token 設置到狀態中 (儘管 AudioEngine.js 內部也做了，這裡可以作為保護)
-        //setState({ currentPlaybackSession: sessionToken }); 
+        playAudioWithFallback(track);
 
         // --- 核心修正 3：使用 LrcParser 的備援邏輯 ---
         if (track.lrcSources && track.lrcSources.length > 0) {
             console.log(`嘗試加載歌詞 (${track.lrcSources.length} 個備援來源)...`); 
             
-            // 由於 fetchLRC 會處理備援，這裡只需調用它
             fetchLRC(track.lrcSources).then(lrcText => {
                 const parsedLRC = parseLRC(lrcText);
                 
@@ -420,7 +421,6 @@ export function playTrack(index) {
                 });
                 renderLyrics();
             }).catch(error => {
-                // fetchLRC 已經處理了內部的重試和錯誤信息，這裡只需處理最終失敗
                 console.error(`❌ 歌詞文件加載最終失敗:`, error);
                 setState({ currentLRC: null, currentLyricIndex: -1 });
                 renderLyrics();
@@ -430,10 +430,10 @@ export function playTrack(index) {
              setState({ currentLRC: null, currentLyricIndex: -1 });
              renderLyrics(); 
         }
-        // --- 修正結束 ---
         
-        DOM_ELEMENTS.playerTitle.textContent = `正在播放：${track.title}`;
-        // playAudioWithFallback 已經調用了 audio.play()，這裡不需要重複調用
+        // 🚨 優化點 1：將 title 設置為「載入中...」，等待 playing 事件來確認播放成功並更新
+        // 這樣可以避免在 AudioEngine 嘗試多個 CDN 來源時，UI 顯示錯誤的成功狀態。
+        DOM_ELEMENTS.playerTitle.textContent = `正在播放：${track.title} (載入中...)`; 
         
         updatePlaylistHighlight();
         
@@ -720,7 +720,7 @@ export function loadTrack(originalIndex) {
 }
 
 
-// --- 事件處理函數 (不變) ---
+// --- 事件處理函數 ---
 function handleTrackEnd() {
     const { playMode, currentTrackIndex, currentPlaylist } = getState();
 
@@ -728,8 +728,9 @@ function handleTrackEnd() {
     sortPlaylistByPlayCount();
     saveSettings(); 
     
+    // 🌟 修正 3 (單曲循環)：在單曲循環模式結束時重置 isTrackPlayRecorded 
     if (playMode === 1) { 
-        setState({ currentLyricIndex: -1 }); 
+        setState({ currentLyricIndex: -1, isTrackPlayRecorded: false }); 
         DOM_ELEMENTS.audio.currentTime = 0; 
         DOM_ELEMENTS.audio.play();
         updatePlaylistHighlight(); 
@@ -796,7 +797,8 @@ function incrementPlayCount() {
 }
 
 function handlePlay() {
-    let { listenIntervalId, scoreTimerIntervalId, lyricsIntervalId, currentTrackIndex, currentPlaylist } = getState();
+    // 🌟 修正 1：handlePlay 只負責設置計時器
+    let { listenIntervalId, scoreTimerIntervalId, lyricsIntervalId } = getState();
 
     if (listenIntervalId === null) {
         listenIntervalId = setInterval(updateTotalListenTime, 1000);
@@ -813,14 +815,29 @@ function handlePlay() {
         setState({ lyricsIntervalId }); 
     }
     
-    if (currentTrackIndex >= 0 && currentTrackIndex < currentPlaylist.length) {
-        const currentSongId = currentPlaylist[currentTrackIndex].id; 
-        trackPlayToDatabase(currentSongId); 
-    }
-
-    
     saveSettings(); 
 }
+
+// 🌟 修正 1：handlePlaying 負責數據庫記錄和 UI 標題更新
+function handlePlaying() {
+    const { currentTrackIndex, currentPlaylist, isTrackPlayRecorded } = getState();
+    
+    if (currentTrackIndex >= 0 && currentTrackIndex < currentPlaylist.length) {
+        const currentTrack = currentPlaylist[currentTrackIndex]; 
+        const currentSongId = currentTrack.id; 
+        
+        // 核心檢查：確保該歌曲在本會話中只被記錄一次
+        if (!isTrackPlayRecorded) {
+            trackPlayToDatabase(currentSongId); 
+            setState({ isTrackPlayRecorded: true }); // 設置為已記錄
+            console.log(`✅ 數據庫播放記錄成功發送: ${currentTrack.title}`);
+            
+            // 更新 UI 標題，確認播放成功
+            DOM_ELEMENTS.playerTitle.textContent = `正在播放：${currentTrack.title}`;
+        }
+    }
+}
+
 
 function handlePause() {
     const { listenIntervalId, scoreTimerIntervalId, lyricsIntervalId } = getState();
@@ -859,7 +876,6 @@ function handleAudioError(e) {
     
     switch (e.target.error.code) {
         case audio.error.MEDIA_ERR_ABORTED:
-            // 這是 AudioEngine 正常切換來源時會觸發的事件，通常不需要日誌
             console.log('音頻載入被終止 (正常備援流程)。');
             break;
         case audio.error.MEDIA_ERR_NETWORK:
@@ -897,26 +913,19 @@ function handleUrlAnchor(isInitialLoad = false) {
             loadTrack(originalIndex); // 👈 這裡調用了 playTrack，它會啟動 CDN 備援和播放
             
             if (isInitialLoad) {
+                // 如果是初始化載入（來自URL），設定為順序停止模式，等待用戶手動播放
                 setState({ playMode: 0 }); 
                 updateModeUI();
                 saveSettings();
             }
             
-            // 由於 playTrack 已經調用 playAudioWithFallback，這裡只需要處理 UI 提示，
-            // 避免額外的 audio.play() 再次觸發播放邏輯並造成 Session Token 不匹配
-            DOM_ELEMENTS.playerTitle.textContent = `從分享連結載入：${trackTitle} (正在緩衝...)`;
-            const handlePlaying = () => {
-                 if (DOM_ELEMENTS.playerTitle.textContent.includes(trackTitle)) { 
-                     DOM_ELEMENTS.playerTitle.textContent = `正在播放：${trackTitle}`;
-                     // 播放成功後移除監聽器，避免重複觸發
-                     DOM_ELEMENTS.audio.removeEventListener('playing', handlePlaying);
-                 }
-            };
-            DOM_ELEMENTS.audio.addEventListener('playing', handlePlaying);
+            // 🚨 優化點 2：移除冗餘的 `playing` 監聽器。
+            // 由於 playTrack 內部已經將 playerTitle 設置為「載入中...」，
+            // 且 `handlePlaying` (全局監聽器) 會在播放成功後將其更新為「正在播放...」，
+            // 因此這裡不需要額外的臨時監聽器來移除。
+            // 保持 `playTrack` 中設置的 "載入中..." 狀態即可。
             
-            // ❌ 移除上次代碼末尾多餘的 });
-            // ❌ 移除冗餘的 DOM_ELEMENTS.audio.play() 及其錯誤處理
-            //    原因：loadTrack -> playTrack 已經啟動了播放
+            DOM_ELEMENTS.playerTitle.textContent = `從分享連結載入：${trackTitle} (正在緩衝...)`;
             
         } // 歌曲索引有效結束
     } // hash 檢查結束
@@ -998,7 +1007,11 @@ function bindEventListeners() {
     DOM_ELEMENTS.audio.addEventListener('ratechange', saveSettings); 
     DOM_ELEMENTS.audio.addEventListener('loadedmetadata', saveSettings); 
     DOM_ELEMENTS.audio.addEventListener('timeupdate', handleTimeUpdate);
-    DOM_ELEMENTS.audio.addEventListener('play', handlePlay);
+    
+    // 🌟 修正 1：區分 handlePlay 和 handlePlaying
+    DOM_ELEMENTS.audio.addEventListener('play', handlePlay);       // 設置計時器
+    DOM_ELEMENTS.audio.addEventListener('playing', handlePlaying); // 記錄數據庫、更新標題
+    
     DOM_ELEMENTS.audio.addEventListener('pause', handlePause);
     DOM_ELEMENTS.audio.addEventListener('ended', handleTrackEnd);
     // 讓 AudioEngine 處理 CDN 錯誤，這裡保留全局錯誤監聽作為備用
