@@ -61,21 +61,59 @@ export function parseLRC(lrcText) {
 }
 
 /**
- * 從指定路徑獲取 LRC 文本
- * @param {string} lrcPath - LRC 文件的 URL
- * @returns {Promise<string>} LRC 文本內容
+ * 實現歌詞 URL 備援抓取並包含網絡超時處理。
+ * @param {string[]|string} lrcSources - 單個 URL 或 URL 陣列 (Config.js 已統一為 string[])
+ * @returns {Promise<string|null>} 成功抓取的歌詞文本或 null
  */
-export async function fetchLRC(lrcPath) {
-    if (!lrcPath) return "";
-    try {
-        const response = await fetch(lrcPath);
-        if (!response.ok) {
-            console.warn(`無法載入 LRC 文件: ${lrcPath}. 狀態碼: ${response.status}. 嘗試跳過歌詞顯示。`);
-            return ""; 
+export async function fetchLRC(lrcSources) {
+    // 確保處理單一字串或陣列（雖然 Config.js 已統一）
+    const urls = Array.isArray(lrcSources) ? lrcSources : (lrcSources ? [lrcSources] : []);
+    const TIMEOUT_MS = 5000; // 🌟 問題 3 修正：設置 5 秒超時
+
+    for (let i = 0; i < urls.length; i++) {
+        const url = urls[i];
+        if (!url) continue;
+
+        const controller = new AbortController();
+        const signal = controller.signal;
+        let timeoutId;
+        
+        try {
+            console.log(`嘗試抓取歌詞來源 (${i + 1}/${urls.length}): ${url}`);
+            
+            // 設置超時計時器
+            timeoutId = setTimeout(() => {
+                controller.abort(new Error("Fetch timeout")); // 手動中止請求
+            }, TIMEOUT_MS);
+
+            const response = await fetch(url, { signal });
+            
+            clearTimeout(timeoutId); // 成功回應，清除超時
+            
+            if (response.ok) {
+                const text = await response.text();
+                if (text && text.trim().length > 0) {
+                    console.log(`✅ 歌詞抓取成功 (${i + 1}): ${url}`);
+                    return text; 
+                }
+            }
+            
+            // 如果狀態碼不是 200，視為失敗
+            throw new Error(`HTTP 錯誤: ${response.status} (${response.statusText})`);
+            
+        } catch (error) {
+            // 清除可能殘留的超時計時器
+            clearTimeout(timeoutId); 
+            
+            let errorMessage = error.message;
+            if (error.name === 'AbortError') {
+                 errorMessage = `請求超時 (${TIMEOUT_MS}ms)`; // 處理超時中止
+            }
+            
+            console.warn(`❌ 抓取歌詞失敗 (${i + 1}/${urls.length}): ${url}. 錯誤: ${errorMessage}`);
+            // 繼續循環，嘗試下一個 URL
         }
-        return await response.text();
-    } catch (error) {
-        console.error("載入 LRC 失敗:", error);
-        return "";
     }
+    
+    return null; 
 }
