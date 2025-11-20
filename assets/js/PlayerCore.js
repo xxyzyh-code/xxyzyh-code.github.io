@@ -1002,7 +1002,7 @@ function bindEventListeners() {
     DOM_ELEMENTS.audio.addEventListener('pause', handlePause);
     DOM_ELEMENTS.audio.addEventListener('ended', handleTrackEnd);
     // 讓 AudioEngine 處理 CDN 錯誤，這裡保留全局錯誤監聽作為備用
-    DOM_ELEMENTS.audio.addEventListener('error', handleAudioError, true); 
+    DOM_ELEMENTS.audio.addEventListener('error', handleAudioError); 
 
     // 搜索欄事件
     DOM_ELEMENTS.playlistSearchInput.addEventListener('input', debounce(filterPlaylist, 300));
