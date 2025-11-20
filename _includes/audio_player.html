@@ -60,31 +60,32 @@
                 </button>
                 
                 <div id="timer-menu" class="hidden-menu" role="menu" style="position: absolute; z-index: 10; right: 0;">
-    <span class="menu-item" onclick="setSleepTimer(10); event.stopPropagation();" role="menuitem" tabindex="0">10 分鐘後關閉</span>
-    <span class="menu-item" onclick="setSleepTimer(30); event.stopPropagation();" role="menuitem" tabindex="0">30 分鐘後關閉</span>
-    <span class="menu-item" onclick="setSleepTimer(60); event.stopPropagation();" role="menuitem" tabindex="0">60 分鐘後關閉</span>
-    <span class="menu-item" onclick="clearSleepTimer(); toggleTimerMenu(); event.stopPropagation();" role="menuitem" tabindex="0">取消定時</span>
-</div>
+                    <span class="menu-item" onclick="setSleepTimer(10);" role="menuitem" tabindex="0">10 分鐘後關閉</span>
+                    <span class="menu-item" onclick="setSleepTimer(30);" role="menuitem" tabindex="0">30 分鐘後關閉</span>
+                    <span class="menu-item" onclick="setSleepTimer(60);" role="menuitem" tabindex="0">60 分鐘後關閉</span>
+                    <span class="menu-item" onclick="clearSleepTimer(); toggleTimerMenu();" role="menuitem" tabindex="0">取消定時</span>
+                </div>
             </div>
         </div>
         
     </div> 
     <div id="search-area">
-    <input type="text" id="playlist-search" placeholder="🔎 搜尋歌曲或歌手..." aria-label="搜尋歌曲或歌手">
-</div>
-    
-<div id="stats-bar">
-    <span role="status" aria-live="polite">總時長: <span id="total-listen-time">0 分鐘</span></span>
-    <span role="status" aria-live="polite">剩餘: <span id="remaining-timer">--:--</span></span>
-</div>
-
-<div id="lyrics-container" class="lyrics-container">
-    <div id="lyrics-content" class="lyrics-content">
-        <p id="lyrics-placeholder">載入中... 請選擇一首歌曲播放。</p>
+        <input type="text" id="playlist-search" placeholder="🔎 搜尋歌曲或歌手..." aria-label="搜尋歌曲或歌手">
     </div>
-</div>
-<ul id="playlist" role="list">
-</ul>
+        
+    <div id="stats-bar">
+        <span role="status" aria-live="polite">總時長: <span id="total-listen-time">0 分鐘</span></span>
+        <span role="status" aria-live="polite">剩餘: <span id="remaining-timer">--:--</span></span>
+    </div>
+
+    <div id="lyrics-container" class="lyrics-container">
+        <div id="lyrics-content" class="lyrics-content">
+            <p id="lyrics-placeholder">載入中... 請選擇一首歌曲播放。</p>
+        </div>
+    </div>
+    
+    <ul id="playlist" role="list">
+    </ul>
 </div>
 
 <script>
@@ -96,7 +97,7 @@
 
 <script type="module" src="/assets/js/Config.js"></script>
 <script type="module" src="/assets/js/StateAndUtils.js"></script>
-<script type="module" src="/assets/js/PlayerCore.js"></script>
+<script type="module" src="/assets/js/LrcParser.js"></script> <script type="module" src="/assets/js/AudioEngine.js"></script> <script type="module" src="/assets/js/PlayerCore.js"></script>
 
 <script>
     if ("serviceWorker" in navigator) {
