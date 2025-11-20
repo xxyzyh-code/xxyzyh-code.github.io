@@ -66,8 +66,9 @@ export function parseLRC(lrcText) {
  * @returns {Promise<string|null>} 成功抓取的歌詞文本或 null
  */
 export async function fetchLRC(lrcSources) {
-    // 確保處理單一字串或陣列（雖然 Config.js 已統一）
-    const urls = Array.isArray(lrcSources) ? lrcSources : (lrcSources ? [lrcSources] : []);
+    // 🌟 簡化：因為 Config.js 已保證 lrcSources 是陣列
+    const urls = Array.isArray(lrcSources) ? lrcSources : []; 
+    if (urls.length === 0) return null; // 如果為空，直接返回
     const TIMEOUT_MS = 5000; // 🌟 問題 3 修正：設置 5 秒超時
 
     for (let i = 0; i < urls.length; i++) {
