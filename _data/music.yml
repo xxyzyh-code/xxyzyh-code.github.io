@@ -129,3 +129,9 @@
     - "https://raw.githubusercontent.com/xxyzyh-code/music/main/jiny.mp3"
   lrcPath: "https://cdn.jsdelivr.net/gh/xxyzyh-code/lyrics@main/jiny.lrc"
   
+- title: O Come O Come Emmanuel
+  artist: Malinda
+  sources:
+    - "https://cdn.jsdelivr.net/gh/xxyzyh-code/music@main/O%20Come%20O%20Come%20Emmanuel.mp3"
+    - "https://cdn.statically.io/gh/xxyzyh-code/music/main/O%20Come%20O%20Come%20Emmanuel.mp3"
+    - "https://raw.githubusercontent.com/xxyzyh-code/music/main/O%20Come%20O%20Come%20Emmanuel.mp3"
