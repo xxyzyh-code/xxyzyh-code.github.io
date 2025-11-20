@@ -24,10 +24,10 @@ const MASTER_TRACK_LIST = (function() {
         artist: track.artist,
         sources: track.sources, 
         originalIndex: index,
-        lrcPath: track.lrcPath || null 
-
+        // 🚨 核心修正：將 lrcPath 升級為 lrcSources (確保它是陣列)
+        lrcSources: Array.isArray(track.lrcPath) ? track.lrcPath : (track.lrcPath ? [track.lrcPath] : []) 
     }));
-})(); 
+})();  
 
 // ------------------------------------
 // 2. DOM 元素 & 儲存鍵常量
@@ -60,7 +60,9 @@ const STORAGE_KEYS = {
     MODE: 'audioPlayerMode',
     LAST_ORIGINAL_INDEX: 'audioPlayerOriginalIndex',
     LAST_TIME: 'audioPlayerTime',
-    THEME: 'userThemePreference'
+    THEME: 'userThemePreference',
+    // 🌟 補充：新增失敗 URL 追蹤 Key 🌟
+    FAILED_URLS: 'audioFailedUrls' 
 };
 
 const THEMES = {
