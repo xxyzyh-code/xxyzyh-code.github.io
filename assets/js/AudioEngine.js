@@ -5,10 +5,9 @@ let currentErrorHandler = null; // 追蹤當前活躍的錯誤處理器
 import { getState, setState } from './StateAndUtils.js';
 import { DOM_ELEMENTS, STORAGE_KEYS } from './Config.js';
 
-// --- 失敗 URL 追蹤邏輯 (問題 4 修正) ---
+// --- 失敗 URL 追蹤邏輯 ---
 
 // 從 LocalStorage 載入上次失敗的來源 URL 列表
-// 🚨 注意：這裡使用了您在 Config.js 中新增的 FAILED_URLS Key
 const failedUrls = JSON.parse(localStorage.getItem(STORAGE_KEYS.FAILED_URLS) || '{}');
 const MAX_FAILED_URLS_DURATION_MS = 1000 * 60 * 60 * 1; // 失敗的 URL 在 1 小時內會被跳過
 
@@ -18,6 +17,13 @@ const MAX_FAILED_URLS_DURATION_MS = 1000 * 60 * 60 * 1; // 失敗的 URL 在 1 �
  */
 function recordFailedUrl(url) {
     failedUrls[url] = Date.now(); 
+    // 清理過期的失敗記錄（選做優化）
+    for (const key in failedUrls) {
+        if (Date.now() - failedUrls[key] > MAX_FAILED_URLS_DURATION_MS) {
+            delete failedUrls[key];
+        }
+    }
+
     try {
         localStorage.setItem(STORAGE_KEYS.FAILED_URLS, JSON.stringify(failedUrls)); 
     } catch(e) {
@@ -25,28 +31,32 @@ function recordFailedUrl(url) {
     }
 }
 
-// --- UI 提示輔助函數 (問題 5 修正) ---
+// --- UI 提示輔助函數 ---
 
 /**
- * 由於沒有 UiUtils.js，我們在這裡定義一個極簡的提示函數來取代 showToast。
+ * 在 playerTitle 暫時顯示提示。
  * @param {string} message - 要顯示的訊息
  */
 function showSimpleAlert(message) {
-    // 🌟 核心邏輯：在 playerTitle 暫時顯示提示
     console.warn(`[CDN Fallback 提示]: ${message}`);
     
     const statusDiv = DOM_ELEMENTS.playerTitle;
     const originalText = statusDiv.textContent;
+    const currentSessionToken = getState().currentPlaybackSession;
 
-    // 暫時顯示提示
     if (statusDiv) {
         statusDiv.textContent = message;
         
         // 3 秒後恢復原標題
         setTimeout(() => {
-            // 只有當標題沒有被其他操作（例如用戶切歌）覆蓋時才恢復
-            if (statusDiv.textContent === message) {
-                statusDiv.textContent = originalText;
+            // 只有當當前 Session Token 仍匹配時才恢復，防止覆蓋新歌標題
+            if (getState().currentPlaybackSession === currentSessionToken) {
+                if (statusDiv.textContent === message) {
+                    // 恢復到 "載入中..." 或類似的狀態，而不是完全恢復，
+                    // 因為這可能發生在 `playing` 事件觸發之前。
+                    // 保持 "載入中..." 狀態，直到 `handlePlaying` 確認成功。
+                    statusDiv.textContent = originalText.includes('(載入中...)') ? originalText : `正在播放 (載入中...)`; 
+                }
             }
         }, 3000); 
     }
@@ -65,57 +75,55 @@ export function playAudioWithFallback(track) {
     
     // 🌟 1. 關鍵修正：如果存在舊的處理器，先強制移除它
     if (currentErrorHandler) {
+        console.log(`[CDN Fallback]: 發現舊的錯誤處理器，正在移除...`);
         audio.removeEventListener('error', currentErrorHandler);
+        currentErrorHandler = null;
     }
     
-    // 🌟 1. 創建並設置新的 Session Token
+    // 🌟 2. 創建並設置新的 Session Token (防止競態條件)
     const sessionToken = Date.now().toString(36) + Math.random().toString(36).substring(2);
     setState({ currentPlaybackSession: sessionToken });
     
     let sourceIndex = 0;
     
-    // 🌟 2. 定義具名的錯誤處理器 (必須具名，以便移除舊的)
+    /**
+     * 具名的錯誤處理器：專門處理音頻加載或播放失敗。
+     * @param {Event} e - 錯誤事件
+     */
     const handleError = (e) => {
     
-    // 核心檢查：Token 不匹配，立即中止
-    if (getState().currentPlaybackSession !== sessionToken) {
-        console.warn(`[CDN Fallback]: 舊的錯誤事件觸發，Session Token 不匹配，終止後援。`);
-        // 🚨 這是最關鍵的一步：當 Token 不匹配時，必須在這裡移除自己，否則它可能會在稍後被其他錯誤觸發。
-        audio.removeEventListener('error', handleError); 
-        currentErrorHandler = null; // 確保全局變量也被清除
-        return; 
-    }
-    
-    // 核心檢查：如果錯誤是正常中止 (如切換 SRC 導致)，則忽略
-    if (e.target.error?.code === audio.error.MEDIA_ERR_ABORTED) {
-        console.log(`[CDN Fallback]: 載入中止 (MEDIA_ERR_ABORTED)，終止當前備援。`);
-        // 🚨 關鍵修改：如果是中止，我們不應嘗試下一個來源，因為這是外部操作造成的。
-        // 我們只需要移除這個處理器，讓新的播放鏈繼續工作即可。
-        audio.removeEventListener('error', handleError); 
-        currentErrorHandler = null; 
-        return; // 立即返回，不執行 sourceIndex++ 和 tryNextSource()
-    } else {
+        // 核心檢查：Token 不匹配，立即中止
+        if (getState().currentPlaybackSession !== sessionToken) {
+            console.warn(`[CDN Fallback]: 舊的錯誤事件觸發，Token 不匹配，終止後援。`);
+            audio.removeEventListener('error', handleError); 
+            currentErrorHandler = null; 
+            return; 
+        }
+        
+        // 核心檢查：如果錯誤是正常中止 (如切換 SRC 導致)，則忽略
+        if (e.target.error?.code === audio.error.MEDIA_ERR_ABORTED) {
+            console.log(`[CDN Fallback]: 載入中止 (MEDIA_ERR_ABORTED)，忽略。`);
+            // 這裡不應移除監聽器，因為這可能是 `audio.load()` 導致的中止，
+            // 監聽器需要保持活躍以接收真正的網絡錯誤。
+            return; 
+        }
+        
         // 真正失敗，記錄並嘗試下一個
         const failedUrl = sources[sourceIndex];
         recordFailedUrl(failedUrl); 
         console.warn(`❌ 來源 URL 失敗: ${failedUrl}。錯誤代碼: ${e.target.error?.code || 'Unknown'}`);
-    }
     
-    // 只有在進入下一個來源時才需要執行後續邏輯
-    audio.removeEventListener('error', handleError); // 移除自己 (保險)
-    currentErrorHandler = null; // 清空追蹤變量
+        // 進入下一個來源
+        // 由於 tryNextSource() 會調用 audio.load()，我們需要**在 tryNextSource 之前**遞增 sourceIndex
+        sourceIndex++; 
+        tryNextSource(); 
+    };
     
-    sourceIndex++;
-    tryNextSource(); // 嘗試下一個
-};
-    
-    // 🌟 3. 追蹤當前的處理器
+    // 🌟 3. 追蹤當前的處理器，並在開始時添加一次
     currentErrorHandler = handleError;
+    audio.addEventListener('error', handleError); 
     
     const tryNextSource = () => {
-        
-        // 🚨 移除上一個監聽器：不再需要，因為我們只在外面移除舊的。
-        // audio.removeEventListener('error', handleError); // 移除這行
         
         // 檢查 Token，防止競態條件
         if (getState().currentPlaybackSession !== sessionToken) {
@@ -133,6 +141,7 @@ export function playAudioWithFallback(track) {
             audio.src = ''; 
             audio.load();
             
+            // 最終結束，移除監聽器
             if (currentErrorHandler === handleError) {
                 audio.removeEventListener('error', handleError);
                 currentErrorHandler = null;
@@ -142,7 +151,7 @@ export function playAudioWithFallback(track) {
 
         const url = sources[sourceIndex];
         
-        // 檢查是否是已知失敗的 URL (保持不變)
+        // 檢查是否是已知失敗的 URL
         if (failedUrls[url] && Date.now() - failedUrls[url] < MAX_FAILED_URLS_DURATION_MS) { 
             console.warn(`⏭ 跳過已知失敗來源: ${url}`);
             sourceIndex++;
@@ -153,37 +162,32 @@ export function playAudioWithFallback(track) {
         showSimpleAlert(`嘗試備援 (CDN ${sourceIndex + 1}/${sources.length}) 載入 ${track.title}。`);
         DOM_ELEMENTS.playerTitle.textContent = `載入中：${track.title} (備援 ${sourceIndex + 1}/${sources.length})`;
 
-        // 設置新的具名錯誤監聽器
-        // 核心修正：只有在第一次嘗試時添加監聽器，後續嘗試在 handleError 中處理移除和添加
-        if (sourceIndex === 0) {
-            audio.addEventListener('error', handleError); 
-        }
-        
         audio.src = url;
         audio.load(); 
 
         audio.play().catch(error => {
+            
+            // 🌟 核心修正：處理瀏覽器阻止自動播放的情況
             if (error.name === "NotAllowedError" || error.name === "AbortError") {
-                console.warn("瀏覽器阻止自動播放或請求被中止。");
+                console.warn("瀏覽器阻止自動播放或請求被中止。等待用戶手勢。");
                 DOM_ELEMENTS.playerTitle.textContent = `需點擊播放：${track.title}`;
                 
-                // 立即移除監聽器，避免它在用戶點擊播放時再次觸發不必要的備援
+                // 立即移除監聽器，防止用戶手動播放後，舊的監聽器錯誤地觸發備援
                 audio.removeEventListener('error', handleError);
                 currentErrorHandler = null;
                 
             } else {
-                console.error("嘗試播放時發生非網絡錯誤，視為失敗，立即嘗試備援:", error);
+                console.error("嘗試播放時發生非網絡/非自動播放錯誤，立即嘗試備援:", error);
                 
-                // 非預期錯誤，移除監聽器，並立即觸發備援流程
-                audio.removeEventListener('error', handleError); 
-                currentErrorHandler = null;
+                // 非預期錯誤，直接進入下一個來源，讓 handleError 負責移除和遞增
+                // 注意：這裡不移除監聽器，由 handleError 負責。
                 sourceIndex++;
                 tryNextSource();
             }
         });
     };
 
-    // 清理舊的 audio.src 和 listeners (確保 PlayTrack 啟動時是乾淨的)
+    // 清理舊的 audio.src (防止重複加載)
     audio.innerHTML = ''; 
     audio.src = '';
     
