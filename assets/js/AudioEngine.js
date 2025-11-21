@@ -65,7 +65,7 @@ function showSimpleAlert(message) {
     }
 }
 
-export function playAudioWithFallback(track) {
+export function playAudioWithFallback(track, autoPlay = true) {
     const audio = DOM_ELEMENTS.audio;
     const sources = track.sources;
     const sessionToken = Date.now().toString(36) + Math.random().toString(36).substring(2);
@@ -79,46 +79,51 @@ export function playAudioWithFallback(track) {
     }
 
     audio.src = '';
-    audio.load();
-
+    // 核心修復 1: 立即調用 load() 確保音頻元素準備好
+    audio.load(); 
+    
+    // ⚠️ 核心修復 2: 傳遞 autoPlay 狀態給 tryNextSource
+    // tryNextSource 現在負責處理整個載入和播放流程
     const stableErrorHandler = (e) => {
         if (getState().currentPlaybackSession !== sessionToken) return;
         if (e.target.error?.code === audio.error.MEDIA_ERR_ABORTED) return;
 
         const failedUrl = sources[sourceIndex];
         recordFailedUrl(failedUrl);
-        console.warn(`❌ 来源 URL 失败: ${failedUrl} 错误代码: ${e.target.error?.code || 'Unknown'}`);
+        console.warn(`❌ 來源 URL 失敗: ${failedUrl} 錯誤代碼: ${e.target.error?.code || 'Unknown'}`);
 
         sourceIndex++;
-        tryNextSource();
+        // 核心修復 3: 備援時也要傳遞 autoPlay 狀態
+        tryNextSource(autoPlay); 
     };
 
     globalErrorHandler = stableErrorHandler;
     audio.addEventListener('error', globalErrorHandler);
 
-    const tryNextSource = () => {
+    // 核心修復 4: 調整 tryNextSource 接受 autoPlay 參數
+    const tryNextSource = (shouldAutoPlay) => {
         if (getState().currentPlaybackSession !== sessionToken) {
             removeCurrentErrorHandler(stableErrorHandler, audio);
             return;
         }
 
         if (sourceIndex >= sources.length) {
-            console.error(`🚨 所有音频来源尝试失败: ${track.title}`);
-            DOM_ELEMENTS.playerTitle.textContent = `🚨 播放失败：音源格式不受支持或所有备援失败`;
+            console.error(`🚨 所有音頻來源嘗試失敗: ${track.title}`);
+            DOM_ELEMENTS.playerTitle.textContent = `🚨 播放失敗：音源格式不受支持或所有備援失敗`;
             removeCurrentErrorHandler(stableErrorHandler, audio);
             return;
         }
 
         let url = sources[sourceIndex];
         if (failedUrls[url] && Date.now() - failedUrls[url] < MAX_FAILED_URLS_DURATION_MS) {
-            console.warn(`⏭ 跳过已知失败来源: ${url}`);
+            console.warn(`⏭ 跳過已知失敗來源: ${url}`);
             sourceIndex++;
-            tryNextSource();
+            tryNextSource(shouldAutoPlay); // 跳過時保持 autoPlay 狀態
             return;
         }
 
-        showSimpleAlert(`尝试备援 (CDN ${sourceIndex + 1}/${sources.length}) 载入 ${track.title}`);
-        DOM_ELEMENTS.playerTitle.textContent = `载入中：${track.title} (备援 ${sourceIndex + 1}/${sources.length})`;
+        showSimpleAlert(`嘗試備援 (CDN ${sourceIndex + 1}/${sources.length}) 載入 ${track.title}`);
+        DOM_ELEMENTS.playerTitle.textContent = `載入中：${track.title} (備援 ${sourceIndex + 1}/${sources.length})`;
 
         audio.src = url;
         audio.load();
@@ -126,21 +131,24 @@ export function playAudioWithFallback(track) {
         const currentMetadataHandler = () => handleMetadata(audio, track, stableErrorHandler, sessionToken);
         audio.addEventListener('loadedmetadata', currentMetadataHandler, { once: true });
 
-        audio.play().catch(error => {
-            if (error.name === "NotAllowedError" || error.name === "AbortError") {
-                console.warn("浏览器阻止自动播放，等待用户手势");
-                if (audio.paused) {
-                    DOM_ELEMENTS.playerTitle.textContent = `载入完成：${track.title} (请点击播放)`;
+        // 核心修復 5: 根據 shouldAutoPlay 決定是否嘗試播放
+        if (shouldAutoPlay) {
+            audio.play().catch(error => {
+                if (error.name === "NotAllowedError" || error.name === "AbortError") {
+                    console.warn("瀏覽器阻止自動播放，等待用戶手勢");
+                    // 即使播放失敗，也要更新 UI 狀態
+                    DOM_ELEMENTS.playerTitle.textContent = `載入完成：${track.title} (請點擊播放)`;
+                    removeCurrentErrorHandler(stableErrorHandler, audio);
+                } else {
+                    console.error("播放時發生未知錯誤，嘗試下一備援:", error);
+                    sourceIndex++;
+                    tryNextSource(shouldAutoPlay); // 嘗試下一備援
                 }
-                removeCurrentErrorHandler(stableErrorHandler, audio);
-            } else {
-                console.error("播放时发生未知错误，尝试下一备援:", error);
-                sourceIndex++;
-                tryNextSource();
-            }
-        });
+            });
+        }
     };
-
-    tryNextSource();
+    
+    // 首次調用時傳遞 autoPlay
+    tryNextSource(autoPlay);
     return sessionToken;
 }
