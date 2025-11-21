@@ -913,9 +913,9 @@ function handleUrlAnchor(isInitialLoad = false) {
             
             const trackTitle = MASTER_TRACK_LIST[originalIndex].title;
             
-            // 🌟 修正 2：如果初次載入（來自URL），則不自動播放
-            // loadTrack(originalIndex, autoPlay = !isInitialLoad)
-            loadTrack(originalIndex, !isInitialLoad); 
+            // 🌟 修正：從 URL 載入時，直接嘗試播放 (autoPlay=true)
+            // 讓 AudioEngine 去處理瀏覽器限制，而不是讓 PlayerCore 流程卡死
+            loadTrack(originalIndex, true); 
             
             if (isInitialLoad) {
                 // 如果是初始化載入（來自URL），設定為順序停止模式，等待用戶手動播放
@@ -984,7 +984,7 @@ async function initializePlayer(isManualToggle = false) {
         
         updatePlaylistHighlight();
         // 載入當前歌曲的音源，但不自動播放 (autoPlay=false)
-        playTrack(currentTrackIndex, false); 
+        //playTrack(currentTrackIndex, false); 
         
     } else {
          setState({ currentTrackIndex: -1 }); 
