@@ -979,6 +979,8 @@ async function initializePlayer(isManualToggle = false) {
         }
         
         updatePlaylistHighlight();
+        playTrack(currentTrackIndex, false); 
+        
     } else {
          setState({ currentTrackIndex: -1 }); 
          DOM_ELEMENTS.playerTitle.textContent = "我的音樂播放器 (無歌曲)";
