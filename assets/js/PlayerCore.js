@@ -329,7 +329,7 @@ export function setSleepTimer(minutes) {
     toggleTimerMenu(); 
     
     const delayMilliseconds = minutes * 60 * 1000;
-    const newEndTime = Date. hẳn + delayMilliseconds;
+    const newEndTime = Date.now() + delayMilliseconds;
     
     const intervalId = setInterval(updateTimerCountdown, 1000);
     
@@ -454,7 +454,8 @@ export function playTrack(index, autoPlay = true) {
         
         updatePlaylistHighlight();
         
-        window.location.hash = `song-index-${track.originalIndex}`; 
+        // ❌ 核心修復：移除此行，防止點擊歌單項目時觸發頁面導航/干擾播放邏輯。
+        // window.location.hash = `song-index-${track.originalIndex}`; 
     } else if (index === currentPlaylist.length) { 
         audio.pause(); 
         DOM_ELEMENTS.playerTitle.textContent = "播放列表已結束";
@@ -520,6 +521,7 @@ export async function toggleDataMode() {
     handlePause(); 
     
     DOM_ELEMENTS.playerTitle.textContent = `數據模式已切換為：${(dataMode === 'global' ? '全球統計' : '本地統計')}`;
+    // 這裡會重新調用 initializePlayer，它最終會用 autoPlay=false 載入音源，因此您看到「載入成功」是正常的。
     await initializePlayer(true); 
 }
 
@@ -765,6 +767,7 @@ function handleTrackEnd() {
         DOM_ELEMENTS.playerTitle.textContent = "自由模式下，歌曲播放完畢。";
         setState({ currentTrackIndex: -1 }); 
         updatePlaylistHighlight(); 
+        // ✅ 核心修復：在自由模式歌曲結束時，清除 URL 錨點。
         window.location.hash = ''; 
         return; 
     } 
@@ -783,6 +786,7 @@ function handleTrackEnd() {
             DOM_ELEMENTS.playerTitle.textContent = "播放列表已結束";
             setState({ currentTrackIndex: -1 }); 
             updatePlaylistHighlight(); 
+            // ✅ 核心修復：在順序停止模式結束時，清除 URL 錨點。
             window.location.hash = ''; 
             return; 
         }
@@ -979,6 +983,7 @@ async function initializePlayer(isManualToggle = false) {
         }
         
         updatePlaylistHighlight();
+        // 載入當前歌曲的音源，但不自動播放 (autoPlay=false)
         playTrack(currentTrackIndex, false); 
         
     } else {
@@ -1089,6 +1094,7 @@ document.addEventListener('click', (e) => {
 // --- 初始啟動 (DOMContentLoaded) ---
 document.addEventListener('DOMContentLoaded', () => {
     initializePlayer(); 
+    // 只有在初始載入時，才根據 URL 錨點載入歌曲（但不自動播放）
     handleUrlAnchor(true);
 });
 
