@@ -188,3 +188,19 @@ self.addEventListener("fetch", (event) => {
                statusText: "Service Unavailable"
            });
         });
+      })
+    );
+    return;
+  }
+
+  // fallback: 對於未分類資源，直接 fetch，避免 SW 拋錯
+  event.respondWith(
+    fetch(req).catch(() => {
+      console.warn(`SW: 無法處理資源 ${req.url}，返回空 Response`);
+      return new Response("Service Worker 無法提供資源。", {
+        status: 503,
+        statusText: "Service Unavailable"
+      });
+    })
+  );
+}); // <-- 正確關閉 fetch 監聽器
