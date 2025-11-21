@@ -893,32 +893,8 @@ function handleTimeUpdate() {
 function handleAudioError(e) {
     if (!e.target.error) return;
     
-    const audio = DOM_ELEMENTS.audio;
-    // 讓 AudioEngine.js 處理具體的 CDN 備援和錯誤記錄
-    // 這裡只處理無法恢復的錯誤提示
-    
-    switch (e.target.error.code) {
-        case audio.error.MEDIA_ERR_ABORTED:
-            console.log('音頻載入被終止 (正常備援流程)。');
-            break;
-        case audio.error.MEDIA_ERR_NETWORK:
-            console.error('音頻網絡錯誤：無法獲取音源文件。');
-            DOM_ELEMENTS.playerTitle.textContent = `播放失敗：網絡錯誤。`;
-            break;
-        case audio.error.MEDIA_ERR_DECODE:
-            console.error('音頻解碼錯誤：文件可能損壞或格式不支持。');
-            DOM_ELEMENTS.playerTitle.textContent = `播放失敗：文件解碼錯誤。`;
-            break;
-        case audio.error.MEDIA_ERR_SRC_NOT_SUPPORTED:
-            console.error('音頻格式不受支持或所有備援來源均已耗盡。');
-            // 如果 AudioEngine 已經嘗試了所有來源，才會停在這裡
-            DOM_ELEMENTS.playerTitle.textContent = `播放失敗：音源格式不受支持或所有備援失敗。`;
-            break;
-        default:
-            console.error(`發生未知播放錯誤 (代碼: ${e.target.error.code})`);
-            DOM_ELEMENTS.playerTitle.textContent = `播放失敗：未知錯誤。`;
-            break;
-    }
+    // 讓 AudioEngine 處理所有備援和錯誤提示。這裡僅做日誌記錄。
+    console.error(`[PlayerCore] 捕獲到一個音頻錯誤 (代碼: ${e.target.error.code})。`);
 }
 
 // 🎯 核心修復點 1：修復 handleUrlAnchor 結構錯誤和冗餘的播放請求
@@ -1033,8 +1009,6 @@ function bindEventListeners() {
     
     DOM_ELEMENTS.audio.addEventListener('pause', handlePause);
     DOM_ELEMENTS.audio.addEventListener('ended', handleTrackEnd);
-    // 讓 AudioEngine 處理 CDN 錯誤，這裡保留全局錯誤監聽作為備用
-    DOM_ELEMENTS.audio.addEventListener('error', handleAudioError); 
 
     // 搜索欄事件
     DOM_ELEMENTS.playlistSearchInput.addEventListener('input', debounce(filterPlaylist, 300));
