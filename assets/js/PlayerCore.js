@@ -405,7 +405,15 @@ export function playTrack(index, autoPlay = true) {
     const audio = DOM_ELEMENTS.audio;
 
     if (index < 0 || index >= currentPlaylist.length) { 
-        return; // 索引無效則退出
+        // 處理播放列表結束時的邏輯
+        if (index === currentPlaylist.length) {
+            audio.pause(); 
+            DOM_ELEMENTS.playerTitle.textContent = "播放列表已結束";
+            setState({ currentTrackIndex: -1 }); 
+            updatePlaylistHighlight();
+            window.location.hash = ''; // 清除 URL 錨點
+        }
+        return; 
     }
     
     setState({ 
@@ -418,13 +426,14 @@ export function playTrack(index, autoPlay = true) {
     if (autoPlay) {
          // 模式一：自動播放/點擊播放。完全交由 AudioEngine 處理 CDN 備援和 UI 狀態
          playAudioWithFallback(track);
-         // 💡 修復點：不在這裡設置 UI 標題，避免覆蓋 AudioEngine 的 "載入中..." 狀態。
+         // 設置 URL 錨點 (讓用戶可以分享)
+         window.location.hash = `song-index-${track.originalIndex}`;
     } else {
          // 模式二：僅載入音源 (用於初始化)。
          audio.src = track.sources[0] || ''; 
          audio.load();
          
-         // 設置臨時 UI 標題，等待 loadedmetadata 觸發後由 AudioEngine 的邏輯（或 PlayerCore 的全局監聽）來更新為「載入完成」。
+         // 設置臨時 UI 標題
          DOM_ELEMENTS.playerTitle.textContent = `載入中：${track.title}`;
     }
 
@@ -448,17 +457,6 @@ export function playTrack(index, autoPlay = true) {
     }
     
     updatePlaylistHighlight();
-}
-      
-        // ❌ 核心修復：移除此行，防止點擊歌單項目時觸發頁面導航/干擾播放邏輯。
-        // window.location.hash = `song-index-${track.originalIndex}`; 
-    } else if (index === currentPlaylist.length) { 
-        audio.pause(); 
-        DOM_ELEMENTS.playerTitle.textContent = "播放列表已結束";
-        setState({ currentTrackIndex: -1 }); 
-        updatePlaylistHighlight();
-        window.location.hash = '';
-    }
 }
 
 
