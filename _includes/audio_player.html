@@ -1,26 +1,19 @@
 <div id="custom-audio-player" role="region" aria-label="音樂播放器和播放列表">
-    <h3 id="player-title">我的音樂播放器 (載入中...)</h3>
+    <h3>我的音樂播放器</h3>
     
-    <audio id="audio" preload="auto" crossorigin="anonymous" controls>
+    <audio id="main-audio" controls>
         您的瀏覽器不支持 HTML5 音頻。
     </audio>
     
     <div id="player-controls" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px;">
         
         <div id="nav-main-group" style="display: flex; justify-content: center; align-items: center; gap: 15px;">
-            
             <button id="prev-button" onclick="playPreviousTrack()" 
                     style="cursor: pointer; font-size: 1.2em; border: none; background: none;" 
                     aria-label="播放上一曲">
                 ⏪ 上一曲
             </button>
             
-            <button id="global-play-btn" 
-                    style="cursor: pointer; font-size: 1.5em; border: 1px solid #333; padding: 8px 15px; border-radius: 5px;"
-                    aria-label="播放 / 暫停">
-                ▶️ / ⏸️
-            </button>
-
             <button id="mode-button" onclick="togglePlayMode()" 
                     style="cursor: pointer; border: none; background: none;" 
                     aria-live="polite" aria-label="切換播放模式">
@@ -91,7 +84,7 @@
         </div>
     </div>
     
-    <ul id="playlistUl" role="list"> 
+    <ul id="playlist" role="list">
     </ul>
 </div>
 
