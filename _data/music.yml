@@ -2,6 +2,7 @@
   artist: AI
   sources:
     - "https://cdn.jsdelivr.net/gh/xxyzyh-code/music@main/Alive%20in%20the%20summer%20time.m4a"
+    - "https://music-proxy.xxyzyh.workers.dev/xxyzyh-code/music/main/Alive%20in%20the%20summer%20time.m4a"
     - "https://rawcdn.githack.com/xxyzyh-code/music/main/Alive%20in%20the%20summer%20time.m4a"
     - "https://ghproxy.net/https://raw.githubusercontent.com/xxyzyh-code/music/main/Alive%20in%20the%20summer%20time.m4a"
 
@@ -9,6 +10,7 @@
   artist: AI
   sources:
     - "https://cdn.jsdelivr.net/gh/xxyzyh-code/music@main/Breakbeat%20background.m4a"
+    - "https://music-proxy.xxyzyh.workers.dev/xxyzyh-code/music/main/Breakbeat%20background.m4a"
     - "https://rawcdn.githack.com/xxyzyh-code/music/main/Breakbeat%20background.m4a"
     - "https://ghproxy.net/https://raw.githubusercontent.com/xxyzyh-code/music/main/Breakbeat%20background.m4a"
 
@@ -16,6 +18,7 @@
   artist: AI
   sources:
     - "https://cdn.jsdelivr.net/gh/xxyzyh-code/music@main/The%20best%20moments%20in%20life.m4a"
+    - "https://music-proxy.xxyzyh.workers.dev/xxyzyh-code/music/main/The%20best%20moments%20in%20life.m4a"
     - "https://rawcdn.githack.com/xxyzyh-code/music/main/The%20best%20moments%20in%20life.m4a"
     - "https://ghproxy.net/https://raw.githubusercontent.com/xxyzyh-code/music/main/The%20best%20moments%20in%20life.m4a"
 
@@ -23,6 +26,7 @@
   artist: AI
   sources:
     - "https://cdn.jsdelivr.net/gh/xxyzyh-code/music@main/Time%20to%20travel.m4a"
+    - "https://music-proxy.xxyzyh.workers.dev/xxyzyh-code/music/main/Time%20to%20travel.m4a"
     - "https://rawcdn.githack.com/xxyzyh-code/music/main/Time%20to%20travel.m4a"
     - "https://ghproxy.net/https://raw.githubusercontent.com/xxyzyh-code/music/main/Time%20to%20travel.m4a"
 
@@ -30,6 +34,7 @@
   artist: AI
   sources:
     - "https://cdn.jsdelivr.net/gh/xxyzyh-code/music@main/Elegance.m4a"
+    - "https://music-proxy.xxyzyh.workers.dev/xxyzyh-code/music/main/Elegance.m4a"
     - "https://rawcdn.githack.com/xxyzyh-code/music/main/Elegance.m4a"
     - "https://ghproxy.net/https://raw.githubusercontent.com/xxyzyh-code/music/main/Elegance.m4a"
 
@@ -37,6 +42,7 @@
   artist: ReavoWorship
   sources:
     - "https://cdn.jsdelivr.net/gh/xxyzyh-code/music@main/The%20More%20I%20Know%20You.mp3"
+    - "https://music-proxy.xxyzyh.workers.dev/xxyzyh-code/music/main/The%20More%20I%20Know%20You.mp3"
     - "https://rawcdn.githack.com/xxyzyh-code/music/main/The%20More%20I%20Know%20You.mp3"
     - "https://ghproxy.net/https://raw.githubusercontent.com/xxyzyh-code/music/main/The%20More%20I%20Know%20You.mp3"
   lrcPath:
@@ -46,6 +52,7 @@
   artist: Be Still Studios
   sources:
     - "https://cdn.jsdelivr.net/gh/xxyzyh-code/music@main/Jesus%20Walks%20With%20Me.mp3"
+    - "https://music-proxy.xxyzyh.workers.dev/xxyzyh-code/music/main/Jesus%20Walks%20With%20Me.mp3"
     - "https://rawcdn.githack.com/xxyzyh-code/music/main/Jesus%20Walks%20With%20Me.mp3"
     - "https://ghproxy.net/https://raw.githubusercontent.com/xxyzyh-code/music/main/Jesus%20Walks%20With%20Me.mp3"
   lrcPath:
@@ -55,6 +62,7 @@
   artist: Be Still Studios
   sources:
     - "https://cdn.jsdelivr.net/gh/xxyzyh-code/music@main/Hallelujah%20Forevermore.mp3"
+    - "https://music-proxy.xxyzyh.workers.dev/xxyzyh-code/music/main/Hallelujah%20Forevermore.mp3"
     - "https://rawcdn.githack.com/xxyzyh-code/music/main/Hallelujah%20Forevermore.mp3"
     - "https://ghproxy.net/https://raw.githubusercontent.com/xxyzyh-code/music/main/Hallelujah%20Forevermore.mp3"
   lrcPath:
@@ -64,6 +72,7 @@
   artist: ReavoWorship
   sources:
     - "https://cdn.jsdelivr.net/gh/xxyzyh-code/music@main/In%20the%20Beginning.mp3"
+    - "https://music-proxy.xxyzyh.workers.dev/xxyzyh-code/music/main/In%20the%20Beginning.mp3"
     - "https://rawcdn.githack.com/xxyzyh-code/music/main/In%20the%20Beginning.mp3"
     - "https://ghproxy.net/https://raw.githubusercontent.com/xxyzyh-code/music/main/In%20the%20Beginning.mp3"
   lrcPath:
@@ -73,6 +82,7 @@
   artist: CryToLordJesus
   sources:
     - "https://cdn.jsdelivr.net/gh/xxyzyh-code/music@main/Thank%20You%20Jesus.mp3"
+    - "https://music-proxy.xxyzyh.workers.dev/xxyzyh-code/music/main/Thank%20You%20Jesus.mp3"
     - "https://rawcdn.githack.com/xxyzyh-code/music/main/Thank%20You%20Jesus.mp3"
     - "https://ghproxy.net/https://raw.githubusercontent.com/xxyzyh-code/music/main/Thank%20You%20Jesus.mp3"
   lrcPath:
@@ -82,6 +92,7 @@
   artist: ReavoWorship
   sources:
     - "https://cdn.jsdelivr.net/gh/xxyzyh-code/music@main/Beside%20My%20Savior.mp3"
+    - "https://music-proxy.xxyzyh.workers.dev/xxyzyh-code/music/main/Beside%20My%20Savior.mp3"
     - "https://rawcdn.githack.com/xxyzyh-code/music/main/Beside%20My%20Savior.mp3"
     - "https://ghproxy.net/https://raw.githubusercontent.com/xxyzyh-code/music/main/Beside%20My%20Savior.mp3"
   lrcPath:
@@ -91,6 +102,7 @@
   artist: ReavoWorship
   sources:
     - "https://cdn.jsdelivr.net/gh/xxyzyh-code/music@main/All%20I%20Had%20Was%20You.mp3"
+    - "https://music-proxy.xxyzyh.workers.dev/xxyzyh-code/music/main/All%20I%20Had%20Was%20You.mp3"
     - "https://rawcdn.githack.com/xxyzyh-code/music/main/All%20I%20Had%20Was%20You.mp3"
     - "https://ghproxy.net/https://raw.githubusercontent.com/xxyzyh-code/music/main/All%20I%20Had%20Was%20You.mp3"
   lrcPath:
@@ -100,6 +112,7 @@
   artist: CryToLordJesus
   sources:
     - "https://cdn.jsdelivr.net/gh/xxyzyh-code/music@main/My%20Shepherd.mp3"
+    - "https://music-proxy.xxyzyh.workers.dev/xxyzyh-code/music/main/My%20Shepherd.mp3"
     - "https://rawcdn.githack.com/xxyzyh-code/music/main/My%20Shepherd.mp3"
     - "https://ghproxy.net/https://raw.githubusercontent.com/xxyzyh-code/music/main/My%20Shepherd.mp3"
   lrcPath:
@@ -109,6 +122,7 @@
   artist: ReavoWorship
   sources:
     - "https://cdn.jsdelivr.net/gh/xxyzyh-code/music@main/The%20First%20Sin%20And%20Endless%20Love.mp3"
+    - "https://music-proxy.xxyzyh.workers.dev/xxyzyh-code/music/main/The%20First%20Sin%20And%20Endless%20Love.mp3"
     - "https://rawcdn.githack.com/xxyzyh-code/music/main/The%20First%20Sin%20And%20Endless%20Love.mp3"
     - "https://ghproxy.net/https://raw.githubusercontent.com/xxyzyh-code/music/main/The%20First%20Sin%20And%20Endless%20Love.mp3"
   lrcPath:
@@ -118,6 +132,7 @@
   artist: CryToLordJesus
   sources:
     - "https://cdn.jsdelivr.net/gh/xxyzyh-code/music@main/Thank%20You%20Lord.mp3"
+    - "https://music-proxy.xxyzyh.workers.dev/xxyzyh-code/music/main/Thank%20You%20Lord.mp3"
     - "https://rawcdn.githack.com/xxyzyh-code/music/main/Thank%20You%20Lord.mp3"
     - "https://ghproxy.net/https://raw.githubusercontent.com/xxyzyh-code/music/main/Thank%20You%20Lord.mp3"
   lrcPath:
@@ -127,6 +142,7 @@
   artist: ThroughMe
   sources:
     - "https://cdn.jsdelivr.net/gh/xxyzyh-code/music@main/linoh.mp3"
+    - "https://music-proxy.xxyzyh.workers.dev/xxyzyh-code/music/main/linoh.mp3"
     - "https://rawcdn.githack.com/xxyzyh-code/music/main/linoh.mp3"
     - "https://ghproxy.net/https://raw.githubusercontent.com/xxyzyh-code/music/main/linoh.mp3"
   lrcPath:
@@ -136,6 +152,7 @@
   artist: Be Still Studios
   sources:
     - "https://cdn.jsdelivr.net/gh/xxyzyh-code/music@main/jiny.mp3"
+    - "https://music-proxy.xxyzyh.workers.dev/xxyzyh-code/music/main/jiny.mp3"
     - "https://rawcdn.githack.com/xxyzyh-code/music/main/jiny.mp3"
     - "https://ghproxy.net/https://raw.githubusercontent.com/xxyzyh-code/music/main/jiny.mp3"
   lrcPath:
@@ -145,5 +162,6 @@
   artist: Malinda
   sources:
     - "https://cdn.jsdelivr.net/gh/xxyzyh-code/music@main/O%20Come%20O%20Come%20Emmanuel.mp3"
+    - "https://music-proxy.xxyzyh.workers.dev/xxyzyh-code/music/main/O%20Come%20O%20Come%20Emmanuel.mp3"
     - "https://rawcdn.githack.com/xxyzyh-code/music/main/O%20Come%20O%20Come%20Emmanuel.mp3"
     - "https://ghproxy.net/https://raw.githubusercontent.com/xxyzyh-code/music/main/O%20Come%20O%20Come%20Emmanuel.mp3"
