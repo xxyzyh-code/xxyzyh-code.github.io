@@ -1,172 +1,204 @@
-// AudioEngine.js
-// 核心音頻播放引擎：负责 CDN 备援、错误处理、防范竞态条件（Race Condition）
-
+// AudioEngine.js - 强健的 CDN fallback 音频引擎
 import { getState, setState } from './StateAndUtils.js';
 import { DOM_ELEMENTS, STORAGE_KEYS } from './Config.js';
 
-// 🌟 核心修復 1：移除全局錯誤處理器變量
-// let globalErrorHandler = null; // ❌ 刪除：不再使用全局變量來管理錯誤處理器
-
-const failedUrls = JSON.parse(localStorage.getItem(STORAGE_KEYS.FAILED_URLS) || '{}');
-// 最大失敗 URL 記錄时长：1 小时
+let persisted = {};
+try {
+    persisted = JSON.parse(localStorage.getItem(STORAGE_KEYS.FAILED_URLS) || '{}') || {};
+} catch (e) {
+    persisted = {};
+}
+const failedUrls = persisted;
 const MAX_FAILED_URLS_DURATION_MS = 1000 * 60 * 60;
 
 function recordFailedUrl(url) {
-    failedUrls[url] = Date.now();
-    for (const key in failedUrls) {
-        if (Date.now() - failedUrls[key] > MAX_FAILED_URLS_DURATION_MS) {
-            delete failedUrls[key];
-        }
-    }
     try {
+        if (!url) return;
+        failedUrls[url] = Date.now();
+        for (const k in failedUrls) {
+            if (Date.now() - failedUrls[k] > MAX_FAILED_URLS_DURATION_MS) delete failedUrls[k];
+        }
         localStorage.setItem(STORAGE_KEYS.FAILED_URLS, JSON.stringify(failedUrls));
     } catch (e) {
-        console.warn('無法記錄失敗 URL:', e);
+        console.warn('无法记录失败 URL', e);
     }
 }
-
-// 🌟 核心修復 2：簡化錯誤處理器移除邏輯
-function removeCurrentErrorHandler(handler, audio) {
-    if (!handler) return;
-    
-    // 舊邏輯中的 globalErrorHandler 檢查已移除。
-    audio.removeEventListener('error', handler);
-    
-    console.log('[CDN Fallback]: 移除會話錯誤處理器'); // 修正日誌，不再提及「全局」
-}
-
-function handleMetadata(audio, track, handler, sessionToken) {
-    if (getState().currentPlaybackSession !== sessionToken) {
-        // 如果不是當前會話，不再處理
-        return;
-    }
-
-    console.log(`[CDN Fallback]: ✅ 音源成功載入元數據 (${track.title})`);
-    
-    // ⭐️ 修正 A.1: 載入元數據成功，立即移除錯誤處理器
-    removeCurrentErrorHandler(handler, audio); 
-
-    // ⭐️ 修正 A.2: 【關鍵】不再在這裡更新 playerTitle
-    // 讓 PlayerCore.js 中的 'playing' 或 'pause' 權威地更新標題。
-    // 如果此時音頻已暫停，PlayerCore.js 會在 playTrack 結束後將其標記為「等待播放」。
-}
-
 
 function showSimpleAlert(message) {
     console.warn(`[CDN Fallback 提示]: ${message}`);
     const statusDiv = DOM_ELEMENTS.playerTitle;
-    const currentSessionToken = getState().currentPlaybackSession;
-
+    const t = getState().currentPlaybackSession;
     if (statusDiv) {
         setTimeout(() => {
-            if (getState().currentPlaybackSession === currentSessionToken) {
-                const currentText = statusDiv.textContent;
-                if (currentText.includes('備援')) {
-                    statusDiv.textContent = `載入中...`;
-                }
+            if (getState().currentPlaybackSession === t) {
+                const cur = statusDiv.textContent || '';
+                if (cur.includes('備援') || cur.includes('載入中')) statusDiv.textContent = '載入中...';
             }
-        }, 3000);
+        }, 2000);
+    }
+}
+
+function safeRemoveListener(target, event, handler) {
+    try {
+        if (handler) target.removeEventListener(event, handler);
+    } catch (e) {
+        // ignore
     }
 }
 
 export function playAudioWithFallback(track, autoPlay = true) {
     const audio = DOM_ELEMENTS.audio;
-    const sources = track.sources;
-    const sessionToken = Date.now().toString(36) + Math.random().toString(36).substring(2);
-    
-    // 設置新的播放會話，這會使上一個會話的 event listener 內部檢查失敗
+    const sourcesRaw = Array.isArray(track?.sources) ? track.sources : [];
+    // normalize sources to array of string URLs
+    const sources = sourcesRaw.map(s => (typeof s === 'string' ? s : (s && s.url) ? s.url : '')).filter(Boolean);
+
+    const sessionToken = Date.now().toString(36) + Math.random().toString(36).slice(2);
     setState({ currentPlaybackSession: sessionToken });
 
+    // reset audio element safely
+    try { audio.pause(); } catch (e) {}
+    audio.removeAttribute('src');
+    audio.load();
+
     let sourceIndex = 0;
+    let currentErrorHandler = null;
+    let currentMetadataHandler = null;
+    let currentExpectedUrl = null;
 
-    // 🌟 核心修復 3：刪除暴力移除上一個 globalErrorHandler 的邏輯
-    /* 舊代碼：
-    if (globalErrorHandler) {
-        audio.removeEventListener('error', globalErrorHandler);
-        globalErrorHandler = null;
-    } 
-    */
+    function cleanupHandlers() {
+        safeRemoveListener(audio, 'error', currentErrorHandler);
+        safeRemoveListener(audio, 'loadedmetadata', currentMetadataHandler);
+        currentErrorHandler = null;
+        currentMetadataHandler = null;
+        currentExpectedUrl = null;
+    }
 
-    audio.src = '';
-    // 核心修復 1: 立即調用 load() 確保音頻元素準備好
-    audio.load(); 
-    
-    // ⚠️ 核心修復 4：為這個新的播放會話創建一個穩定的錯誤處理器
-    const stableErrorHandler = (e) => {
-        // 如果當前全局會話 ID 與此處理器閉包的 session ID 不匹配，則該錯誤已過時，直接退出
+    function isStale(expectedUrl) {
+        if (getState().currentPlaybackSession !== sessionToken) return true;
+        const cur = audio.currentSrc || audio.src || '';
+        if (!expectedUrl) return false;
+        try {
+            const a = new URL(cur, location.href).href;
+            const b = new URL(expectedUrl, location.href).href;
+            return a !== b;
+        } catch (e) {
+            return !cur.includes(expectedUrl) && cur !== expectedUrl;
+        }
+    }
+
+    function tryNextSource(shouldAutoPlay) {
         if (getState().currentPlaybackSession !== sessionToken) {
-            // 由於這是過時的錯誤，我們確保移除自己，防止它再次被觸發（儘管它應該只被觸發一次）
-            removeCurrentErrorHandler(stableErrorHandler, audio);
+            cleanupHandlers();
             return;
         }
-        
-        // MEDIA_ERR_ABORTED 通常發生在切歌時，此時我們應該交給新的 sessionToken 處理，所以退出
-        if (e.target.error?.code === audio.error.MEDIA_ERR_ABORTED) return;
 
-        const failedUrl = sources[sourceIndex];
-        recordFailedUrl(failedUrl);
-        console.warn(`❌ 來源 URL 失敗: ${failedUrl} 錯誤代碼: ${e.target.error?.code || 'Unknown'}`);
-
-        sourceIndex++;
-        // 核心修復 3: 備援時也要傳遞 autoPlay 狀態
-        tryNextSource(autoPlay); 
-    };
-
-    // 🌟 核心修復 5：直接綁定 stableErrorHandler (作為會話處理器)
-    audio.addEventListener('error', stableErrorHandler);
-
-    // 核心修復 4: 調整 tryNextSource 接受 autoPlay 參數
-    const tryNextSource = (shouldAutoPlay) => {
-        // 如果會話被新的請求取代，則清理並退出
-        if (getState().currentPlaybackSession !== sessionToken) {
-            removeCurrentErrorHandler(stableErrorHandler, audio);
-            return;
+        // skip failed urls within retention window
+        while (sourceIndex < sources.length) {
+            const cand = sources[sourceIndex];
+            if (cand && failedUrls[cand] && (Date.now() - failedUrls[cand]) < MAX_FAILED_URLS_DURATION_MS) {
+                console.warn('跳過已知失敗來源', cand);
+                sourceIndex++;
+                continue;
+            }
+            break;
         }
 
         if (sourceIndex >= sources.length) {
-            console.error(`🚨 所有音頻來源嘗試失敗: ${track.title}`);
-            DOM_ELEMENTS.playerTitle.textContent = `🚨 播放失敗：音源格式不受支持或所有備援失敗`;
-            removeCurrentErrorHandler(stableErrorHandler, audio); // 失敗後移除處理器
+            DOM_ELEMENTS.playerTitle.textContent = `🚨 播放失敗：所有來源均嘗試失敗`;
+            cleanupHandlers();
             return;
         }
 
-        let url = sources[sourceIndex];
-        if (failedUrls[url] && Date.now() - failedUrls[url] < MAX_FAILED_URLS_DURATION_MS) {
-            console.warn(`⏭ 跳過已知失敗來源: ${url}`);
-            sourceIndex++;
-            tryNextSource(shouldAutoPlay); // 跳過時保持 autoPlay 狀態
-            return;
-        }
+        const url = sources[sourceIndex];
+        currentExpectedUrl = url;
+        cleanupHandlers();
 
         showSimpleAlert(`嘗試備援 (CDN ${sourceIndex + 1}/${sources.length}) 載入 ${track.title}`);
         DOM_ELEMENTS.playerTitle.textContent = `載入中：${track.title} (備援 ${sourceIndex + 1}/${sources.length})`;
 
-        audio.src = url;
+        try {
+            audio.src = url;
+        } catch (e) {
+            console.error('設定 src 失敗，切到下一個', e);
+            recordFailedUrl(url);
+            sourceIndex++;
+            tryNextSource(shouldAutoPlay);
+            return;
+        }
         audio.load();
 
-// loadedmetadata 只會觸發一次 ({once: true})
-        const currentMetadataHandler = () => handleMetadata(audio, track, stableErrorHandler, sessionToken);
+        // metadata handler: 只作校驗/紀錄，不移除 error handler
+        currentMetadataHandler = function () {
+            if (isStale(currentExpectedUrl)) {
+                console.warn('[Audio] loadedmetadata 為過時事件，忽略');
+                return;
+            }
+            console.log('[Audio] loadedmetadata for', url);
+            // do nothing else here
+        };
         audio.addEventListener('loadedmetadata', currentMetadataHandler, { once: true });
 
+        // error handler
+        currentErrorHandler = function (e) {
+            if (isStale(currentExpectedUrl)) {
+                safeRemoveListener(audio, 'error', currentErrorHandler);
+                return;
+            }
+            const code = e?.target?.error?.code;
+            if (code === 1) { // MEDIA_ERR_ABORTED
+                console.warn('[Audio] MEDIA_ERR_ABORTED - ignore');
+                return;
+            }
+            console.warn('[Audio] error event, record and fallback', url, code);
+            recordFailedUrl(url);
+            safeRemoveListener(audio, 'error', currentErrorHandler);
+            safeRemoveListener(audio, 'loadedmetadata', currentMetadataHandler);
+            currentErrorHandler = null;
+            currentMetadataHandler = null;
+            currentExpectedUrl = null;
+            sourceIndex++;
+            tryNextSource(shouldAutoPlay);
+        };
+        audio.addEventListener('error', currentErrorHandler);
 
-        // 核心修復 5: 根據 shouldAutoPlay 決定是否嘗試播放
         if (shouldAutoPlay) {
-            audio.play().catch(error => {
-                if (error.name === "NotAllowedError" || error.name === "AbortError" || error.name === "NotSupportedError") {
-                    console.warn("瀏覽器阻止自動播放，等待用戶手勢。");
-                    // ⭐️ 修正 A.3: 如果被阻止，強制設置為等待播放狀態。
-                    // 由於錯誤處理器已在 loadedmetadata 中移除，這不會觸發備援。
-                    DOM_ELEMENTS.playerTitle.textContent = `載入成功：${track.title} (請點擊播放)`;
-                } else {
-                    console.error("嘗試播放時發生未知錯誤:", error);
-                }
-            });
+            audio.play()
+                .then(() => {
+                    if (isStale(currentExpectedUrl)) { cleanupHandlers(); return; }
+                    // success -> remove handlers for this source
+                    safeRemoveListener(audio, 'error', currentErrorHandler);
+                    safeRemoveListener(audio, 'loadedmetadata', currentMetadataHandler);
+                    currentErrorHandler = null;
+                    currentMetadataHandler = null;
+                    currentExpectedUrl = null;
+                    // PlayerCore 'playing' will update UI
+                    console.log('[Audio] play() resolved - source confirmed:', url);
+                })
+                .catch(err => {
+                    if (getState().currentPlaybackSession !== sessionToken) { cleanupHandlers(); return; }
+                    const name = err && err.name;
+                    if (name === 'NotAllowedError' || name === 'AbortError' || name === 'NotSupportedError') {
+                        console.warn('[Audio] autoplay 被阻止，切換到等待用戶操作', err);
+                        DOM_ELEMENTS.playerTitle.textContent = `載入成功：${track.title} (請點擊播放)`;
+                        // 不切換 source — 用户后续点击 play 时，如果源坏会触发 error 或 play() reject
+                    } else {
+                        console.error('[Audio] play() reject - treat as decode/source error', err);
+                        recordFailedUrl(url);
+                        safeRemoveListener(audio, 'error', currentErrorHandler);
+                        safeRemoveListener(audio, 'loadedmetadata', currentMetadataHandler);
+                        currentErrorHandler = null;
+                        currentMetadataHandler = null;
+                        currentExpectedUrl = null;
+                        sourceIndex++;
+                        tryNextSource(shouldAutoPlay);
+                    }
+                });
+        } else {
+            // 非自动播放，只 load 等待用户 play
+            // 当用户点击 play，如果播放失败，error or play() reject 会触发 fallback
         }
-        // 如果不 shouldAutoPlay，則不調用 play()，等待用戶手勢。
-        // 錯誤處理器會一直掛著，直到用戶播放，或載入失敗（觸發錯誤事件）。
-    };
-    
-    // 首次調用時傳遞 autoPlay
+    }
+
     tryNextSource(autoPlay);
     return sessionToken;
 }
