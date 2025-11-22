@@ -142,6 +142,8 @@ export function playAudioWithFallback(track, autoPlay = true) {
 
         // error handler
         currentErrorHandler = function (e) {
+            // ⭐️ 新增 Log
+            console.error('[AE EVENT] ❌ ERROR 事件觸發！代碼:', e?.target?.error?.code);
             if (isStale(currentExpectedUrl)) {
                 safeRemoveListener(audio, 'error', currentErrorHandler);
                 return;
