@@ -945,6 +945,21 @@ function handleUrlAnchor(isInitialLoad = false) {
 // --- 初始化與事件綁定 ---
 
 async function initializePlayer(isManualToggle = false) {
+    // ⭐️ 核心排查點：新增詳細 Log，檢查 MASTER_TRACK_LIST 是否有效
+    console.group('【播放器啟動狀態檢查 - 數據源】');
+    console.log('MASTER_TRACK_LIST 元素數量:', MASTER_TRACK_LIST.length); // 這裡檢查長度
+    if (MASTER_TRACK_LIST.length > 0) {
+        console.log('MASTER_TRACK_LIST 第一首歌:', MASTER_TRACK_LIST[0]);
+        console.log('第一首歌的 Sources:', MASTER_TRACK_LIST[0].sources);
+    } else {
+        // 如果長度為 0，這就是卡住的原因！
+        DOM_ELEMENTS.playerTitle.textContent = "錯誤: 歌單數據為空，無法初始化。";
+        console.error('⚠️ 致命錯誤：MASTER_TRACK_LIST 數據為空。請檢查 Config.js 中的 window.PLAYER_GLOBAL_DATA。');
+        console.groupEnd();
+        return; // 數據無效，直接退出初始化
+    }
+    console.groupEnd();
+
     loadSavedSettings(); 
     
     let { dataMode } = getState();
