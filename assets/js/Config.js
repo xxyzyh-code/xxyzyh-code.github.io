@@ -35,7 +35,7 @@ const MASTER_TRACK_LIST = (function() {
 // ------------------------------------
 const DOM_ELEMENTS = {
     // 您的 HTML 中 ID 是 'audio'，這裡是正確的
-    audio: document.getElementById('audio'), 
+    audio: document.getElementById('main-audio'), 
     playerTitle: document.querySelector('#custom-audio-player h3'),
     modeButton: document.getElementById('mode-button'), 
     timerToggleButton: document.getElementById('timer-toggle-btn'),
@@ -47,7 +47,7 @@ const DOM_ELEMENTS = {
     themeMenu: document.getElementById('theme-menu'),
     currentThemeName: document.getElementById('current-theme-name'),
     themeOptions: document.querySelectorAll('#theme-menu .theme-option'),
-    playlistUl: document.getElementById('playlistUl'), 
+    playlistUl: document.getElementById('playlist'), 
     lyricsContainer: document.getElementById('lyrics-container'),
     lyricsContent: document.getElementById('lyrics-content'),
     lyricsPlaceholder: document.getElementById('lyrics-placeholder')
