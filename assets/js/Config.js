@@ -22,9 +22,10 @@ const MASTER_TRACK_LIST = (function() {
         id: track.id || `s${index}`, 
         title: track.title,
         artist: track.artist,
-        sources: track.sources, 
+        // 🚨 核心修正 1：確保 sources 永遠是陣列，防止單一字串導致 AudioEngine 錯誤
+        sources: Array.isArray(track.sources) ? track.sources : (track.sources ? [track.sources] : []), 
         originalIndex: index,
-        // 🚨 核心修正：將 lrcPath 升級為 lrcSources (確保它是陣列)
+        // 確保 lrcSources 是陣列
         lrcSources: Array.isArray(track.lrcPath) ? track.lrcPath : (track.lrcPath ? [track.lrcPath] : []) 
     }));
 })();  
@@ -46,7 +47,6 @@ const DOM_ELEMENTS = {
     currentThemeName: document.getElementById('current-theme-name'),
     themeOptions: document.querySelectorAll('#theme-menu .theme-option'),
     playlistUl: document.getElementById('playlist'),
-        // 🌟 新增：歌詞相關 DOM 元素 🌟
     lyricsContainer: document.getElementById('lyrics-container'),
     lyricsContent: document.getElementById('lyrics-content'),
     lyricsPlaceholder: document.getElementById('lyrics-placeholder')
@@ -61,7 +61,6 @@ const STORAGE_KEYS = {
     LAST_ORIGINAL_INDEX: 'audioPlayerOriginalIndex',
     LAST_TIME: 'audioPlayerTime',
     THEME: 'userThemePreference',
-    // 🌟 補充：新增失敗 URL 追蹤 Key 🌟
     FAILED_URLS: 'audioFailedUrls' 
 };
 
