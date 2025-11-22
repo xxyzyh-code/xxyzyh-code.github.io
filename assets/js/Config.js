@@ -49,7 +49,8 @@ const DOM_ELEMENTS = {
     playlistUl: document.getElementById('playlist'),
     lyricsContainer: document.getElementById('lyrics-container'),
     lyricsContent: document.getElementById('lyrics-content'),
-    lyricsPlaceholder: document.getElementById('lyrics-placeholder')
+    lyricsPlaceholder: document.getElementById('lyrics-placeholder'),
+    globalPlayBtn: document.getElementById('global-play-btn')
 };
 
 const STORAGE_KEYS = {
