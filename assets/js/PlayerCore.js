@@ -398,44 +398,46 @@ function getNextRandomIndex() {
 /**
  * 核心播放函數：載入並嘗試播放指定索引的歌曲。
  * @param {number} index - 歌曲在當前播放列表 currentPlaylist 中的索引
- * @param {boolean} [autoPlay=true] - 是否嘗試立即播放（點擊歌單或切歌時為 true，初始化時為 false）
+ * @param {boolean} [autoPlay=true] - 是否嘗試立即播放
+ * @param {boolean} [updateHash=false] - 是否更新 URL 錨點（只在外部載入時使用）
  */
-export function playTrack(index, autoPlay = true) {
+export function playTrack(index, autoPlay = true, updateHash = false) {
     const { currentPlaylist } = getState();
     const audio = DOM_ELEMENTS.audio;
 
     if (index < 0 || index >= currentPlaylist.length) { 
-        // ... (播放列表結束邏輯 - 保留不變)
+        // ... (播放列表結束邏輯 - 不變)
         if (index === currentPlaylist.length) {
             audio.pause(); 
             DOM_ELEMENTS.playerTitle.textContent = "播放列表已結束";
             setState({ currentTrackIndex: -1 }); 
             updatePlaylistHighlight();
-            window.location.hash = ''; 
+            window.location.hash = ''; // 結束時清除 hash
         }
         return; 
     }
     
     setState({ 
         currentTrackIndex: index,
-        isTrackPlayRecorded: false // 重置播放記錄標誌
+        isTrackPlayRecorded: false 
     });
     const track = currentPlaylist[index]; 
 
     // --- 播放核心邏輯：統一交給 AudioEngine 處理 ---
-    // 傳遞 autoPlay 參數，讓 AudioEngine 決定是否 play()
-    // ⚠️ 這是核心變動：playAudioWithFallback 需要知道是否 autoPlay
     playAudioWithFallback(track, autoPlay); 
 
-    // 設置 URL 錨點
-    window.location.hash = `song-index-${track.originalIndex}`;
+    // ⭐️ 修正 B.1: 只有當 updateHash=true 時，才設置 URL 錨點
+    if (updateHash) {
+        window.location.hash = `song-index-${track.originalIndex}`;
+    }
     
     // 設置臨時 UI 標題 (等待 AudioEngine 更新)
     if (autoPlay) {
+         // ⭐️ 修正 B.2: 初始狀態設置為「正在載入」，等待 playing/pause 修正。
          DOM_ELEMENTS.playerTitle.textContent = `載入中：${track.title} (正在嘗試播放...)`;
     } else {
-         // 初始化載入
-         DOM_ELEMENTS.playerTitle.textContent = `載入中：${track.title} (等待播放)`;
+         // 初始化載入或手動設置 autoPlay=false
+         DOM_ELEMENTS.playerTitle.textContent = `載入成功：${track.title} (請點擊播放)`;
     }
 
 
@@ -565,7 +567,8 @@ function renderPlaylist() {
         }
         
         const playTrackAction = () => {
-             playTrack(index); // 默認 autoPlay=true
+             // ⭐️ 修正 B.4: 用戶手動點擊時，updateHash=false (不改變 URL)
+             playTrack(index, true, false); 
              if (playMode !== 3) {
                  setState({ playMode: 3 }); 
                  updateModeUI();
@@ -733,7 +736,8 @@ export function loadTrack(originalIndex, autoPlay = true) {
             updateModeUI();
             saveSettings(); 
         }
-        playTrack(newIndex, autoPlay); // 🌟 傳遞 autoPlay 參數
+        // ⭐️ 修正 B.3: 來自外部連結的載入，必須設置 updateHash=true
+        playTrack(newIndex, autoPlay, true); 
     } else {
         console.error(`loadTrack 錯誤: 歌曲 (原始索引: ${originalIndex}) 在當前歌單中找不到。`);
         DOM_ELEMENTS.playerTitle.textContent = `錯誤：歌曲找不到。請手動點擊歌單中的其他歌曲。`;
@@ -912,24 +916,21 @@ function handleUrlAnchor(isInitialLoad = false) {
         
         if (!isNaN(originalIndex) && originalIndex >= 0 && originalIndex < MASTER_TRACK_LIST.length) {
             
-            const trackTitle = MASTER_TRACK_LIST[originalIndex].title;
-            
-            // 🌟 修正：從 URL 載入時，直接嘗試播放 (autoPlay=true)
-            // 讓 AudioEngine 去處理瀏覽器限制，而不是讓 PlayerCore 流程卡死
+            // ⭐️ 修正 B.5: 從 URL 載入時，直接嘗試播放 (autoPlay=true)
+            // loadTrack 內部已經包含了設置 playMode 和 updateHash=true 的邏輯。
             loadTrack(originalIndex, true); 
             
+            // 如果是初始化載入（來自URL），設定為順序停止模式
             if (isInitialLoad) {
-                // 如果是初始化載入（來自URL），設定為順序停止模式，等待用戶手動播放
                 setState({ playMode: 0 }); 
                 updateModeUI();
                 saveSettings();
             }
-            
-            DOM_ELEMENTS.playerTitle.textContent = `從分享連結載入：${trackTitle} (正在緩衝...)`;
-            
-        } // 歌曲索引有效結束
-    } // hash 檢查結束
+            // DOM_ELEMENTS.playerTitle 的更新交給 playTrack/playing 事件
+        }
+    }
 }
+
 
 
 // --- 初始化與事件綁定 ---
