@@ -162,8 +162,11 @@ export function playAudioWithFallback(track, autoPlay = true) {
         audio.addEventListener('error', currentErrorHandler);
 
         if (shouldAutoPlay) {
+            console.log(`[AE] 嘗試播放: ${url}`); // 新增 Log 1
             audio.play()
                 .then(() => {
+                    // 成功播放
+                    console.log('[AE] ✅ 播放 Promise 成功解決 (resolved)！'); // 新增 Log 2
                     if (isStale(currentExpectedUrl)) { cleanupHandlers(); return; }
                     // success -> remove handlers for this source
                     safeRemoveListener(audio, 'error', currentErrorHandler);
@@ -175,6 +178,8 @@ export function playAudioWithFallback(track, autoPlay = true) {
                     console.log('[Audio] play() resolved - source confirmed:', url);
                 })
                 .catch(err => {
+                    // 播放失敗或被阻止
+                    console.error('[AE] ❌ 播放 Promise 失敗 (rejected)！', err.name, err); // 新增 Log 3
                     if (getState().currentPlaybackSession !== sessionToken) { cleanupHandlers(); return; }
                     const name = err && err.name;
                     if (name === 'NotAllowedError' || name === 'AbortError' || name === 'NotSupportedError') {
