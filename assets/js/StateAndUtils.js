@@ -182,7 +182,7 @@ export const setState = (newState) => {
 
     // 🌟 修正 2：設置 isTrackPlayRecorded 狀態
     if (newState.isTrackPlayRecorded !== undefined) isTrackPlayRecorded = newState.isTrackPlayRecorded;
-}; // 🚨 已移除多餘的 }
+}
 
 // 導出重置歌單
 export function resetCurrentPlaylist() {
