@@ -45,14 +45,14 @@ function handleMetadata(audio, track, handler, sessionToken) {
     }
 
     console.log(`[CDN Fallback]: ✅ 音源成功載入元數據 (${track.title})`);
-    //removeCurrentErrorHandler(handler, audio); // 成功後移除該 session 的錯誤處理器
+    removeCurrentErrorHandler(handler, audio); // 成功後移除該 session 的錯誤處理器
 
     // UI 邏輯保持不變
     if (audio.paused) {
-        DOM_ELEMENTS.playerTitle.textContent = `載入完成：${track.title} (請點擊播放)`;
+        DOM_ELEMENTS.playerTitle.textContent = `載入成功：${track.title} (請點擊播放)`; // 🌟 UI 詞語修正
     } else {
-        // 正在播放事件 (playing) 會在 PlayerCore.js 中更新標題
-        DOM_ELEMENTS.playerTitle.textContent = `載入完成，等待播放事件確認...`;
+        // 否則，讓 'playing' 事件 (PlayerCore.js) 來更新標題
+        DOM_ELEMENTS.playerTitle.textContent = `載入成功，等待播放事件確認...`;
     }
 }
 
