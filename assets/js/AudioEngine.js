@@ -1,4 +1,5 @@
 // AudioEngine.js - 强健的 CDN fallback 音频引擎
+console.log("🔥 AudioEngine.js 已加载！");
 import { getState, setState } from './StateAndUtils.js';
 import { DOM_ELEMENTS, STORAGE_KEYS } from './Config.js';
 
