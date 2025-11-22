@@ -43,9 +43,9 @@ function trackPlayToDatabase(song_id) {
     .then(response => {
         if (!response.ok) {
             console.error(`播放記錄發送失敗，狀態碼: ${response.status}`);
-            // throw new Error(`HTTP error! status: ${response.status}`); // 移除 throw 以避免未捕獲的 rejected promise
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
-        // return response.json();
+        return response.json();
     })
     .catch(error => {
         console.error('播放記錄發送失敗:', error);
@@ -86,13 +86,11 @@ async function fetchGlobalPlayCounts() {
     } catch (error) {
         console.error('獲取全球播放次數失敗:', error);
         
-        // 🚨 修正：在錯誤時，UI 提示應明確且只執行一次。
-        // alert 會阻止執行，改用 console 提示，讓用戶手動切換。
-        console.warn(`無法載入全球統計數據。錯誤: ${error.message}。請手動切換到本地模式。`);
+        alert(`無法載入全球統計數據。錯誤: ${error.message}。已自動切換到本地模式。`);
         
-        // setState({ dataMode: 'local' }); // 不自動切換，讓用戶決定
-        // updateDataModeUI(); 
-        // saveSettings();
+        setState({ dataMode: 'local' });
+        updateDataModeUI(); 
+        saveSettings();
         
         return {}; 
     }
@@ -124,7 +122,6 @@ function updateModeUI() {
     else if (playMode === 4) { modeText = "[ 模式: 順序循環 ]"; } 
     else { modeText = "[ 模式: 順序停止 ]"; }
     
-    // 🚨 修正：使用textContent而非innerHTML，更安全
     DOM_ELEMENTS.modeButton.textContent = modeText;
 }
 
@@ -153,7 +150,7 @@ function updatePlaylistHighlight(manualScroll = false) {
     }
 }
 
-// --- 歌詞渲染與同步輔助函數 (邏輯正確，保留) ---
+// --- 歌詞渲染與同步輔助函數 ---
 
 function renderLyrics() {
     const { currentLRC } = getState();
@@ -186,7 +183,8 @@ function syncLyrics() {
 
     let nextIndex = currentLyricIndex;
 
-    // 🌟 修正 4：從一個安全的起始點開始搜索
+    // 🌟 修正 4：從一個安全的起始點開始搜索，減少無效迭代
+    // 預設從 -20 行開始搜索 (如果 currentLyricIndex > 20)
     const startIndex = Math.max(0, currentLyricIndex - 20); 
 
     for (let i = startIndex; i < currentLRC.length; i++) {
@@ -227,8 +225,6 @@ function syncLyrics() {
 // --- 歌詞輔助函數結束 ---
 
 
-// --- 主題函數 (邏輯正確，保留) ---
-
 function getSystemThemeBasedOnTime() {
     const hour = new Date().getHours();
     return (hour >= 19 || hour < 7) ? THEMES.DARK : THEMES.LIGHT;
@@ -268,10 +264,7 @@ function applyTheme(desiredTheme, isManual = false) {
         default: displayName = '白色';
     }
     
-    // 🚨 修正：確保 currentThemeName DOM 存在
-    if (DOM_ELEMENTS.currentThemeName) {
-         DOM_ELEMENTS.currentThemeName.textContent = `${displayName} ${modeText}`;
-    }
+    DOM_ELEMENTS.currentThemeName.textContent = `${displayName} ${modeText}`;
 }
 
 function initializeTheme() {
@@ -290,10 +283,8 @@ function initializeTheme() {
 
 function updateTotalListenTime() {
     incrementListenTime(); 
-    if (DOM_ELEMENTS.totalListenTimeSpan) {
-        DOM_ELEMENTS.totalListenTimeSpan.textContent = 
-            `${totalListenMinutes} 分鐘 ${totalListenSeconds} 秒`;
-    }
+    DOM_ELEMENTS.totalListenTimeSpan.textContent = 
+        `${totalListenMinutes} 分鐘 ${totalListenSeconds} 秒`;
 }
 
 function updateTimerCountdown() {
@@ -305,10 +296,8 @@ function updateTimerCountdown() {
         const minutes = Math.floor(remainingS / 60);
         const seconds = remainingS % 60;
         
-        if (DOM_ELEMENTS.remainingTimerSpan) {
-            DOM_ELEMENTS.remainingTimerSpan.textContent = 
-                `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-        }
+        DOM_ELEMENTS.remainingTimerSpan.textContent = 
+            `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
             
         if (remainingS === 0) {
             clearSleepTimer(); 
@@ -326,34 +315,17 @@ export function toggleTimerMenu(e) {
     if (e && typeof e.stopPropagation === 'function') {
         e.stopPropagation(); 
     }
-    
-    if (!DOM_ELEMENTS.timerMenu) return; // 修正：避免 DOM 不存在時報錯
-    
     const isExpanded = DOM_ELEMENTS.timerMenu.classList.toggle('hidden-menu');
+    DOM_ELEMENTS.timerToggleButton.setAttribute('aria-expanded', !isExpanded);
     
-    if (DOM_ELEMENTS.timerToggleButton) {
-        DOM_ELEMENTS.timerToggleButton.setAttribute('aria-expanded', !isExpanded);
-    }
-    
-    if (DOM_ELEMENTS.themeMenu && !DOM_ELEMENTS.themeMenu.classList.contains('hidden-menu')) {
+    if (!DOM_ELEMENTS.themeMenu.classList.contains('hidden-menu')) {
         DOM_ELEMENTS.themeMenu.classList.add('hidden-menu');
-        if (DOM_ELEMENTS.themeToggleBtn) {
-            DOM_ELEMENTS.themeToggleBtn.setAttribute('aria-expanded', false); 
-        }
+        DOM_ELEMENTS.themeToggleBtn.setAttribute('aria-expanded', false); 
     }
 }
 
 export function setSleepTimer(minutes) {
     clearSleepTimer();
-    
-    // 🚨 修正：在設置定時器前，必須確保歌曲被選中且已載入
-    const { currentPlaylist, currentTrackIndex } = getState();
-    if (currentTrackIndex === -1 || currentTrackIndex >= currentPlaylist.length) {
-         DOM_ELEMENTS.playerTitle.textContent = `請先選歌再設置定時器`;
-         if (DOM_ELEMENTS.timerMenu) DOM_ELEMENTS.timerMenu.classList.add('hidden-menu');
-         return;
-    }
-    
     toggleTimerMenu(); 
     
     const delayMilliseconds = minutes * 60 * 1000;
@@ -373,14 +345,19 @@ export function setSleepTimer(minutes) {
         countdownIntervalId: intervalId 
     });
     
-    if (DOM_ELEMENTS.timerToggleButton) DOM_ELEMENTS.timerToggleButton.textContent = `定時 (${minutes} 分鐘)`;
+    DOM_ELEMENTS.timerToggleButton.textContent = `定時 (${minutes} 分鐘)`;
     DOM_ELEMENTS.playerTitle.textContent = `定時器已設置：${minutes} 分鐘後自動關閉`;
     
-    // 🌟 修正 1：定時器錯誤修復 - 嘗試播放，但不處理播放錯誤，讓 AudioEngine 處理
+    // 🌟 修正 1：定時器錯誤修復 - 添加 .catch() 處理播放失敗
     if (DOM_ELEMENTS.audio.paused) {
-        // playTrack(currentTrackIndex, true) 在此情境更可靠
-        const track = currentPlaylist[currentTrackIndex];
-        playAudioWithFallback(track, true); 
+        DOM_ELEMENTS.audio.play().catch(error => {
+            if (error.name === "DOMException" || error.name === "NotSupportedError") {
+                console.warn("定時器啟動：無法自動播放 (無音源/被阻止)。", error);
+                // 這裡我們只記錄警告，定時器本身仍應生效
+            } else {
+                console.error("定時器啟動時，播放發生未知錯誤:", error);
+            }
+        });
     }
 }
 
@@ -400,8 +377,8 @@ export function clearSleepTimer() {
         countdownIntervalId: null 
     });
     
-    if (DOM_ELEMENTS.timerToggleButton) DOM_ELEMENTS.timerToggleButton.textContent = "定時 (未設定)";
-    if (DOM_ELEMENTS.remainingTimerSpan) DOM_ELEMENTS.remainingTimerSpan.textContent = "--:--";
+    DOM_ELEMENTS.timerToggleButton.textContent = "定時 (未設定)";
+    DOM_ELEMENTS.remainingTimerSpan.textContent = "--:--";
     DOM_ELEMENTS.playerTitle.textContent = "已取消定時器";
 }
 
@@ -429,7 +406,7 @@ export function playTrack(index, autoPlay = true, updateHash = false) {
     const audio = DOM_ELEMENTS.audio;
 
     if (index < 0 || index >= currentPlaylist.length) { 
-        // 播放列表結束邏輯 (只處理越界)
+        // ... (播放列表結束邏輯 - 不變)
         if (index === currentPlaylist.length) {
             audio.pause(); 
             DOM_ELEMENTS.playerTitle.textContent = "播放列表已結束";
@@ -442,24 +419,24 @@ export function playTrack(index, autoPlay = true, updateHash = false) {
     
     setState({ 
         currentTrackIndex: index,
-        // 每次切歌都重置記錄狀態和歌詞索引
-        isTrackPlayRecorded: false, 
-        currentLyricIndex: -1
+        isTrackPlayRecorded: false 
     });
     const track = currentPlaylist[index]; 
 
     // --- 播放核心邏輯：統一交給 AudioEngine 處理 ---
     playAudioWithFallback(track, autoPlay); 
 
-    // 設置 URL 錨點
+    // ⭐️ 修正 B.1: 只有當 updateHash=true 時，才設置 URL 錨點
     if (updateHash) {
         window.location.hash = `song-index-${track.originalIndex}`;
     }
     
-    // 設置臨時 UI 標題 (等待 AudioEngine 成功/失敗後更新)
+    // 設置臨時 UI 標題 (等待 AudioEngine 更新)
     if (autoPlay) {
+         // ⭐️ 修正 B.2: 初始狀態設置為「正在載入」，等待 playing/pause 修正。
          DOM_ELEMENTS.playerTitle.textContent = `載入中：${track.title} (正在嘗試播放...)`;
     } else {
+         // 初始化載入或手動設置 autoPlay=false
          DOM_ELEMENTS.playerTitle.textContent = `載入成功：${track.title} (請點擊播放)`;
     }
 
@@ -496,16 +473,7 @@ export function playNextTrack() {
     if (currentTrackIndex < currentPlaylist.length - 1) {
         nextIndex = currentTrackIndex + 1;
     } else { 
-        // 🚨 修正：只有在順序循環 (4) 或隨機 (2) 模式下才循環到第一首
-        // 在順序停止 (0) 或自由 (3) 模式下，應停止
-        const { playMode } = getState();
-        if (playMode === 4 || playMode === 2) {
-             nextIndex = 0; 
-        } else {
-             // 讓 playTrack 處理列表結束邏輯
-             playTrack(currentTrackIndex + 1, true, false); 
-             return; 
-        }
+        nextIndex = 0; 
     }
     
     playTrack(nextIndex); // 默認 autoPlay=true
@@ -548,11 +516,10 @@ export async function toggleDataMode() {
     updateDataModeUI();
     saveSettings(); 
     
-    // handlePause(); // 不需要在這裡暫停，在 initializePlayer 內部會處理
+    handlePause(); 
     
     DOM_ELEMENTS.playerTitle.textContent = `數據模式已切換為：${(dataMode === 'global' ? '全球統計' : '本地統計')}`;
-    
-    // 重新初始化播放器，會用 autoPlay=false 載入當前音源
+    // 這裡會重新調用 initializePlayer，它最終會用 autoPlay=false 載入音源，因此您看到「載入成功」是正常的。
     await initializePlayer(true); 
 }
 
@@ -577,8 +544,6 @@ function getTrackDisplayInfo(track) {
 
 function renderPlaylist() {
     const { currentPlaylist, currentTrackIndex, playMode } = getState();
-    if (!DOM_ELEMENTS.playlistUl) return; // 修正：確保 DOM 存在
-
     DOM_ELEMENTS.playlistUl.innerHTML = ''; 
     const fragment = document.createDocumentFragment();
 
@@ -632,9 +597,8 @@ function renderPlaylist() {
 function sortPlaylistByPlayCount() {
     let { currentPlaylist, currentTrackIndex } = getState();
 
-    // 🚨 修正：只有在當前播放列表與 Master List 長度相符時才執行排序
     if (currentPlaylist.length !== MASTER_TRACK_LIST.length) {
-         // renderPlaylist(); // 不用重複渲染
+         renderPlaylist(); 
          return;
     }
     
@@ -653,7 +617,7 @@ function sortPlaylistByPlayCount() {
         : -1; 
         
     setState({ currentPlaylist: sortableList });
-    currentPlaylist = sortableList; // 確保本地變量同步
+    currentPlaylist = sortableList; 
 
     
     if (currentlyPlayingOriginalIndex !== -1) {
@@ -704,8 +668,7 @@ function filterPlaylist() {
 
             if (newIndex !== -1) {
                 setState({ currentTrackIndex: newIndex });
-                // 🚨 修正：篩選時的標題應更簡潔，避免與播放標題衝突
-                DOM_ELEMENTS.playerTitle.textContent = `篩選結果 (${newPlaylist.length} 首)。請點擊播放。`;
+                DOM_ELEMENTS.playerTitle.textContent = `篩選結果 (${newPlaylist.length} 首)。`;
             } else {
                 setState({ currentTrackIndex: 0 }); 
                 DOM_ELEMENTS.playerTitle.textContent = `已根據篩選建立新歌單 (${newPlaylist.length} 首)。請點擊播放。`;
@@ -758,11 +721,10 @@ function filterPlaylist() {
  */
 export function loadTrack(originalIndex, autoPlay = true) { 
     
-    // 🚨 修正：若正在篩選，應先重置篩選狀態再載入 (用戶從外部連結點擊時)
     const isFiltered = DOM_ELEMENTS.playlistSearchInput.value.trim().length > 0;
     if (isFiltered) {
         DOM_ELEMENTS.playlistSearchInput.value = ''; 
-        filterPlaylist(); // 執行 filterPlaylist(空字串) 等同於退出篩選
+        filterPlaylist(); 
     }
     
     const { currentPlaylist } = getState();
@@ -870,9 +832,8 @@ function handlePlay() {
         setState({ listenIntervalId });
     }
     
-    // 🚨 修正：只在 window 上存在 updateMusicScore 時才設置
-    if (scoreTimerIntervalId === null && typeof window.updateMusicScore === 'function') {
-        scoreTimerIntervalId = setInterval(window.updateMusicScore, 1000); 
+    if (scoreTimerIntervalId === null) {
+        scoreTimerIntervalId = setInterval(window.updateMusicScore || (() => console.warn('updateMusicScore not defined')), 1000); 
         setState({ scoreTimerIntervalId }); 
     }
 
@@ -902,7 +863,7 @@ function handlePlaying() {
             DOM_ELEMENTS.playerTitle.textContent = `正在播放：${currentTrack.title}`;
         }
         
-        // ⭐️ 新增: 處理用戶在 play() 被阻止後手動播放的情況 (UI 提示殘留)
+        // ⭐️ 新增: 處理用戶在 play() 被阻止後手動播放的情況
         if (DOM_ELEMENTS.playerTitle.textContent.includes('(請點擊播放)')) {
             DOM_ELEMENTS.playerTitle.textContent = `正在播放：${currentTrack.title}`;
         }
@@ -932,9 +893,7 @@ function handlePause() {
 }
 
 function handleTimeUpdate() {
-    // 🚨 修正：頻繁調用 saveSettings 可能影響性能。
-    // 只有當音頻實際播放且時間是 5 的倍數時才儲存。
-    if (!DOM_ELEMENTS.audio.paused && Math.floor(DOM_ELEMENTS.audio.currentTime) % 5 === 0 && Math.abs(DOM_ELEMENTS.audio.currentTime - Math.round(DOM_ELEMENTS.audio.currentTime)) < 0.1) {
+    if (!DOM_ELEMENTS.audio.paused && DOM_ELEMENTS.audio.currentTime % 5 < 1) {
          saveSettings();
     }
 }
@@ -961,12 +920,13 @@ function handleUrlAnchor(isInitialLoad = false) {
             // loadTrack 內部已經包含了設置 playMode 和 updateHash=true 的邏輯。
             loadTrack(originalIndex, true); 
             
-            // 如果是初始化載入（來自URL），設定為順序停止模式（覆蓋 loadTrack 設置的自由模式）
+            // 如果是初始化載入（來自URL），設定為順序停止模式
             if (isInitialLoad) {
                 setState({ playMode: 0 }); 
                 updateModeUI();
                 saveSettings();
             }
+            // DOM_ELEMENTS.playerTitle 的更新交給 playTrack/playing 事件
         }
     }
 }
@@ -986,8 +946,7 @@ async function initializePlayer(isManualToggle = false) {
     
     updateDataModeUI(); 
 
-    // 🚨 修正：確保在 filterPlaylist 之前，currentPlaylist 已被初始化
-    if (DOM_ELEMENTS.playlistSearchInput && DOM_ELEMENTS.playlistSearchInput.value.trim().length > 0) {
+    if (DOM_ELEMENTS.playlistSearchInput.value.trim().length > 0) {
         filterPlaylist(); 
     } else {
         resetCurrentPlaylist(); 
@@ -1011,6 +970,7 @@ async function initializePlayer(isManualToggle = false) {
         const track = currentPlaylist[currentTrackIndex];
         
         // 核心修正 5：移除舊的音源載入邏輯
+        // 僅設置 UI 提示和載入上次播放時間
         DOM_ELEMENTS.playerTitle.textContent = `上次播放：${track.title}`;
         
         const savedTime = localStorage.getItem(STORAGE_KEYS.LAST_TIME);
@@ -1018,6 +978,7 @@ async function initializePlayer(isManualToggle = false) {
             const time = parseFloat(savedTime);
             if (!isNaN(time) && time > 0) {
                 // 注意：這裡只設置 currentTime。
+                // 真正的音源載入應該由 playTrack() 處理，但初始化時我們不自動 playTrack。
                 DOM_ELEMENTS.audio.currentTime = time;
                 localStorage.removeItem(STORAGE_KEYS.LAST_TIME); 
             }
@@ -1032,7 +993,7 @@ async function initializePlayer(isManualToggle = false) {
          DOM_ELEMENTS.playerTitle.textContent = "我的音樂播放器 (無歌曲)";
     }
     
-    // 🎯 核心修復點 2：強制在初始化結束時重新渲染列表
+    // 🎯 核心修復點 2：強制在初始化結束時重新渲染列表，解決列表消失問題
     renderPlaylist();
 
     initializeTheme();
@@ -1048,11 +1009,9 @@ function bindEventListeners() {
     // 播放器事件
     DOM_ELEMENTS.audio.addEventListener('volumechange', saveSettings);
     DOM_ELEMENTS.audio.addEventListener('ratechange', saveSettings); 
-    // 🚨 修正：loadedmetadata 不應該儲存設置，因為它會在每次 load() 時觸發，可能在 play() 失敗前儲存錯誤的狀態
-    // DOM_ELEMENTS.audio.addEventListener('loadedmetadata', saveSettings); 
+    DOM_ELEMENTS.audio.addEventListener('loadedmetadata', saveSettings); 
     DOM_ELEMENTS.audio.addEventListener('timeupdate', handleTimeUpdate);
-    DOM_ELEMENTS.audio.addEventListener('error', handleAudioError); // 🚨 修正：保留 error 監聽，但讓它只做日誌記錄。
-
+    
     // 🌟 修正 1：區分 handlePlay 和 handlePlaying
     DOM_ELEMENTS.audio.addEventListener('play', handlePlay);       // 設置計時器
     DOM_ELEMENTS.audio.addEventListener('playing', handlePlaying); // 記錄數據庫、更新標題
@@ -1061,74 +1020,63 @@ function bindEventListeners() {
     DOM_ELEMENTS.audio.addEventListener('ended', handleTrackEnd);
 
     // 搜索欄事件
-    if (DOM_ELEMENTS.playlistSearchInput) {
-        DOM_ELEMENTS.playlistSearchInput.addEventListener('input', debounce(filterPlaylist, 300));
-    }
+    DOM_ELEMENTS.playlistSearchInput.addEventListener('input', debounce(filterPlaylist, 300));
     
     // 主題切換事件
-    if (DOM_ELEMENTS.themeToggleBtn) {
-        DOM_ELEMENTS.themeToggleBtn.addEventListener('click', (e) => {
-           e.stopPropagation(); 
-           if (!DOM_ELEMENTS.themeMenu) return; // 修正：避免 DOM 不存在時報錯
-            const isExpanded = DOM_ELEMENTS.themeMenu.classList.toggle('hidden-menu');
-            DOM_ELEMENTS.themeToggleBtn.setAttribute('aria-expanded', !isExpanded); 
-            
-            if (DOM_ELEMENTS.timerMenu && !DOM_ELEMENTS.timerMenu.classList.contains('hidden-menu')) {
-                DOM_ELEMENTS.timerMenu.classList.add('hidden-menu');
-                if (DOM_ELEMENTS.timerToggleButton) DOM_ELEMENTS.timerToggleButton.setAttribute('aria-expanded', false); 
-            }
-        });
-    }
+    DOM_ELEMENTS.themeToggleBtn.addEventListener('click', (e) => {
+       e.stopPropagation(); 
+        const isExpanded = DOM_ELEMENTS.themeMenu.classList.toggle('hidden-menu');
+        DOM_ELEMENTS.themeToggleBtn.setAttribute('aria-expanded', !isExpanded); 
+        
+        if (!DOM_ELEMENTS.timerMenu.classList.contains('hidden-menu')) {
+            DOM_ELEMENTS.timerMenu.classList.add('hidden-menu');
+            DOM_ELEMENTS.timerToggleButton.setAttribute('aria-expanded', false); 
+        }
+    });
     
-    if (DOM_ELEMENTS.timerToggleButton) {
-        DOM_ELEMENTS.timerToggleButton.addEventListener('click', toggleTimerMenu);
-    }
+    DOM_ELEMENTS.timerToggleButton.addEventListener('click', toggleTimerMenu);
 
     // 主題菜單項
-    if (DOM_ELEMENTS.themeOptions) {
-        DOM_ELEMENTS.themeOptions.forEach(option => {
-            const clickAction = (e) => {
-                e.stopPropagation(); 
-                const selectedTheme = e.currentTarget.getAttribute('data-theme');
-                applyTheme(selectedTheme, true); 
-                if (DOM_ELEMENTS.themeMenu) DOM_ELEMENTS.themeMenu.classList.add('hidden-menu'); 
-                if (DOM_ELEMENTS.themeToggleBtn) DOM_ELEMENTS.themeToggleBtn.setAttribute('aria-expanded', false);
-            };
-            
-            option.addEventListener('click', clickAction);
-            
-            option.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault(); 
-                    clickAction(e); 
-                }
-            });
+    DOM_ELEMENTS.themeOptions.forEach(option => {
+        const clickAction = (e) => {
+            e.stopPropagation(); 
+            const selectedTheme = e.currentTarget.getAttribute('data-theme');
+            applyTheme(selectedTheme, true); 
+            DOM_ELEMENTS.themeMenu.classList.add('hidden-menu'); 
+            DOM_ELEMENTS.themeToggleBtn.setAttribute('aria-expanded', false);
+        };
+        
+        option.addEventListener('click', clickAction);
+        
+        option.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault(); 
+                clickAction(e); 
+            }
         });
-    }
+    });
 
     // 定時器菜單項
-    if (DOM_ELEMENTS.timerMenu) {
-        DOM_ELEMENTS.timerMenu.querySelectorAll('.menu-item').forEach(item => {
-            item.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault(); 
-                    item.click(); 
-                }
-            });
+    DOM_ELEMENTS.timerMenu.querySelectorAll('.menu-item').forEach(item => {
+        item.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault(); 
+                item.click(); 
+            }
         });
-    }
+    });
     
 // 全局點擊事件 (用於關閉菜單)
 document.addEventListener('click', (e) => {
     const target = e.target;
     
     // 關閉主題菜單
-    if (DOM_ELEMENTS.themeMenu && DOM_ELEMENTS.themeToggleBtn && !DOM_ELEMENTS.themeMenu.contains(target) && !DOM_ELEMENTS.themeToggleBtn.contains(target)) {
+    if (!DOM_ELEMENTS.themeMenu.contains(target) && !DOM_ELEMENTS.themeToggleBtn.contains(target)) {
         DOM_ELEMENTS.themeMenu.classList.add('hidden-menu');
         DOM_ELEMENTS.themeToggleBtn.setAttribute('aria-expanded', false);
     }
     // 關閉定時器菜單
-    if (DOM_ELEMENTS.timerMenu && DOM_ELEMENTS.timerToggleButton && !DOM_ELEMENTS.timerMenu.contains(target) && !DOM_ELEMENTS.timerToggleButton.contains(target)) {
+    if (!DOM_ELEMENTS.timerMenu.contains(target) && !DOM_ELEMENTS.timerToggleButton.contains(target)) {
         DOM_ELEMENTS.timerMenu.classList.add('hidden-menu');
         DOM_ELEMENTS.timerToggleButton.setAttribute('aria-expanded', false);
     }
