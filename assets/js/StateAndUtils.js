@@ -21,12 +21,6 @@ let listenIntervalId = null;
 let scoreTimerIntervalId = null; 
 let scoreAccumulatorSeconds = 0; 
 
-// 🌟 新增：播放會話 Token (用於防範 Race Condition)
-let currentPlaybackSession = null; 
-
-// 🌟 新增：追蹤歌曲是否已向後端報告播放 (防止多重記錄) 🌟 修正 2
-let isTrackPlayRecorded = false; 
-
 // 🌟 新增：歌詞同步狀態 🌟
 let currentLRC = null;         // 儲存解析後的歌詞陣列
 let lyricsIntervalId = null;   // 歌詞同步的 setInterval ID
@@ -34,7 +28,6 @@ let currentLyricIndex = -1;    // 當前高亮的歌詞行索引
 // 🌟 新增結束 🌟
 
 // --- 實用工具函數 ---
-
 
 export function debounce(func, delay) {
     let timeoutId;
@@ -152,9 +145,8 @@ export const getState = () => ({
     currentPlaylist, currentTrackIndex, playMode, dataMode, 
     trackPlayCounts, globalTrackPlayCounts, sleepTimerId, endTime, countdownIntervalId,
     listenIntervalId, scoreTimerIntervalId, scoreAccumulatorSeconds,
-    currentLRC, lyricsIntervalId, currentLyricIndex,
-    // 🌟 導出新增狀態 🌟
-    isTrackPlayRecorded
+        // 🌟 導出新增狀態 🌟
+    currentLRC, lyricsIntervalId, currentLyricIndex
 });
 
 
@@ -172,26 +164,16 @@ export const setState = (newState) => {
     if (newState.listenIntervalId !== undefined) listenIntervalId = newState.listenIntervalId;
     if (newState.scoreTimerIntervalId !== undefined) scoreTimerIntervalId = newState.scoreTimerIntervalId;
     if (newState.scoreAccumulatorSeconds !== undefined) scoreAccumulatorSeconds = newState.scoreAccumulatorSeconds;
-    // 🌟 設置新增狀態 🌟
+        // 🌟 設置新增狀態 🌟
     if (newState.currentLRC !== undefined) currentLRC = newState.currentLRC;
     if (newState.lyricsIntervalId !== undefined) lyricsIntervalId = newState.lyricsIntervalId;
     if (newState.currentLyricIndex !== undefined) currentLyricIndex = newState.currentLyricIndex;
-    
-    // 🌟 設置新增狀態 🌟
-    if (newState.currentPlaybackSession !== undefined) currentPlaybackSession = newState.currentPlaybackSession;
+};
 
-    // 🌟 修正 2：設置 isTrackPlayRecorded 狀態
-    if (newState.isTrackPlayRecorded !== undefined) isTrackPlayRecorded = newState.isTrackPlayRecorded;
-}
 
 // 導出重置歌單
 export function resetCurrentPlaylist() {
-    // ✅ 修正：使用 setState 更新全局狀態，確保 currentTrackIndex 被重置
-    const initialPlaylist = [...MASTER_TRACK_LIST];
-    setState({ 
-        currentPlaylist: initialPlaylist,
-        currentTrackIndex: 0 // 確保索引有效
-    });
+    currentPlaylist = [...MASTER_TRACK_LIST]; 
 }
 
 // 導出計數器
