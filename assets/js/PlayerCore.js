@@ -396,7 +396,7 @@ function getNextRandomIndex() {
 }
 
 /**
- * 輔助函數：根據文件擴展名推斷 MIME 類型 (此函數在新邏輯中不再使用，但保留以防萬一)
+ * 輔助函數：根據文件擴展名推斷 MIME 類型
  * @param {string} src - 資源 URL
  * @returns {string} MIME 類型
  */
@@ -413,87 +413,80 @@ function getMimeType(src) {
     }
 }
 
-// 🌟 朋友建議：新增 tryPlayCurrentSource 輔助函數 (核心 Fallback 邏輯) 🌟
-function tryPlayCurrentSource(track) {
-    const audio = DOM_ELEMENTS.audio;
-    const { currentSourceIndex } = getState();
-
-    if (!track.sources || track.sources.length === 0 || currentSourceIndex >= track.sources.length) {
-        DOM_ELEMENTS.playerTitle.textContent = `播放失敗：所有 CDN 都無法播放`;
-        // 可選：播放失敗時，清空歌詞
-        setState({ currentLRC: null, currentLyricIndex: -1 }); 
-        renderLyrics();
-        return;
-    }
-
-    // 設置當前嘗試的 CDN 來源
-    audio.src = track.sources[currentSourceIndex];
-    audio.load();
-    
-    // 設置 UI 提示
-    DOM_ELEMENTS.playerTitle.textContent = `正在播放：${track.title} (CDN: ${currentSourceIndex + 1}/${track.sources.length})`;
-    
-    // 嘗試播放，如果失敗則觸發錯誤處理
-    audio.play().catch(err => {
-        console.warn(`播放失敗，嘗試下一個 CDN: ${track.sources[currentSourceIndex]}`, err);
-        
-        // 手動觸發錯誤處理，跳到下一個 source
-        // 傳遞 isFallback: true 確保錯誤處理器知道這是一個需要備援的錯誤
-        handleAudioError({ target: audio, isFallback: true, track });
-    });
-}
-// 🌟 輔助函數結束 🌟
-
-
 /**
  * @param {number} index - 歌曲在當前播放列表 currentPlaylist 中的索引
  */
 export function playTrack(index) {
     const { currentPlaylist } = getState();
-    if (index < 0 || index >= currentPlaylist.length) return; // 檢查範圍
-
-    const track = currentPlaylist[index];
-    
-    // 🌟 朋友建議：重置 currentSourceIndex 🌟
-    setState({ 
-        currentTrackIndex: index, 
-        currentSourceIndex: 0 
-    }); 
-    
-    // 初始化 audio
-    const audio = DOM_ELEMENTS.audio;
-    audio.pause();
-    // 移除舊的 <source> 標籤，新邏輯直接使用 audio.src
-    audio.innerHTML = ''; 
-    audio.removeAttribute('src');
-    audio.load();
-
-    // 🌟 歌詞載入與解析邏輯 (保持不變) 🌟
-    if (track.lrcPath) {
-        fetchLRC(track.lrcPath).then(lrcText => {
-            const parsedLRC = parseLRC(lrcText || '');
-            setState({ 
-                currentLRC: parsedLRC, 
-                currentLyricIndex: -1 
+    if (index >= 0 && index < currentPlaylist.length) { 
+        setState({ currentTrackIndex: index });
+        const track = currentPlaylist[index]; 
+        
+        // --- 核心 CDN/格式備援邏輯：動態插入 <source> 標籤 ---
+        DOM_ELEMENTS.audio.innerHTML = ''; 
+        if (track.sources && Array.isArray(track.sources)) {
+            track.sources.forEach(src => {
+                const sourceEl = document.createElement('source');
+                sourceEl.src = src;
+                
+                // 🌟 使用輔助函數統一 MIME 類型邏輯 🌟
+                sourceEl.type = getMimeType(src); 
+                DOM_ELEMENTS.audio.appendChild(sourceEl);
             });
-            renderLyrics();
-        }).catch(error => {
-            console.error(`❌ 歌詞文件加載失敗 (${track.lrcPath}):`, error);
-            setState({ currentLRC: null, currentLyricIndex: -1 });
-            renderLyrics();
+        } else {
+             console.error(`歌曲 ${track.title} 缺少 sources 陣列!`);
+             DOM_ELEMENTS.audio.src = ''; 
+        }
+                        // 🌟 新增：歌詞載入與解析邏輯 🌟
+if (track.lrcPath) {
+    console.log(`嘗試加載歌詞: ${track.lrcPath}`); // 步驟 1: 輸出路徑
+    fetchLRC(track.lrcPath).then(lrcText => {
+        // 步驟 2: 檢查是否成功獲取文本
+        if (lrcText) {
+             console.log("歌詞文本獲取成功，長度:", lrcText.length);
+        } else {
+             console.error("❌ 錯誤：fetchLRC 返回空或無效文本。");
+        }
+        
+        const parsedLRC = parseLRC(lrcText);
+        
+        // 步驟 3: 檢查解析結果
+        if (parsedLRC && parsedLRC.length > 0) {
+            console.log("✅ 歌詞解析成功，找到行數:", parsedLRC.length);
+        } else {
+            console.error("❌ 錯誤：歌詞解析失敗或解析結果為空！");
+        }
+        
+        setState({ 
+            currentLRC: parsedLRC, 
+            currentLyricIndex: -1
         });
-    } else {
-        setState({ currentLRC: null, currentLyricIndex: -1 });
         renderLyrics();
+    }).catch(error => {
+        console.error(`❌ 歌詞文件加載失敗 (${track.lrcPath}):`, error); // 步驟 4: 捕獲網絡錯誤
+            });
+        } else {
+             // 如果沒有 lrcPath 或載入失敗，清空歌詞區域
+             setState({ currentLRC: null, currentLyricIndex: -1 });
+             renderLyrics(); 
+        }
+        // 🌟 新增結束 🌟
+        DOM_ELEMENTS.audio.load();
+
+        DOM_ELEMENTS.playerTitle.textContent = `正在播放：${track.title}`;
+        DOM_ELEMENTS.audio.play().catch(error => {
+            console.error("自動播放失敗，可能是瀏覽器限制：", error);
+        });
+        updatePlaylistHighlight();
+        
+        window.location.hash = `song-index-${track.originalIndex}`; 
+    } else if (index === currentPlaylist.length) { 
+        DOM_ELEMENTS.audio.pause(); 
+        DOM_ELEMENTS.playerTitle.textContent = "播放列表已結束";
+        setState({ currentTrackIndex: -1 }); 
+        updatePlaylistHighlight();
+        window.location.hash = '';
     }
-    // 🌟 歌詞載入結束 🌟
-
-    // 🌟 朋友建議：使用新的 Fallback 播放邏輯 🌟
-    tryPlayCurrentSource(track); 
-
-    updatePlaylistHighlight();
-    window.location.hash = `song-index-${track.originalIndex}`; 
-    // 由於 tryPlayCurrentSource 會更新 title，這裡只需要在播放列表結束時處理，故移除舊的 title 設置
 }
 
 
@@ -813,15 +806,7 @@ function handleTrackEnd() {
         // 這將確保下一輪播放開始時，syncLyrics 會從頭開始尋找
         setState({ currentLyricIndex: -1 }); 
         DOM_ELEMENTS.audio.currentTime = 0; 
-        
-        // 🌟 修正：單曲循環也必須使用 Fallback 邏輯重新嘗試播放 🌟
-        const track = currentPlaylist[currentTrackIndex];
-        if (track) {
-             setState({ currentSourceIndex: 0 }); // 重置 CDN 索引
-             tryPlayCurrentSource(track);
-        }
-        // 🌟 修正結束 🌟
-        
+        DOM_ELEMENTS.audio.play();
         updatePlaylistHighlight(); 
         return; 
     } 
@@ -887,7 +872,7 @@ function incrementPlayCount() {
 
 function handlePlay() {
     let { listenIntervalId, scoreTimerIntervalId } = getState(); // 解構其他狀態
-    let { lyricsIntervalId, currentTrackIndex, currentPlaylist } = getState(); // 🌟 確保在這裡解構 lyricsIntervalId
+    let { lyricsIntervalId } = getState(); // 🌟 確保在這裡解構 lyricsIntervalId
 
     if (listenIntervalId === null) {
         listenIntervalId = setInterval(updateTotalListenTime, 1000);
@@ -945,58 +930,32 @@ function handleTimeUpdate() {
     }
 }
 
-// 🌟 核心修正：改寫 handleAudioError 支持自動 fallback 🌟
 function handleAudioError(e) {
-    const audio = e.target;
-    const track = e.track || getState().currentPlaylist[getState().currentTrackIndex];
-    if (!track) return;
+    if (!e.target.error) return;
     
-    let code = audio.error?.code; 
-    let name = audio.error?.name; // 獲取錯誤名稱
-    
-    // --- 修正點：識別 Autoplay 錯誤 ---
-    if (name === 'NotAllowedError' || name === 'AbortError') {
-        // 這是瀏覽器自動播放策略限制或用戶中斷播放
-        console.warn(`瀏覽器自動播放受限或中斷 (錯誤: ${name})。請用戶手動點擊播放。`);
-        
-        // 🌟 關鍵：不切換 CDN 來源，將 currentSourceIndex 重置為 0 (或保持不變)
-        // 並且不調用 tryPlayCurrentSource，終止錯誤處理循環
-        setState({ currentSourceIndex: 0 }); // 確保下次點擊播放從第一個 CDN 開始
-        
-        // 提示用戶手動播放
-        DOM_ELEMENTS.playerTitle.textContent = `載入完成：${track.title} (需點擊播放按鈕)`;
-        return; // 終止錯誤處理
-    }
-    // --- 修正點結束 ---
-
-    // 僅在網絡或格式錯誤時嘗試 fallback，或當 isFallback 旗標被手動傳入時
-    if (code === audio.error?.MEDIA_ERR_NETWORK || 
-        code === audio.error?.MEDIA_ERR_SRC_NOT_SUPPORTED || 
-        e.isFallback) 
-    {
-        let { currentSourceIndex } = getState();
-        
-        // 判斷是否還有下一個 source
-        if (currentSourceIndex + 1 < track.sources.length) {
-            // 還有下一個 source，嘗試播放
-            setState({ currentSourceIndex: currentSourceIndex + 1 });
-            console.log(`CDN fallback → 嘗試下一個 CDN: ${track.sources[currentSourceIndex + 1]}`);
-            
-            // 重新嘗試播放，使用最新的 currentSourceIndex
-            tryPlayCurrentSource(track); 
-            return;
-        } else {
-            // 所有 CDN 都試過了
-            console.error('所有 CDN 播放失敗，資源本身可能無效或被封鎖。');
-            DOM_ELEMENTS.playerTitle.textContent = "播放失敗：所有 CDN 無法播放";
-        }
-    } else {
-        // 其他錯誤（例如文件載入中斷）
-        console.error('播放錯誤：', audio.error);
-        DOM_ELEMENTS.playerTitle.textContent = `播放失敗：未知錯誤 (代碼: ${code})`;
+    const audio = DOM_ELEMENTS.audio;
+    switch (e.target.error.code) {
+        case audio.error.MEDIA_ERR_ABORTED:
+            console.warn('音頻載入被終止。');
+            break;
+        case audio.error.MEDIA_ERR_NETWORK:
+            console.error('音頻網絡錯誤：無法獲取音源文件。所有來源可能都已失敗或 CDN 服務中斷。');
+            DOM_ELEMENTS.playerTitle.textContent = `播放失敗：網絡錯誤或 CDN 連結失效。`;
+            break;
+        case audio.error.MEDIA_ERR_DECODE:
+            console.error('音頻解碼錯誤：文件可能損壞或格式不支持。');
+            DOM_ELEMENTS.playerTitle.textContent = `播放失敗：文件解碼錯誤。`;
+            break;
+        case audio.error.MEDIA_ERR_SRC_NOT_SUPPORTED:
+            console.error('音頻格式不受支持或所有備援來源均已耗盡。');
+            DOM_ELEMENTS.playerTitle.textContent = `播放失敗：音源格式不受支持或所有備援失敗。`;
+            break;
+        default:
+            console.error(`發生未知播放錯誤 (代碼: ${e.target.error.code})`);
+            DOM_ELEMENTS.playerTitle.textContent = `播放失敗：未知錯誤。`;
+            break;
     }
 }
-// 🌟 錯誤處理函數修正結束 🌟
 
 function handleUrlAnchor(isInitialLoad = false) {
     const hash = window.location.hash;
@@ -1019,7 +978,6 @@ function handleUrlAnchor(isInitialLoad = false) {
             
             DOM_ELEMENTS.playerTitle.textContent = `從分享連結載入：${trackTitle} (正在緩衝...)`;
             const handlePlaying = () => {
-                 // 🌟 修正：檢查 title 確保沒有被 fallback 錯誤覆蓋 🌟
                  if (DOM_ELEMENTS.playerTitle.textContent.includes(trackTitle)) { 
                      DOM_ELEMENTS.playerTitle.textContent = `正在播放：${trackTitle}`;
                      DOM_ELEMENTS.audio.removeEventListener('playing', handlePlaying);
@@ -1027,8 +985,6 @@ function handleUrlAnchor(isInitialLoad = false) {
             };
             DOM_ELEMENTS.audio.addEventListener('playing', handlePlaying);
             
-            // 🌟 修正：這裡不再直接調用 audio.play()，而是由 loadTrack 內部的 playTrack 處理 🌟
-            // 為了保持和舊邏輯一致的 UI 提示，我們只處理自動播放失敗的情況。
             DOM_ELEMENTS.audio.play().catch(error => {
                  DOM_ELEMENTS.playerTitle.textContent = `從分享載入：${trackTitle} (需點擊播放)`;
             });
@@ -1039,7 +995,6 @@ function handleUrlAnchor(isInitialLoad = false) {
 
 // --- 初始化與事件綁定 ---
 
-// 🌟 朋友建議：改寫 initializePlayer 支持第一次載入的 Fallback 邏輯 🌟
 async function initializePlayer(isManualToggle = false) {
     loadSavedSettings(); 
     
@@ -1060,26 +1015,33 @@ async function initializePlayer(isManualToggle = false) {
     
     const lastPlayedOriginalIndex = window.__LAST_PLAYED_ORIGINAL_INDEX;
     let { currentPlaylist } = getState();
-    let startIndex = 0; // 預設索引 0
     
     if (lastPlayedOriginalIndex !== -1) {
         const newIndex = currentPlaylist.findIndex(track => track.originalIndex === lastPlayedOriginalIndex);
-        startIndex = newIndex !== -1 ? newIndex : 0;
+        setState({ currentTrackIndex: newIndex !== -1 ? newIndex : 0 });
+    } else {
+        setState({ currentTrackIndex: 0 });
     }
     
-    // 🌟 設置初始狀態 🌟
-    setState({ 
-        currentTrackIndex: startIndex,
-        currentSourceIndex: 0 // 必須初始化 currentSourceIndex
-    }); 
-    
     delete window.__LAST_PLAYED_ORIGINAL_INDEX; 
-    
-    // 重新獲取最新的狀態
-    let { currentTrackIndex } = getState();
 
+    let { currentTrackIndex } = getState();
     if (currentTrackIndex >= 0 && currentTrackIndex < currentPlaylist.length) {
         const track = currentPlaylist[currentTrackIndex];
+        
+        // 最終設置播放器狀態 (CDN 備援/格式備援邏輯)
+        if (track.sources && Array.isArray(track.sources)) {
+            DOM_ELEMENTS.audio.innerHTML = ''; 
+            track.sources.forEach(src => {
+                const sourceEl = document.createElement('source');
+                sourceEl.src = src;
+                
+                // 🌟 使用輔助函數統一 MIME 類型邏輯 🌟
+                sourceEl.type = getMimeType(src); 
+                DOM_ELEMENTS.audio.appendChild(sourceEl);
+            });
+            DOM_ELEMENTS.audio.load();
+        } 
         
         DOM_ELEMENTS.playerTitle.textContent = `上次播放：${track.title}`;
         
@@ -1092,17 +1054,7 @@ async function initializePlayer(isManualToggle = false) {
             }
         }
         
-        // ✅ 使用新的 fallback 播放邏輯
-        tryPlayCurrentSource(track);
         updatePlaylistHighlight();
-        // 🌟 新增：主動捕獲瀏覽器自動播放失敗，並提示用戶 🌟
-    DOM_ELEMENTS.audio.play().catch(error => {
-        // Autoplay policy blocked. 讓 handleAudioError 處理這個錯誤，並提示用戶手動點擊。
-        // 如果 handleAudioError 已經被觸發 (例如因為 NotAllowedError)，它會設置好提示。
-        if (DOM_ELEMENTS.playerTitle.textContent.includes('正在播放：')) {
-             DOM_ELEMENTS.playerTitle.textContent = `上次播放：${track.title} (需點擊播放)`;
-        }
-    });
     } else {
          setState({ currentTrackIndex: -1 }); 
          DOM_ELEMENTS.playerTitle.textContent = "我的音樂播放器 (無歌曲)";
@@ -1116,7 +1068,6 @@ async function initializePlayer(isManualToggle = false) {
         hasInitializedListeners = true;
     }
 }
-// 🌟 初始化函數修正結束 🌟
 
 
 function bindEventListeners() {
@@ -1128,8 +1079,6 @@ function bindEventListeners() {
     DOM_ELEMENTS.audio.addEventListener('play', handlePlay);
     DOM_ELEMENTS.audio.addEventListener('pause', handlePause);
     DOM_ELEMENTS.audio.addEventListener('ended', handleTrackEnd);
-    
-    // 🌟 修正：錯誤事件監聽器保持不變，但函數 handleAudioError 已被修改 🌟
     DOM_ELEMENTS.audio.addEventListener('error', handleAudioError, true); 
 
     // 搜索欄事件
@@ -1227,7 +1176,7 @@ const globalExposedFunctions = {
     playPreviousTrack,
     togglePlayMode,
     toggleDataMode,
-    //toggleTimerMenu, // 由於已在 bindEventListeners 處理，這裡可選
+    //toggleTimerMenu,
     setSleepTimer,
     clearSleepTimer,
     loadTrack 
