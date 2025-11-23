@@ -11,150 +11,103 @@
 - title: The best moments in life
   artist: AI
   sources:
-    - "https://cdn.jsdelivr.net/gh/xxyzyh-code/music@main/The%20best%20moments%20in%20life.m4a"
-    - "https://music-proxy.xxyzyh.workers.dev/xxyzyh-code/music/main/The%20best%20moments%20in%20life.m4a"
-    - "https://rawcdn.githack.com/xxyzyh-code/music/main/The%20best%20moments%20in%20life.m4a"
-    - "https://ghproxy.net/https://raw.githubusercontent.com/xxyzyh-code/music/main/The%20best%20moments%20in%20life.m4a"
+    - "https://music-proxy.xxyzyh.workers.dev/The best moments in life.m4a"
 
 - title: Time to travel
   artist: AI
   sources:
-    - "https://cdn.jsdelivr.net/gh/xxyzyh-code/music@main/Time%20to%20travel.m4a"
-    - "https://music-proxy.xxyzyh.workers.dev/xxyzyh-code/music/main/Time%20to%20travel.m4a"
-    - "https://rawcdn.githack.com/xxyzyh-code/music/main/Time%20to%20travel.m4a"
-    - "https://ghproxy.net/https://raw.githubusercontent.com/xxyzyh-code/music/main/Time%20to%20travel.m4a"
+    - "https://music-proxy.xxyzyh.workers.dev/Time to travel.m4a"
 
 - title: Elegance
   artist: AI
   sources:
-    - "https://cdn.jsdelivr.net/gh/xxyzyh-code/music@main/Elegance.m4a"
-    - "https://music-proxy.xxyzyh.workers.dev/xxyzyh-code/music/main/Elegance.m4a"
-    - "https://rawcdn.githack.com/xxyzyh-code/music/main/Elegance.m4a"
-    - "https://ghproxy.net/https://raw.githubusercontent.com/xxyzyh-code/music/main/Elegance.m4a"
+    - "https://music-proxy.xxyzyh.workers.dev/Elegance.m4a"
 
 - title: The More I Know You, Jesus
   artist: ReavoWorship
   sources:
-    - "https://cdn.jsdelivr.net/gh/xxyzyh-code/music@main/The%20More%20I%20Know%20You.mp3"
-    - "https://music-proxy.xxyzyh.workers.dev/xxyzyh-code/music/main/The%20More%20I%20Know%20You.mp3"
-    - "https://rawcdn.githack.com/xxyzyh-code/music/main/The%20More%20I%20Know%20You.mp3"
-    - "https://ghproxy.net/https://raw.githubusercontent.com/xxyzyh-code/music/main/The%20More%20I%20Know%20You.mp3"
+    - "https://music-proxy.xxyzyh.workers.dev/The More I Know You.mp3"
   lrcPath:
     - "https://lyrics-proxy.ksbfkzbm.workers.dev/xxyzyh-code/lyrics/main/tmiky.lrc"
 
 - title: Jesus Walks With Me
   artist: Be Still Studios
   sources:
-    - "https://cdn.jsdelivr.net/gh/xxyzyh-code/music@main/Jesus%20Walks%20With%20Me.mp3"
-    - "https://music-proxy.xxyzyh.workers.dev/xxyzyh-code/music/main/Jesus%20Walks%20With%20Me.mp3"
-    - "https://rawcdn.githack.com/xxyzyh-code/music/main/Jesus%20Walks%20With%20Me.mp3"
-    - "https://ghproxy.net/https://raw.githubusercontent.com/xxyzyh-code/music/main/Jesus%20Walks%20With%20Me.mp3"
+    - "https://music-proxy.xxyzyh.workers.dev/Jesus Walks With Me.mp3"
   lrcPath:
     - "https://lyrics-proxy.ksbfkzbm.workers.dev/xxyzyh-code/lyrics/main/jwwm.lrc"
 
 - title: Hallelujah Forevermore
   artist: Be Still Studios
   sources:
-    - "https://cdn.jsdelivr.net/gh/xxyzyh-code/music@main/Hallelujah%20Forevermore.mp3"
-    - "https://music-proxy.xxyzyh.workers.dev/xxyzyh-code/music/main/Hallelujah%20Forevermore.mp3"
-    - "https://rawcdn.githack.com/xxyzyh-code/music/main/Hallelujah%20Forevermore.mp3"
-    - "https://ghproxy.net/https://raw.githubusercontent.com/xxyzyh-code/music/main/Hallelujah%20Forevermore.mp3"
+    - "https://music-proxy.xxyzyh.workers.dev/Hallelujah Forevermore.mp3"
   lrcPath:
     - "https://lyrics-proxy.ksbfkzbm.workers.dev/xxyzyh-code/lyrics/main/hf.lrc"
 
 - title: In the Beginning
   artist: ReavoWorship
   sources:
-    - "https://cdn.jsdelivr.net/gh/xxyzyh-code/music@main/In%20the%20Beginning.mp3"
-    - "https://music-proxy.xxyzyh.workers.dev/xxyzyh-code/music/main/In%20the%20Beginning.mp3"
-    - "https://rawcdn.githack.com/xxyzyh-code/music/main/In%20the%20Beginning.mp3"
-    - "https://ghproxy.net/https://raw.githubusercontent.com/xxyzyh-code/music/main/In%20the%20Beginning.mp3"
+    - "https://music-proxy.xxyzyh.workers.dev/In the Beginning.mp3"
   lrcPath:
     - "https://lyrics-proxy.ksbfkzbm.workers.dev/xxyzyh-code/lyrics/main/itb.lrc"
 
 - title: Thank You Jesus
   artist: CryToLordJesus
   sources:
-    - "https://cdn.jsdelivr.net/gh/xxyzyh-code/music@main/Thank%20You%20Jesus.mp3"
-    - "https://music-proxy.xxyzyh.workers.dev/xxyzyh-code/music/main/Thank%20You%20Jesus.mp3"
-    - "https://rawcdn.githack.com/xxyzyh-code/music/main/Thank%20You%20Jesus.mp3"
-    - "https://ghproxy.net/https://raw.githubusercontent.com/xxyzyh-code/music/main/Thank%20You%20Jesus.mp3"
+    - "https://music-proxy.xxyzyh.workers.dev/Thank You Jesus.mp3"
   lrcPath:
     - "https://lyrics-proxy.ksbfkzbm.workers.dev/xxyzyh-code/lyrics/main/tyj.lrc"
 
 - title: Beside My Savior
   artist: ReavoWorship
   sources:
-    - "https://cdn.jsdelivr.net/gh/xxyzyh-code/music@main/Beside%20My%20Savior.mp3"
-    - "https://music-proxy.xxyzyh.workers.dev/xxyzyh-code/music/main/Beside%20My%20Savior.mp3"
-    - "https://rawcdn.githack.com/xxyzyh-code/music/main/Beside%20My%20Savior.mp3"
-    - "https://ghproxy.net/https://raw.githubusercontent.com/xxyzyh-code/music/main/Beside%20My%20Savior.mp3"
+    - "https://music-proxy.xxyzyh.workers.dev/Beside My Savior.mp3"
   lrcPath:
     - "https://lyrics-proxy.ksbfkzbm.workers.dev/xxyzyh-code/lyrics/main/bms.lrc"
 
 - title: All I Had Was You
   artist: ReavoWorship
   sources:
-    - "https://cdn.jsdelivr.net/gh/xxyzyh-code/music@main/All%20I%20Had%20Was%20You.mp3"
-    - "https://music-proxy.xxyzyh.workers.dev/xxyzyh-code/music/main/All%20I%20Had%20Was%20You.mp3"
-    - "https://rawcdn.githack.com/xxyzyh-code/music/main/All%20I%20Had%20Was%20You.mp3"
-    - "https://ghproxy.net/https://raw.githubusercontent.com/xxyzyh-code/music/main/All%20I%20Had%20Was%20You.mp3"
+    - "https://music-proxy.xxyzyh.workers.dev/All I Had Was You.mp3"
   lrcPath:
     - "https://lyrics-proxy.ksbfkzbm.workers.dev/xxyzyh-code/lyrics/main/aihwy.lrc"
 
 - title: My Shepherd
   artist: CryToLordJesus
   sources:
-    - "https://cdn.jsdelivr.net/gh/xxyzyh-code/music@main/My%20Shepherd.mp3"
-    - "https://music-proxy.xxyzyh.workers.dev/xxyzyh-code/music/main/My%20Shepherd.mp3"
-    - "https://rawcdn.githack.com/xxyzyh-code/music/main/My%20Shepherd.mp3"
-    - "https://ghproxy.net/https://raw.githubusercontent.com/xxyzyh-code/music/main/My%20Shepherd.mp3"
+    - "https://music-proxy.xxyzyh.workers.dev/My Shepherd.mp3"
   lrcPath:
     - "https://lyrics-proxy.ksbfkzbm.workers.dev/xxyzyh-code/lyrics/main/ms.lrc"
 
 - title: The First Sin,The Endless Love
   artist: ReavoWorship
   sources:
-    - "https://cdn.jsdelivr.net/gh/xxyzyh-code/music@main/The%20First%20Sin%20And%20Endless%20Love.mp3"
-    - "https://music-proxy.xxyzyh.workers.dev/xxyzyh-code/music/main/The%20First%20Sin%20And%20Endless%20Love.mp3"
-    - "https://rawcdn.githack.com/xxyzyh-code/music/main/The%20First%20Sin%20And%20Endless%20Love.mp3"
-    - "https://ghproxy.net/https://raw.githubusercontent.com/xxyzyh-code/music/main/The%20First%20Sin%20And%20Endless%20Love.mp3"
-  lrcPath: "https://lyrics-proxy.ksbfkzbm.workers.dev/xxyzyh-code/lyrics/main/tfsael.lrc"
+    - "https://music-proxy.xxyzyh.workers.dev/The First Sin And Endless Love.mp3"
+  lrcPath:
+    - "https://lyrics-proxy.ksbfkzbm.workers.dev/xxyzyh-code/lyrics/main/tfsael.lrc"
 
 - title: Thank You Lord
   artist: CryToLordJesus
   sources:
-    - "https://cdn.jsdelivr.net/gh/xxyzyh-code/music@main/Thank%20You%20Lord.mp3"
-    - "https://music-proxy.xxyzyh.workers.dev/xxyzyh-code/music/main/Thank%20You%20Lord.mp3"
-    - "https://rawcdn.githack.com/xxyzyh-code/music/main/Thank%20You%20Lord.mp3"
-    - "https://ghproxy.net/https://raw.githubusercontent.com/xxyzyh-code/music/main/Thank%20You%20Lord.mp3"
+    - "https://music-proxy.xxyzyh.workers.dev/Thank You Lord.mp3"
   lrcPath:
     - "https://lyrics-proxy.ksbfkzbm.workers.dev/xxyzyh-code/lyrics/main/tyl.lrc"
 
 - title: Lord,Im Not Okay,But Im Still Here
   artist: ThroughMe
   sources:
-    - "https://cdn.jsdelivr.net/gh/xxyzyh-code/music@main/linoh.mp3"
-    - "https://music-proxy.xxyzyh.workers.dev/xxyzyh-code/music/main/linoh.mp3"
-    - "https://rawcdn.githack.com/xxyzyh-code/music/main/linoh.mp3"
-    - "https://ghproxy.net/https://raw.githubusercontent.com/xxyzyh-code/music/main/linoh.mp3"
+    - "https://music-proxy.xxyzyh.workers.dev/linoh.mp3"
   lrcPath:
     - "https://lyrics-proxy.ksbfkzbm.workers.dev/xxyzyh-code/lyrics/main/linoh.lrc"
 
 - title: Jesus I Need You
   artist: Be Still Studios
   sources:
-    - "https://cdn.jsdelivr.net/gh/xxyzyh-code/music@main/jiny.mp3"
-    - "https://music-proxy.xxyzyh.workers.dev/xxyzyh-code/music/main/jiny.mp3"
-    - "https://rawcdn.githack.com/xxyzyh-code/music/main/jiny.mp3"
-    - "https://ghproxy.net/https://raw.githubusercontent.com/xxyzyh-code/music/main/jiny.mp3"
+    - "https://music-proxy.xxyzyh.workers.dev/jiny.mp3"
   lrcPath:
     - "https://lyrics-proxy.ksbfkzbm.workers.dev/xxyzyh-code/lyrics/main/jiny.lrc"
 
 - title: O Come O Come Emmanuel
   artist: Malinda
   sources:
-    - "https://cdn.jsdelivr.net/gh/xxyzyh-code/music@main/O%20Come%20O%20Come%20Emmanuel.mp3"
-    - "https://music-proxy.xxyzyh.workers.dev/xxyzyh-code/music/main/O%20Come%20O%20Come%20Emmanuel.mp3"
-    - "https://rawcdn.githack.com/xxyzyh-code/music/main/O%20Come%20O%20Come%20Emmanuel.mp3"
-    - "https://ghproxy.net/https://raw.githubusercontent.com/xxyzyh-code/music/main/O%20Come%20O%20Come%20Emmanuel.mp3"
+    - "https://music-proxy.xxyzyh.workers.dev/O Come O Come Emmanuel.mp3"
