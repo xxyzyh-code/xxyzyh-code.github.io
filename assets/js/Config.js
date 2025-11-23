@@ -18,31 +18,15 @@ const MASTER_TRACK_LIST = (function() {
         console.error("錯誤: Liquid 注入的 trackDataArray 數據未找到或為空。");
         return [];
     }
-    
-    return trackDataArray.map((track, index) => {
-        
-        // 🌟 修正點：確保 track.sources 是陣列 🌟
-        let sourcesArray = track.sources;
-        if (!Array.isArray(sourcesArray) || sourcesArray === null) {
-            
-            // 如果 sources 不是陣列或為 null，發出警告並設置為空陣列
-            // 這通常是 YAML 轉 JSON/JS 過程中出錯導致的。
-            console.warn(
-                `⚠️ 警告: 歌曲 "${track.title}" (原始索引: ${index}) 的 sources 屬性不是有效的陣列。` +
-                `實際類型為 ${typeof track.sources}。已設置為空陣列。`
-            );
-            sourcesArray = []; 
-        }
-        
-        return {
-            id: track.id || `s${index}`, 
-            title: track.title,
-            artist: track.artist,
-            sources: sourcesArray, // 使用經過檢查的陣列
-            originalIndex: index,
-            lrcPath: track.lrcPath || null 
-        };
-    });
+    return trackDataArray.map((track, index) => ({
+        id: track.id || `s${index}`, 
+        title: track.title,
+        artist: track.artist,
+        sources: track.sources, 
+        originalIndex: index,
+        lrcPath: track.lrcPath || null 
+
+    }));
 })(); 
 
 // ------------------------------------
@@ -62,7 +46,7 @@ const DOM_ELEMENTS = {
     currentThemeName: document.getElementById('current-theme-name'),
     themeOptions: document.querySelectorAll('#theme-menu .theme-option'),
     playlistUl: document.getElementById('playlist'),
-    // 🌟 歌詞相關 DOM 元素 🌟
+        // 🌟 新增：歌詞相關 DOM 元素 🌟
     lyricsContainer: document.getElementById('lyrics-container'),
     lyricsContent: document.getElementById('lyrics-content'),
     lyricsPlaceholder: document.getElementById('lyrics-placeholder')
