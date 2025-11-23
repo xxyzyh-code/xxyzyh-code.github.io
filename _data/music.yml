@@ -28,84 +28,84 @@
   sources:
     - "https://music-proxy.xxyzyh.workers.dev/The More I Know You.mp3"
   lrcPath:
-    - "https://lyrics-proxy.ksbfkzbm.workers.dev/xxyzyh-code/lyrics/main/tmiky.lrc"
+    - "https://lyrics-proxy.ksbfkzbm.workers.dev/tmiky.lrc"
 
 - title: Jesus Walks With Me
   artist: Be Still Studios
   sources:
     - "https://music-proxy.xxyzyh.workers.dev/Jesus Walks With Me.mp3"
   lrcPath:
-    - "https://lyrics-proxy.ksbfkzbm.workers.dev/xxyzyh-code/lyrics/main/jwwm.lrc"
+    - "https://lyrics-proxy.ksbfkzbm.workers.dev/jwwm.lrc"
 
 - title: Hallelujah Forevermore
   artist: Be Still Studios
   sources:
     - "https://music-proxy.xxyzyh.workers.dev/Hallelujah Forevermore.mp3"
   lrcPath:
-    - "https://lyrics-proxy.ksbfkzbm.workers.dev/xxyzyh-code/lyrics/main/hf.lrc"
+    - "https://lyrics-proxy.ksbfkzbm.workers.dev/hf.lrc"
 
 - title: In the Beginning
   artist: ReavoWorship
   sources:
     - "https://music-proxy.xxyzyh.workers.dev/In the Beginning.mp3"
   lrcPath:
-    - "https://lyrics-proxy.ksbfkzbm.workers.dev/xxyzyh-code/lyrics/main/itb.lrc"
+    - "https://lyrics-proxy.ksbfkzbm.workers.dev/itb.lrc"
 
 - title: Thank You Jesus
   artist: CryToLordJesus
   sources:
     - "https://music-proxy.xxyzyh.workers.dev/Thank You Jesus.mp3"
   lrcPath:
-    - "https://lyrics-proxy.ksbfkzbm.workers.dev/xxyzyh-code/lyrics/main/tyj.lrc"
+    - "https://lyrics-proxy.ksbfkzbm.workers.dev/tyj.lrc"
 
 - title: Beside My Savior
   artist: ReavoWorship
   sources:
     - "https://music-proxy.xxyzyh.workers.dev/Beside My Savior.mp3"
   lrcPath:
-    - "https://lyrics-proxy.ksbfkzbm.workers.dev/xxyzyh-code/lyrics/main/bms.lrc"
+    - "https://lyrics-proxy.ksbfkzbm.workers.dev/bms.lrc"
 
 - title: All I Had Was You
   artist: ReavoWorship
   sources:
     - "https://music-proxy.xxyzyh.workers.dev/All I Had Was You.mp3"
   lrcPath:
-    - "https://lyrics-proxy.ksbfkzbm.workers.dev/xxyzyh-code/lyrics/main/aihwy.lrc"
+    - "https://lyrics-proxy.ksbfkzbm.workers.dev/aihwy.lrc"
 
 - title: My Shepherd
   artist: CryToLordJesus
   sources:
     - "https://music-proxy.xxyzyh.workers.dev/My Shepherd.mp3"
   lrcPath:
-    - "https://lyrics-proxy.ksbfkzbm.workers.dev/xxyzyh-code/lyrics/main/ms.lrc"
+    - "https://lyrics-proxy.ksbfkzbm.workers.dev/ms.lrc"
 
 - title: The First Sin,The Endless Love
   artist: ReavoWorship
   sources:
     - "https://music-proxy.xxyzyh.workers.dev/The First Sin And Endless Love.mp3"
   lrcPath:
-    - "https://lyrics-proxy.ksbfkzbm.workers.dev/xxyzyh-code/lyrics/main/tfsael.lrc"
+    - "https://lyrics-proxy.ksbfkzbm.workers.dev/tfsael.lrc"
 
 - title: Thank You Lord
   artist: CryToLordJesus
   sources:
     - "https://music-proxy.xxyzyh.workers.dev/Thank You Lord.mp3"
   lrcPath:
-    - "https://lyrics-proxy.ksbfkzbm.workers.dev/xxyzyh-code/lyrics/main/tyl.lrc"
+    - "https://lyrics-proxy.ksbfkzbm.workers.dev/tyl.lrc"
 
 - title: Lord,Im Not Okay,But Im Still Here
   artist: ThroughMe
   sources:
     - "https://music-proxy.xxyzyh.workers.dev/linoh.mp3"
   lrcPath:
-    - "https://lyrics-proxy.ksbfkzbm.workers.dev/xxyzyh-code/lyrics/main/linoh.lrc"
+    - "https://lyrics-proxy.ksbfkzbm.workers.dev/linoh.lrc"
 
 - title: Jesus I Need You
   artist: Be Still Studios
   sources:
     - "https://music-proxy.xxyzyh.workers.dev/jiny.mp3"
   lrcPath:
-    - "https://lyrics-proxy.ksbfkzbm.workers.dev/xxyzyh-code/lyrics/main/jiny.lrc"
+    - "https://lyrics-proxy.ksbfkzbm.workers.dev/jiny.lrc"
 
 - title: O Come O Come Emmanuel
   artist: Malinda
