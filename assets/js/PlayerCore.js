@@ -945,15 +945,30 @@ function handleTimeUpdate() {
     }
 }
 
-// 🌟 朋友建議：改寫 handleAudioError 支持自動 fallback 🌟
+// 🌟 核心修正：改寫 handleAudioError 支持自動 fallback 🌟
 function handleAudioError(e) {
     const audio = e.target;
-    // 嘗試從事件對象獲取 track，如果沒有則從狀態中獲取 (e.track 是 tryPlayCurrentSource 手動傳入的)
     const track = e.track || getState().currentPlaylist[getState().currentTrackIndex];
     if (!track) return;
     
     let code = audio.error?.code; 
+    let name = audio.error?.name; // 獲取錯誤名稱
     
+    // --- 修正點：識別 Autoplay 錯誤 ---
+    if (name === 'NotAllowedError' || name === 'AbortError') {
+        // 這是瀏覽器自動播放策略限制或用戶中斷播放
+        console.warn(`瀏覽器自動播放受限或中斷 (錯誤: ${name})。請用戶手動點擊播放。`);
+        
+        // 🌟 關鍵：不切換 CDN 來源，將 currentSourceIndex 重置為 0 (或保持不變)
+        // 並且不調用 tryPlayCurrentSource，終止錯誤處理循環
+        setState({ currentSourceIndex: 0 }); // 確保下次點擊播放從第一個 CDN 開始
+        
+        // 提示用戶手動播放
+        DOM_ELEMENTS.playerTitle.textContent = `載入完成：${track.title} (需點擊播放按鈕)`;
+        return; // 終止錯誤處理
+    }
+    // --- 修正點結束 ---
+
     // 僅在網絡或格式錯誤時嘗試 fallback，或當 isFallback 旗標被手動傳入時
     if (code === audio.error?.MEDIA_ERR_NETWORK || 
         code === audio.error?.MEDIA_ERR_SRC_NOT_SUPPORTED || 
@@ -967,16 +982,16 @@ function handleAudioError(e) {
             setState({ currentSourceIndex: currentSourceIndex + 1 });
             console.log(`CDN fallback → 嘗試下一個 CDN: ${track.sources[currentSourceIndex + 1]}`);
             
-            // 這裡必須使用最新的狀態 currentSourceIndex，但由於是同步代碼塊，
-            // 且 setState 只是排隊，所以我們直接使用遞增後的邏輯（由 tryPlayCurrentSource 內部讀取）
+            // 重新嘗試播放，使用最新的 currentSourceIndex
             tryPlayCurrentSource(track); 
             return;
         } else {
-            console.error('所有 CDN 播放失敗');
+            // 所有 CDN 都試過了
+            console.error('所有 CDN 播放失敗，資源本身可能無效或被封鎖。');
             DOM_ELEMENTS.playerTitle.textContent = "播放失敗：所有 CDN 無法播放";
         }
     } else {
-        // 非網絡/格式錯誤，則報錯
+        // 其他錯誤（例如文件載入中斷）
         console.error('播放錯誤：', audio.error);
         DOM_ELEMENTS.playerTitle.textContent = `播放失敗：未知錯誤 (代碼: ${code})`;
     }
@@ -1080,6 +1095,14 @@ async function initializePlayer(isManualToggle = false) {
         // ✅ 使用新的 fallback 播放邏輯
         tryPlayCurrentSource(track);
         updatePlaylistHighlight();
+        // 🌟 新增：主動捕獲瀏覽器自動播放失敗，並提示用戶 🌟
+    DOM_ELEMENTS.audio.play().catch(error => {
+        // Autoplay policy blocked. 讓 handleAudioError 處理這個錯誤，並提示用戶手動點擊。
+        // 如果 handleAudioError 已經被觸發 (例如因為 NotAllowedError)，它會設置好提示。
+        if (DOM_ELEMENTS.playerTitle.textContent.includes('正在播放：')) {
+             DOM_ELEMENTS.playerTitle.textContent = `上次播放：${track.title} (需點擊播放)`;
+        }
+    });
     } else {
          setState({ currentTrackIndex: -1 }); 
          DOM_ELEMENTS.playerTitle.textContent = "我的音樂播放器 (無歌曲)";
