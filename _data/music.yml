@@ -125,8 +125,7 @@
     - "https://music-proxy.xxyzyh.workers.dev/xxyzyh-code/music/main/The%20First%20Sin%20And%20Endless%20Love.mp3"
     - "https://rawcdn.githack.com/xxyzyh-code/music/main/The%20First%20Sin%20And%20Endless%20Love.mp3"
     - "https://ghproxy.net/https://raw.githubusercontent.com/xxyzyh-code/music/main/The%20First%20Sin%20And%20Endless%20Love.mp3"
-  lrcPath:
-    - "https://lyrics-proxy.ksbfkzbm.workers.dev/xxyzyh-code/lyrics/main/tfsael.lrc"
+  lrcPath: "https://lyrics-proxy.ksbfkzbm.workers.dev/xxyzyh-code/lyrics/main/tfsael.lrc"
 
 - title: Thank You Lord
   artist: CryToLordJesus
