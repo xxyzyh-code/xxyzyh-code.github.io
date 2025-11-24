@@ -118,3 +118,10 @@
     - "https://support.audio-main-worker.workers.dev/audio?id=Holy Holy Holy.mp3"
   lrcPath:
     - "https://lyrics-proxy.ksbfkzbm.workers.dev/hhh.lrc"
+
+- title: Even When I Can’t See
+  artist: ReavoWorship
+  sources:
+    - "https://support.audio-main-worker.workers.dev/audio?id=Even When I Can’t See.mp3"
+  lrcPath:
+    - "https://lyrics-proxy.ksbfkzbm.workers.dev/ewics.lrc"
