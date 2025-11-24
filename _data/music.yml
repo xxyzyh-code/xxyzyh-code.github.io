@@ -111,3 +111,10 @@
   artist: Malinda
   sources:
     - "https://support.audio-main-worker.workers.dev/audio?id=O Come O Come Emmanuel.mp3"
+
+- title: Holy Holy Holy
+  artist: Be Still Studios
+  sources:
+    - "https://support.audio-main-worker.workers.dev/audio?id=Holy Holy Holy.mp3"
+  lrcPath:
+    - "https://lyrics-proxy.ksbfkzbm.workers.dev/hhh.lrc"
