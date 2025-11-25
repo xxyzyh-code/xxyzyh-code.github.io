@@ -419,7 +419,8 @@ function getMimeType(src) {
 export function playTrack(index) {
     const { currentPlaylist } = getState();
     if (index >= 0 && index < currentPlaylist.length) { 
-        setState({ currentTrackIndex: index });
+        // 播放新歌曲時，清除 isStoppedAtEnd 標記
+        setState({ currentTrackIndex: index, isStoppedAtEnd: false }); 
         const track = currentPlaylist[index]; 
         
         // --- 核心 CDN/格式備援邏輯：動態插入 <source> 標籤 ---
@@ -483,7 +484,8 @@ if (track.lrcPath) {
     } else if (index === currentPlaylist.length) { 
         DOM_ELEMENTS.audio.pause(); 
         DOM_ELEMENTS.playerTitle.textContent = "播放列表已結束";
-        setState({ currentTrackIndex: -1 }); 
+        // 設置停止標記
+        setState({ currentTrackIndex: -1, isStoppedAtEnd: true }); 
         updatePlaylistHighlight();
         window.location.hash = '';
     }
@@ -696,6 +698,7 @@ setState({ currentPlaylist: newPlaylist });
 
 handlePause(); // 清除計時器
 DOM_ELEMENTS.audio.pause(); // 確保暫停
+setState({ isStoppedAtEnd: false }); // 清除停止標記以防干擾
 
 if (newPlaylist.length === 0) {
     DOM_ELEMENTS.playerTitle.textContent = `未找到與 "${searchText}" 相關的歌曲。`;
@@ -806,7 +809,7 @@ function handleTrackEnd() {
     if (playMode === 1) { 
         // ⭐️ 【核心修正】在單曲循環模式下，重置歌詞高亮索引 ⭐️
         // 這將確保下一輪播放開始時，syncLyrics 會從頭開始尋找
-        setState({ currentLyricIndex: -1 }); 
+        setState({ currentLyricIndex: -1, isStoppedAtEnd: false }); // 循環模式，沒有邏輯停止
         DOM_ELEMENTS.audio.currentTime = 0; 
         DOM_ELEMENTS.audio.play();
         updatePlaylistHighlight(); 
@@ -816,7 +819,8 @@ function handleTrackEnd() {
     if (playMode === 3) { 
         DOM_ELEMENTS.audio.pause();
         DOM_ELEMENTS.playerTitle.textContent = "自由模式下，歌曲播放完畢。";
-        setState({ currentTrackIndex: -1 }); 
+        // 🛠️ 修正點 1/5：歌曲結束後，設置停止標記
+        setState({ currentTrackIndex: -1, isStoppedAtEnd: true }); 
         updatePlaylistHighlight(); 
         window.location.hash = ''; 
         return; 
@@ -825,17 +829,21 @@ function handleTrackEnd() {
     let nextIndex;
     
     if (playMode === 2) { 
+        setState({ isStoppedAtEnd: false }); // 循環模式，沒有邏輯停止
         nextIndex = getNextRandomIndex();
     } else if (playMode === 4) { 
+        setState({ isStoppedAtEnd: false }); // 循環模式，沒有邏輯停止
         nextIndex = (currentTrackIndex + 1) % currentPlaylist.length;
-    } else { 
+    } else { // 模式 0 (順序停止)
         if (currentTrackIndex < currentPlaylist.length - 1) { 
+            setState({ isStoppedAtEnd: false }); // 繼續播放下一首，沒有邏輯停止
             nextIndex = currentTrackIndex + 1;
         } else {
             // 模式 0 (順序停止) 的終止邏輯
             DOM_ELEMENTS.audio.pause();
             DOM_ELEMENTS.playerTitle.textContent = "播放列表已結束";
-            setState({ currentTrackIndex: -1 }); 
+            // 🛠️ 修正點 2/5：歌曲結束後，設置停止標記
+            setState({ currentTrackIndex: -1, isStoppedAtEnd: true }); 
             updatePlaylistHighlight(); 
             window.location.hash = ''; 
             return; 
@@ -874,8 +882,52 @@ function incrementPlayCount() {
 }
 
 function handlePlay() {
-    let { listenIntervalId, scoreTimerIntervalId } = getState(); // 解構其他狀態
-    let { lyricsIntervalId } = getState(); // 🌟 確保在這裡解構 lyricsIntervalId
+    let { 
+        listenIntervalId, scoreTimerIntervalId, lyricsIntervalId, 
+        currentTrackIndex, currentPlaylist, isStoppedAtEnd // 🛠️ 修正點 3/5：解構新變量
+    } = getState(); 
+
+    // --- 核心 Bug 修正邏輯：處理停止後點擊播放 ---
+    if (isStoppedAtEnd === true) { 
+        
+        // 1. 清除停止標記
+        setState({ isStoppedAtEnd: false }); 
+        
+        // 2. 確定要播放的歌曲索引 (如果 currentTrackIndex 是 -1，則預設回到 0)
+        let indexToPlay = currentTrackIndex; 
+        
+        // 如果 currentTrackIndex 是 -1 (表示播放列表已結束)，則回到第一首歌
+        if (indexToPlay === -1 && currentPlaylist.length > 0) {
+             indexToPlay = 0; 
+        }
+        
+        // 如果能找到索引
+        if (indexToPlay !== -1) {
+            // 3. 重設狀態並重新播放
+            setState({ currentTrackIndex: indexToPlay, currentLyricIndex: -1 }); // 重置歌詞索引
+            
+            // 確保所有 UI 指標更新到正確的歌曲
+            updatePlaylistHighlight(); // 重新高光
+            
+            // 重新載入歌詞 (如果需要) - 避免調用 playTrack() 導致重新載入音頻
+            const track = currentPlaylist[indexToPlay];
+            if (track.lrcPath) {
+                 fetchLRC(track.lrcPath).then(lrcText => {
+                     const parsedLRC = parseLRC(lrcText);
+                     setState({ currentLRC: parsedLRC, currentLyricIndex: -1 });
+                     renderLyrics();
+                 });
+            } else {
+                 setState({ currentLRC: null, currentLyricIndex: -1 });
+                 renderLyrics(); 
+            }
+            
+            DOM_ELEMENTS.audio.currentTime = 0; // 從頭開始播放
+            DOM_ELEMENTS.playerTitle.textContent = `重新播放：${currentPlaylist[indexToPlay].title}`;
+        }
+    }
+    // --- 核心 Bug 修正邏輯結束 ---
+
 
     if (listenIntervalId === null) {
         listenIntervalId = setInterval(updateTotalListenTime, 1000);
@@ -894,6 +946,7 @@ function handlePlay() {
     }
     // 🌟 新增結束 🌟
     
+    // 確保只有在歌曲有效時才發送數據庫記錄
     if (currentTrackIndex >= 0 && currentTrackIndex < currentPlaylist.length) {
         const currentSongId = currentPlaylist[currentTrackIndex].id; 
         trackPlayToDatabase(currentSongId); 
@@ -1007,9 +1060,21 @@ async function initializePlayer(isManualToggle = false) {
 
     // 🚀 修正 1/2：確保如果這是第一次載入且沒有保存的播放模式，它被設置為 0 (順序停止)。
     // 由於我們無法直接修改 StateAndUtils.js，我們在這裡添加一個防護檢查：
-    let { playMode } = getState();
+    let { playMode, isStoppedAtEnd } = getState(); // 🛠️ 修正點 4/5：解構新變量
     if (typeof playMode !== 'number' || playMode < 0 || playMode > 4) {
         setState({ playMode: 0 }); // 順序停止
+    }
+    
+    // 🛠️ 修正點 5/5：設置 isStoppedAtEnd 預設值
+    // 即使 StateAndUtils.js 已經設置，這裡也提供最終防護。
+    if (typeof isStoppedAtEnd !== 'boolean') {
+        setState({ isStoppedAtEnd: false }); 
+    }
+
+    // 當重新初始化時，確保停止標記被清除，除非是通過列表結束的邏輯導致的暫停
+    if (isStoppedAtEnd === false && DOM_ELEMENTS.audio.paused) {
+         setState({ currentLyricIndex: -1 });
+         renderLyrics();
     }
     
     let { dataMode } = getState();
@@ -1090,6 +1155,7 @@ function bindEventListeners() {
     DOM_ELEMENTS.audio.addEventListener('ratechange', saveSettings); 
     DOM_ELEMENTS.audio.addEventListener('loadedmetadata', saveSettings); 
     DOM_ELEMENTS.audio.addEventListener('timeupdate', handleTimeUpdate);
+    // 注意：handlePlay 和 handlePause 現在處理 isStoppedAtEnd 狀態
     DOM_ELEMENTS.audio.addEventListener('play', handlePlay);
     DOM_ELEMENTS.audio.addEventListener('pause', handlePause);
     DOM_ELEMENTS.audio.addEventListener('ended', handleTrackEnd);
