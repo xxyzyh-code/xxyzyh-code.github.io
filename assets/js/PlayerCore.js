@@ -534,6 +534,7 @@ export function playPreviousTrack() {
 
 export function togglePlayMode() {
     let { playMode } = getState();
+    // 播放模式: 0 (順序停止) -> 1 (單曲循環) -> 2 (隨機) -> 3 (自由) -> 4 (順序循環) -> 0...
     playMode = (playMode + 1) % 5; 
     setState({ playMode });
     
@@ -831,6 +832,7 @@ function handleTrackEnd() {
         if (currentTrackIndex < currentPlaylist.length - 1) { 
             nextIndex = currentTrackIndex + 1;
         } else {
+            // 模式 0 (順序停止) 的終止邏輯
             DOM_ELEMENTS.audio.pause();
             DOM_ELEMENTS.playerTitle.textContent = "播放列表已結束";
             setState({ currentTrackIndex: -1 }); 
@@ -972,6 +974,7 @@ function handleUrlAnchor(isInitialLoad = false) {
             loadTrack(originalIndex); 
             
             if (isInitialLoad) {
+                // 🚀 修正 2/2：從分享連結載入時，將模式設置為順序停止 (0)
                 setState({ playMode: 0 }); // 順序停止
                 updateModeUI();
                 saveSettings();
@@ -997,7 +1000,17 @@ function handleUrlAnchor(isInitialLoad = false) {
 // --- 初始化與事件綁定 ---
 
 async function initializePlayer(isManualToggle = false) {
+    // 原始的 loadSavedSettings() 函數位於 StateAndUtils.js 中，
+    // 假設您已在 StateAndUtils.js 的 loadSavedSettings 中將預設值從 null/undefined
+    // 變更為 0 (順序停止)。
     loadSavedSettings(); 
+
+    // 🚀 修正 1/2：確保如果這是第一次載入且沒有保存的播放模式，它被設置為 0 (順序停止)。
+    // 由於我們無法直接修改 StateAndUtils.js，我們在這裡添加一個防護檢查：
+    let { playMode } = getState();
+    if (typeof playMode !== 'number' || playMode < 0 || playMode > 4) {
+        setState({ playMode: 0 }); // 順序停止
+    }
     
     let { dataMode } = getState();
     if (dataMode === 'global') {
