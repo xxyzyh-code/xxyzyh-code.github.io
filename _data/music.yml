@@ -132,3 +132,10 @@
     - "https://support.audio-main-worker.workers.dev/audio?id=Together We Rise.mp3"
   lrcPath:
     - "https://lyrics-proxy.ksbfkzbm.workers.dev/twr.lrc"
+
+- title: What a Friend We Have in Jesus
+  artist: GraceWorship
+  sources:
+    - "https://support.audio-main-worker.workers.dev/audio?id=What a Friend We Have in Jesus.mp3"
+  lrcPath:
+    - "https://lyrics-proxy.ksbfkzbm.workers.dev/wafwhij.lrc"
