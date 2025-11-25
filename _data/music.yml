@@ -125,3 +125,10 @@
     - "https://support.audio-main-worker.workers.dev/audio?id=Even When I Can’t See.mp3"
   lrcPath:
     - "https://lyrics-proxy.ksbfkzbm.workers.dev/ewics.lrc"
+
+- title: Together We Rise
+  artist: HappyWorship
+  sources:
+    - "https://support.audio-main-worker.workers.dev/audio?id=Together We Rise.mp3"
+  lrcPath:
+    - "https://lyrics-proxy.ksbfkzbm.workers.dev/twr.lrc"
