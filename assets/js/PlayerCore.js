@@ -136,9 +136,9 @@ function updatePlaylistHighlight(manualScroll = false) {
     });
     
     if (currentTrackIndex >= 0 && currentTrackIndex < currentPlaylist.length) {
-// 修正：使用正在播放歌曲的 originalIndex 查找
-const currentlyPlayingOriginalIndex = currentPlaylist[currentTrackIndex].originalIndex; 
-const playingItem = DOM_ELEMENTS.playlistUl.querySelector(`li[data-original-index="${currentlyPlayingOriginalIndex}"]`);
+        // 修正：使用正在播放歌曲的 originalIndex 查找
+        const currentlyPlayingOriginalIndex = currentPlaylist[currentTrackIndex].originalIndex; 
+        const playingItem = DOM_ELEMENTS.playlistUl.querySelector(`li[data-original-index="${currentlyPlayingOriginalIndex}"]`);
         
         if (playingItem) {
             playingItem.classList.add('playing');
@@ -581,7 +581,7 @@ function getTrackDisplayInfo(track) {
 }
 
 function renderPlaylist() {
-    const { currentPlaylist, currentTrackIndex, playMode } = getState();
+    const { currentPlaylist } = getState();
     DOM_ELEMENTS.playlistUl.innerHTML = ''; 
     const fragment = document.createDocumentFragment();
 
@@ -687,40 +687,40 @@ function filterPlaylist() {
             const itemText = (track.title + ' ' + track.artist).toLowerCase(); 
             return itemText.includes(searchText);
         });
-// 1. 儲存舊的播放歌曲的 originalIndex
-let { currentTrackIndex, currentPlaylist } = getState();
-const playingOriginalIndex = currentTrackIndex >= 0 && currentTrackIndex < currentPlaylist.length
-    ? currentPlaylist[currentTrackIndex].originalIndex 
-    : -1; 
-    
-// 2. 更新狀態為新列表
-setState({ currentPlaylist: newPlaylist });
+        // 1. 儲存舊的播放歌曲的 originalIndex
+        let { currentTrackIndex, currentPlaylist } = getState();
+        const playingOriginalIndex = currentTrackIndex >= 0 && currentTrackIndex < currentPlaylist.length
+            ? currentPlaylist[currentTrackIndex].originalIndex 
+            : -1; 
+            
+        // 2. 更新狀態為新列表
+        setState({ currentPlaylist: newPlaylist });
 
-handlePause(); // 清除計時器
-DOM_ELEMENTS.audio.pause(); // 確保暫停
-setState({ isStoppedAtEnd: false }); // 清除停止標記以防干擾
+        handlePause(); // 清除計時器
+        DOM_ELEMENTS.audio.pause(); // 確保暫停
+        setState({ isStoppedAtEnd: false }); // 清除停止標記以防干擾
 
-if (newPlaylist.length === 0) {
-    DOM_ELEMENTS.playerTitle.textContent = `未找到與 "${searchText}" 相關的歌曲。`;
-    setState({ currentTrackIndex: -1 });
-    
-} else {
-    // 3. 檢查正在播放的歌曲是否在新列表內
-    let newIndex = -1;
-    if (playingOriginalIndex !== -1) {
-        newIndex = newPlaylist.findIndex(track => track.originalIndex === playingOriginalIndex);
-    }
+        if (newPlaylist.length === 0) {
+            DOM_ELEMENTS.playerTitle.textContent = `未找到與 "${searchText}" 相關的歌曲。`;
+            setState({ currentTrackIndex: -1 });
+            
+        } else {
+            // 3. 檢查正在播放的歌曲是否在新列表內
+            let newIndex = -1;
+            if (playingOriginalIndex !== -1) {
+                newIndex = newPlaylist.findIndex(track => track.originalIndex === playingOriginalIndex);
+            }
 
-    if (newIndex !== -1) {
-        // A. 如果正在播放的歌曲還在列表中，高光它
-        setState({ currentTrackIndex: newIndex });
-        DOM_ELEMENTS.playerTitle.textContent = `篩選結果 (${newPlaylist.length} 首)。`;
-    } else {
-        // B. 如果不在列表中，將索引設為 0
-        setState({ currentTrackIndex: 0 }); 
-        DOM_ELEMENTS.playerTitle.textContent = `已根據篩選建立新歌單 (${newPlaylist.length} 首)。請點擊播放。`;
-    }
-}
+            if (newIndex !== -1) {
+                // A. 如果正在播放的歌曲還在列表中，高光它
+                setState({ currentTrackIndex: newIndex });
+                DOM_ELEMENTS.playerTitle.textContent = `篩選結果 (${newPlaylist.length} 首)。`;
+            } else {
+                // B. 如果不在列表中，將索引設為 0
+                setState({ currentTrackIndex: 0 }); 
+                DOM_ELEMENTS.playerTitle.textContent = `已根據篩選建立新歌單 (${newPlaylist.length} 首)。請點擊播放。`;
+            }
+        }
 
 
         // 🚨 修正：篩選完成後，必須重新渲染播放列表 UI
@@ -728,42 +728,39 @@ if (newPlaylist.length === 0) {
 
     } else {
 
-// --- 退出篩選邏輯 ---
+        // --- 退出篩選邏輯 ---
 
-let { currentTrackIndex, currentPlaylist } = getState();
-// 🌟 修正：退出篩選時，我們應該找回上次播放的歌曲的 originalIndex，而不是當前篩選列表的索引。
-// 由於我們在進入篩選時已經更新了 currentTrackIndex，這裡的邏輯是正確的：
-const currentlyPlayingOriginalIndex = currentTrackIndex >= 0 && currentTrackIndex < currentPlaylist.length
-    ? currentPlaylist[currentTrackIndex].originalIndex 
-    : -1; 
-    
-// 保持這段邏輯不變，因為在步驟 1 我們已經確保了 currentlyPlayingOriginalIndex 指向的是用戶最後一次點擊的歌曲。
+        let { currentTrackIndex, currentPlaylist } = getState();
+        // 🌟 修正：退出篩選時，我們應該找回上次播放的歌曲的 originalIndex，而不是當前篩選列表的索引。
+        const currentlyPlayingOriginalIndex = currentTrackIndex >= 0 && currentTrackIndex < currentPlaylist.length
+            ? currentPlaylist[currentTrackIndex].originalIndex 
+            : -1; 
+            
+        handlePause(); 
+        resetCurrentPlaylist(); 
+        DOM_ELEMENTS.playerTitle.textContent = "我的音樂播放器";
 
-handlePause(); 
-resetCurrentPlaylist(); 
-DOM_ELEMENTS.playerTitle.textContent = "我的音樂播放器";
+        sortPlaylistByPlayCount(); // 排序並在內部調用 renderPlaylist()
 
-sortPlaylistByPlayCount(); // 排序並在內部調用 renderPlaylist()
+        // 手動修正索引 (重新獲取狀態，因為 sortPlaylistByPlayCount 可能會改變它)
+        ({ currentTrackIndex, currentPlaylist } = getState()); 
 
-// 手動修正索引 (重新獲取狀態，因為 sortPlaylistByPlayCount 可能會改變它)
-({ currentTrackIndex, currentPlaylist } = getState()); 
+        if (currentlyPlayingOriginalIndex !== -1) {
+            // 根據上次播放的 originalIndex 找到它在恢復後的總歌單中的新位置
+            const newIndex = currentPlaylist.findIndex(track => track.originalIndex === currentlyPlayingOriginalIndex);
+            
+            if (newIndex !== -1) {
+                setState({ currentTrackIndex: newIndex });
+            } else {
+                // 這不應該發生，但作為防護
+                setState({ currentTrackIndex: 0 }); 
+            }
+        } else if (currentTrackIndex === -1 || currentTrackIndex >= currentPlaylist.length) {
+            setState({ currentTrackIndex: 0 }); 
+        }
 
-if (currentlyPlayingOriginalIndex !== -1) {
-    // 根據上次播放的 originalIndex 找到它在恢復後的總歌單中的新位置
-    const newIndex = currentPlaylist.findIndex(track => track.originalIndex === currentlyPlayingOriginalIndex);
-    
-    if (newIndex !== -1) {
-        setState({ currentTrackIndex: newIndex });
-    } else {
-        // 這不應該發生，但作為防護
-        setState({ currentTrackIndex: 0 }); 
-    }
-} else if (currentTrackIndex === -1 || currentTrackIndex >= currentPlaylist.length) {
-    setState({ currentTrackIndex: 0 }); 
-}
-
-DOM_ELEMENTS.audio.pause(); 
-// renderPlaylist() 會在 sortPlaylistByPlayCount() 內部被調用，並帶有 setTimeout(0) 修正。
+        DOM_ELEMENTS.audio.pause(); 
+        // renderPlaylist() 會在 sortPlaylistByPlayCount() 內部被調用，並帶有 setTimeout(0) 修正。
     }
 }
 
@@ -916,6 +913,8 @@ function handlePlay() {
                      const parsedLRC = parseLRC(lrcText);
                      setState({ currentLRC: parsedLRC, currentLyricIndex: -1 });
                      renderLyrics();
+                 }).catch(error => {
+                     console.error("重新載入歌詞失敗:", error);
                  });
             } else {
                  setState({ currentLRC: null, currentLyricIndex: -1 });
@@ -924,6 +923,8 @@ function handlePlay() {
             
             DOM_ELEMENTS.audio.currentTime = 0; // 從頭開始播放
             DOM_ELEMENTS.playerTitle.textContent = `重新播放：${currentPlaylist[indexToPlay].title}`;
+            // 必須手動調用 play()，因為這是在 onplay 事件中執行的
+            DOM_ELEMENTS.audio.play().catch(e => console.error("嘗試恢復播放失敗:", e)); 
         }
     }
     // --- 核心 Bug 修正邏輯結束 ---
@@ -981,7 +982,8 @@ function handlePause() {
 
 function handleTimeUpdate() {
     // 每 5 秒保存一次播放時間
-    if (!DOM_ELEMENTS.audio.paused && DOM_ELEMENTS.audio.currentTime % 5 < 1) {
+    // 只有在非停止狀態，且音頻正在播放時才保存時間
+    if (!DOM_ELEMENTS.audio.paused && getState().isStoppedAtEnd === false && DOM_ELEMENTS.audio.currentTime % 5 < 1) {
          saveSettings();
     }
 }
@@ -1027,7 +1029,7 @@ function handleUrlAnchor(isInitialLoad = false) {
             loadTrack(originalIndex); 
             
             if (isInitialLoad) {
-                // 🚀 修正 2/2：從分享連結載入時，將模式設置為順序停止 (0)
+                // 從分享連結載入時，將模式設置為順序停止 (0)
                 setState({ playMode: 0 }); // 順序停止
                 updateModeUI();
                 saveSettings();
@@ -1053,20 +1055,15 @@ function handleUrlAnchor(isInitialLoad = false) {
 // --- 初始化與事件綁定 ---
 
 async function initializePlayer(isManualToggle = false) {
-    // 原始的 loadSavedSettings() 函數位於 StateAndUtils.js 中，
-    // 假設您已在 StateAndUtils.js 的 loadSavedSettings 中將預設值從 null/undefined
-    // 變更為 0 (順序停止)。
+    
     loadSavedSettings(); 
 
-    // 🚀 修正 1/2：確保如果這是第一次載入且沒有保存的播放模式，它被設置為 0 (順序停止)。
-    // 由於我們無法直接修改 StateAndUtils.js，我們在這裡添加一個防護檢查：
-    let { playMode, isStoppedAtEnd } = getState(); // 🛠️ 修正點 4/5：解構新變量
+    // 🛠️ 修正點 4/5：確保播放模式和停止狀態的預設值
+    let { playMode, isStoppedAtEnd } = getState(); 
     if (typeof playMode !== 'number' || playMode < 0 || playMode > 4) {
         setState({ playMode: 0 }); // 順序停止
     }
     
-    // 🛠️ 修正點 5/5：設置 isStoppedAtEnd 預設值
-    // 即使 StateAndUtils.js 已經設置，這裡也提供最終防護。
     if (typeof isStoppedAtEnd !== 'boolean') {
         setState({ isStoppedAtEnd: false }); 
     }
@@ -1095,20 +1092,33 @@ async function initializePlayer(isManualToggle = false) {
     const lastPlayedOriginalIndex = window.__LAST_PLAYED_ORIGINAL_INDEX;
     let { currentPlaylist } = getState();
     
+    // 將上次播放的索引暫存從 window 移除，不管有沒有找到
+    delete window.__LAST_PLAYED_ORIGINAL_INDEX; 
+
+    // 1. 設置 currentTrackIndex
     if (lastPlayedOriginalIndex !== -1) {
         const newIndex = currentPlaylist.findIndex(track => track.originalIndex === lastPlayedOriginalIndex);
         setState({ currentTrackIndex: newIndex !== -1 ? newIndex : 0 });
     } else {
-        setState({ currentTrackIndex: 0 });
+        // 初次訪問，沒有上次播放記錄，設置為播放列表第一首，但不要加載它
+        setState({ currentTrackIndex: 0 }); 
     }
     
-    delete window.__LAST_PLAYED_ORIGINAL_INDEX; 
-
     let { currentTrackIndex } = getState();
+    
     if (currentTrackIndex >= 0 && currentTrackIndex < currentPlaylist.length) {
         const track = currentPlaylist[currentTrackIndex];
         
-        // 最終設置播放器狀態 (CDN 備援/格式備援邏輯)
+        // 2. 核心修正：根據是否有上次播放記錄來決定顯示的 UI 標題
+        if (lastPlayedOriginalIndex !== -1) {
+            // 情況 A: 找到上次播放的歌曲
+            DOM_ELEMENTS.playerTitle.textContent = `上次播放：${track.title}`;
+        } else {
+            // 情況 B: 首次訪問/無記錄
+            DOM_ELEMENTS.playerTitle.textContent = `我的音樂播放器`; // 修正為中性標題
+        }
+        
+        // 3. 最終設置音頻狀態 (CDN 備援/格式備援邏輯)
         if (track.sources && Array.isArray(track.sources)) {
             DOM_ELEMENTS.audio.innerHTML = ''; 
             track.sources.forEach(src => {
@@ -1122,8 +1132,7 @@ async function initializePlayer(isManualToggle = false) {
             DOM_ELEMENTS.audio.load();
         } 
         
-        DOM_ELEMENTS.playerTitle.textContent = `上次播放：${track.title}`;
-        
+        // 4. 處理上次播放時間
         const savedTime = localStorage.getItem(STORAGE_KEYS.LAST_TIME);
         if (savedTime !== null) { 
             const time = parseFloat(savedTime);
