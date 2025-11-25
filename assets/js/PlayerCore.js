@@ -604,7 +604,8 @@ function renderPlaylist() {
         
         const playTrackAction = () => {
              playTrack(index);
-             if (playMode !== 3) {
+             // ⭐️ 核心修正：在 action 內部再次從狀態中獲取當前 playMode 的值 ⭐️
+                if (getState().playMode !== 3) { 
                  setState({ playMode: 3 }); 
                  updateModeUI();
                  saveSettings();
