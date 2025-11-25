@@ -21,6 +21,10 @@ let listenIntervalId = null;
 let scoreTimerIntervalId = null; 
 let scoreAccumulatorSeconds = 0; 
 
+// 🌟 核心修正：新增狀態變量 🌟
+// 當歌曲因播放列表結束（模式 0 或 3）而停止時，設為 true。
+let isStoppedAtEnd = false; 
+
 // 🌟 新增：歌詞同步狀態 🌟
 let currentLRC = null;         // 儲存解析後的歌詞陣列
 let lyricsIntervalId = null;   // 歌詞同步的 setInterval ID
@@ -57,6 +61,8 @@ export function saveSettings() {
         localStorage.setItem(STORAGE_KEYS.MODE, playMode);
         localStorage.setItem(STORAGE_KEYS.DATA_MODE, dataMode);  
         
+        // 注意：isStoppedAtEnd 狀態不需持久化，它在每次載入時都應該是 false。
+        
         if (currentTrackIndex >= 0 && currentTrackIndex < currentPlaylist.length) {
             const track = currentPlaylist[currentTrackIndex];
             localStorage.setItem(STORAGE_KEYS.LAST_ORIGINAL_INDEX, track.originalIndex); 
@@ -64,7 +70,8 @@ export function saveSettings() {
             localStorage.removeItem(STORAGE_KEYS.LAST_ORIGINAL_INDEX); 
         }
         
-        if (DOM_ELEMENTS.audio.currentTime > 0) {
+        if (DOM_ELEMENTS.audio.currentTime > 0 && !DOM_ELEMENTS.audio.paused) {
+             // 只有在播放器沒有手動暫停時，才保存時間，避免在結束時保存 0
              localStorage.setItem(STORAGE_KEYS.LAST_TIME, DOM_ELEMENTS.audio.currentTime);
         } else {
              localStorage.removeItem(STORAGE_KEYS.LAST_TIME);
@@ -95,10 +102,10 @@ export function loadSavedSettings() {
             if (mode >= 0 && mode <= 4) { 
                 playMode = mode; 
             } else {
-                playMode = 0; 
+                playMode = 0; // 預設為順序停止
             }
         } else {
-            playMode = 0; 
+            playMode = 0; // 預設為順序停止
         }
 
         const savedCounts = localStorage.getItem(STORAGE_KEYS.PLAY_COUNT);
@@ -145,7 +152,9 @@ export const getState = () => ({
     currentPlaylist, currentTrackIndex, playMode, dataMode, 
     trackPlayCounts, globalTrackPlayCounts, sleepTimerId, endTime, countdownIntervalId,
     listenIntervalId, scoreTimerIntervalId, scoreAccumulatorSeconds,
-        // 🌟 導出新增狀態 🌟
+    // 🌟 導出 isStoppedAtEnd 🌟
+    isStoppedAtEnd,
+    // 🌟 導出新增狀態 🌟
     currentLRC, lyricsIntervalId, currentLyricIndex
 });
 
@@ -164,7 +173,11 @@ export const setState = (newState) => {
     if (newState.listenIntervalId !== undefined) listenIntervalId = newState.listenIntervalId;
     if (newState.scoreTimerIntervalId !== undefined) scoreTimerIntervalId = newState.scoreTimerIntervalId;
     if (newState.scoreAccumulatorSeconds !== undefined) scoreAccumulatorSeconds = newState.scoreAccumulatorSeconds;
-        // 🌟 設置新增狀態 🌟
+
+    // 🌟 設置 isStoppedAtEnd 🌟
+    if (newState.isStoppedAtEnd !== undefined) isStoppedAtEnd = newState.isStoppedAtEnd;
+    
+    // 🌟 設置新增狀態 🌟
     if (newState.currentLRC !== undefined) currentLRC = newState.currentLRC;
     if (newState.lyricsIntervalId !== undefined) lyricsIntervalId = newState.lyricsIntervalId;
     if (newState.currentLyricIndex !== undefined) currentLyricIndex = newState.currentLyricIndex;
