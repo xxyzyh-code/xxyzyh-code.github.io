@@ -139,3 +139,10 @@
     - "https://audio-gateway.vercel.app/api/What a Friend We Have in Jesus.mp3"
   lrcPath:
     - "https://lyrics-proxy.ksbfkzbm.workers.dev/wafwhij.lrc"
+
+- title: I Will Walk With You
+  artist: ReavoWorship
+  sources:
+    - "https://audio-gateway.vercel.app/api/I Will Walk With You.mp3"
+  lrcPath:
+    - "https://lyrics-proxy.ksbfkzbm.workers.dev/iwwwy.lrc"
