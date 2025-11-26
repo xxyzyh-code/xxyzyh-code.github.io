@@ -883,10 +883,10 @@ function handlePlay() {
             DOM_ELEMENTS.playerTitle.textContent = `正在播放：${track.title} (緩衝中...)`; // 增加緩衝提示
             updatePlaylistHighlight();
             window.location.hash = `song-index-${track.originalIndex}`;
-
+            /*
             if (DOM_ELEMENTS.audio.paused) {
                 DOM_ELEMENTS.audio.play().catch(e => {
-                     // 忽略自動播放錯誤，等待 canplaythrough
+                    // 忽略自動播放錯誤，等待 canplaythrough
                 });
             }
             */
