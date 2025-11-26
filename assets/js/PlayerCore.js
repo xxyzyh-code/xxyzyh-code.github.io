@@ -805,8 +805,7 @@ function handleTrackEnd() {
     
     if (playMode === 1) { 
         // ⭐️ 【核心修正】在單曲循環模式下，重置歌詞高亮索引 ⭐️
-        // 這將確保下一輪播放開始時，syncLyrics 會從頭開始尋找
-        setState({ currentLyricIndex: -1, isStoppedAtEnd: false }); // 循環模式，沒有邏輯停止
+        setState({ currentLyricIndex: -1, isStoppedAtEnd: false }); 
         DOM_ELEMENTS.audio.currentTime = 0; 
         DOM_ELEMENTS.audio.play();
         updatePlaylistHighlight(); 
@@ -816,8 +815,8 @@ function handleTrackEnd() {
     if (playMode === 3) { 
         DOM_ELEMENTS.audio.pause();
         DOM_ELEMENTS.playerTitle.textContent = "自由模式下，歌曲播放完畢。";
-        // 🛠️ 修正點 1/5：歌曲結束後，設置停止標記
-        setState({ currentTrackIndex: -1, isStoppedAtEnd: true }); 
+        // ✅ 修正：保留 currentTrackIndex，僅設置停止標記
+        setState({ isStoppedAtEnd: true }); 
         updatePlaylistHighlight(); 
         window.location.hash = ''; 
         return; 
@@ -826,30 +825,31 @@ function handleTrackEnd() {
     let nextIndex;
     
     if (playMode === 2) { 
-        setState({ isStoppedAtEnd: false }); // 循環模式，沒有邏輯停止
+        setState({ isStoppedAtEnd: false }); 
         nextIndex = getNextRandomIndex();
     } else if (playMode === 4) { 
-        setState({ isStoppedAtEnd: false }); // 循環模式，沒有邏輯停止
+        setState({ isStoppedAtEnd: false }); 
         nextIndex = (currentTrackIndex + 1) % currentPlaylist.length;
     } else { // 模式 0 (順序停止)
-        if (currentTrackIndex < currentPlaylist.length - 1) { 
-            setState({ isStoppedAtEnd: false }); // 繼續播放下一首，沒有邏輯停止
-            nextIndex = currentTrackIndex + 1;
-        } else {
-            // 模式 0 (順序停止) 的終止邏輯
-            DOM_ELEMENTS.audio.pause();
-            DOM_ELEMENTS.playerTitle.textContent = "播放列表已結束";
-            // 🛠️ 修正點 2/5：歌曲結束後，設置停止標記
-            setState({ currentTrackIndex: -1, isStoppedAtEnd: true }); 
-            updatePlaylistHighlight(); 
-            window.location.hash = ''; 
-            return; 
-        }
+    if (currentTrackIndex < currentPlaylist.length - 1) { 
+        setState({ isStoppedAtEnd: false }); 
+        nextIndex = currentTrackIndex + 1;
+    } else {
+        // 模式 0 (順序停止) 的終止邏輯
+        DOM_ELEMENTS.audio.pause();
+        DOM_ELEMENTS.playerTitle.textContent = "播放列表已結束";
+        // 🎯 最終決定：僅設置停止標記，讓 currentTrackIndex 保留最後一首歌的索引
+        setState({ isStoppedAtEnd: true }); 
+        updatePlaylistHighlight(); 
+        window.location.hash = ''; 
+        return; 
     }
+}
     if (nextIndex !== undefined && nextIndex !== -1) {
         playTrack(nextIndex);
     }
 }
+
 
 function incrementPlayCount() {
     const { currentTrackIndex, currentPlaylist, trackPlayCounts } = getState();
@@ -884,55 +884,36 @@ function handlePlay() {
         currentTrackIndex, currentPlaylist, isStoppedAtEnd
     } = getState(); 
 
-    // --- 核心 Bug 修正邏輯：處理停止後點擊播放 (本次修正重點) ---
+    // --- 核心 Bug 修正邏輯：處理停止後點擊播放 ---
     if (isStoppedAtEnd === true) { 
-        
+    
         // 1. 清除停止標記
         setState({ isStoppedAtEnd: false }); 
         
-        // 2. 確定要播放的歌曲索引 (如果 currentTrackIndex 是 -1，則預設回到 0)
+        // 2. 確定要播放的歌曲索引。
         let indexToPlay = currentTrackIndex; 
         
-        // 如果 currentTrackIndex 是 -1 (表示播放列表已結束)，則回到第一首歌
         if (indexToPlay === -1 && currentPlaylist.length > 0) {
-             indexToPlay = 0; 
+            // 如果索引仍是 -1 (例如舊版終止邏輯的遺留狀態)，則預設回第 0 首
+            indexToPlay = 0; 
+        } else if (indexToPlay >= currentPlaylist.length) {
+            // 防止列表被過濾但 index 未重置的情況
+            indexToPlay = 0;
         }
         
-        // 如果能找到索引
+        // 如果能找到索引 (indexToPlay >= 0)
         if (indexToPlay !== -1) {
             
-            // 3. 重設狀態並重新播放
-            // 🛠️ 修正點 5/5：重置歌詞索引，確保歌詞同步器從頭開始
-            setState({ currentTrackIndex: indexToPlay, currentLyricIndex: -1 }); 
+            // 🎯 關鍵修正：當用戶點擊播放按鈕重播時，調用 playTrack(indexToPlay)
+            // playTrack 處理載入音源、歌詞、播放、更新 UI、設定新的 currentTrackIndex 等所有工作。
+            playTrack(indexToPlay); 
             
-            // 確保所有 UI 指標更新到正確的歌曲
-            updatePlaylistHighlight(); // 重新高光
-            
-            // 🌟 關鍵修復：重新載入歌詞（因為 playTrack 沒有被調用，所以需要手動處理）🌟
-            const track = currentPlaylist[indexToPlay];
-            if (track.lrcPath) {
-                 fetchLRC(track.lrcPath).then(lrcText => {
-                     const parsedLRC = parseLRC(lrcText);
-                     setState({ currentLRC: parsedLRC, currentLyricIndex: -1 });
-                     renderLyrics(); // 渲染新的歌詞行
-                 }).catch(error => {
-                     console.error("重新載入歌詞失敗:", error);
-                     setState({ currentLRC: null, currentLyricIndex: -1 });
-                     renderLyrics(); // 失敗也要清空
-                 });
-            } else {
-                 setState({ currentLRC: null, currentLyricIndex: -1 });
-                 renderLyrics(); 
-            }
-            // 🌟 關鍵修復結束 🌟
-            
-            DOM_ELEMENTS.audio.currentTime = 0; // 從頭開始播放
-            DOM_ELEMENTS.playerTitle.textContent = `重新播放：${currentPlaylist[indexToPlay].title}`;
-            // 必須手動調用 play()，因為這是在 onplay 事件中執行的
-            DOM_ELEMENTS.audio.play().catch(e => console.error("嘗試恢復播放失敗:", e)); 
+            // 成功重新播放後立即返回，跳過下方的手動計時器啟動邏輯
+            return; 
         }
         
-        if (indexToPlay === -1) return; // 如果列表為空，則跳過計時器啟動
+        // 如果列表為空 (indexToPlay === -1)，也應跳過計時器啟動
+        if (currentPlaylist.length === 0) return; 
     }
     // --- 核心 Bug 修正邏輯結束 ---
 
@@ -947,12 +928,11 @@ function handlePlay() {
         setState({ scoreTimerIntervalId }); 
     }
 
-    // 🌟 新增：啟動歌詞同步計時器 🌟
+    // 🌟 啟動歌詞同步計時器 🌟
     if (lyricsIntervalId === null) {
-        lyricsIntervalId = setInterval(syncLyrics, 100); // 100ms 頻率確保同步平滑
+        lyricsIntervalId = setInterval(syncLyrics, 100); 
         setState({ lyricsIntervalId }); 
     }
-    // 🌟 新增結束 🌟
     
     // 確保只有在歌曲有效時才發送數據庫記錄
     if (currentTrackIndex >= 0 && currentTrackIndex < currentPlaylist.length) {
@@ -963,6 +943,7 @@ function handlePlay() {
     
     saveSettings(); 
 }
+
 
 function handlePause() {
     const { listenIntervalId, scoreTimerIntervalId, lyricsIntervalId } = getState(); // 🌟 修正：確保解構 lyricsIntervalId
