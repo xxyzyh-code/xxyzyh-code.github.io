@@ -880,33 +880,31 @@ function incrementPlayCount() {
 
 function handlePlay() {
     let { 
-        listenIntervalId, scoreTimerIntervalId, lyricsIntervalId, 
         currentTrackIndex, currentPlaylist, isStoppedAtEnd
     } = getState(); 
 
-    // --- 核心修正區：處理列表結束後的重播點擊 ---
+    // 只有在歌曲停止在末尾時才執行重啟邏輯
     if (isStoppedAtEnd === true) { 
-    
+        
         setState({ isStoppedAtEnd: false }); 
         
         let indexToPlay = currentTrackIndex; 
         
-        // 確保播放索引是有效的 (自由模式結束後，通常保留在最後一首)
         if (indexToPlay === -1 || indexToPlay >= currentPlaylist.length) {
             indexToPlay = 0; 
         }
 
-        // 🎯 執行所有必要的更新和載入，但跳過 audio.play() 避免遞歸
         if (indexToPlay !== -1) {
 
+            // 1. 更新狀態和 UI（不包含 audio.play()）
             setState({ 
                 currentTrackIndex: indexToPlay,
-                currentLyricIndex: -1 // 🚨 關鍵：重設歌詞索引
+                currentLyricIndex: -1 // 重設歌詞索引
             });
             
             const track = currentPlaylist[indexToPlay];
             
-            // 1. 載入新的音源 (來自 playTrack 的載入邏輯)
+            // 2. 載入新的音源 (來自 playTrack 的載入邏輯)
             if (track.sources && Array.isArray(track.sources)) {
                 DOM_ELEMENTS.audio.innerHTML = ''; 
                 track.sources.forEach(src => {
@@ -915,15 +913,15 @@ function handlePlay() {
                     sourceEl.type = getMimeType(src); 
                     DOM_ELEMENTS.audio.appendChild(sourceEl);
                 });
-                DOM_ELEMENTS.audio.load();
+                DOM_ELEMENTS.audio.load(); // 💡 關鍵：開始載入新資源
             } 
             
-            // 2. 載入歌詞 (來自 playTrack 的歌詞載入邏輯)
+            // 3. 載入歌詞 (來自 playTrack 的歌詞載入邏輯)
             if (track.lrcPath) {
                 fetchLRC(track.lrcPath).then(lrcText => {
                     const parsedLRC = parseLRC(lrcText);
                     setState({ currentLRC: parsedLRC, currentLyricIndex: -1 });
-                    renderLyrics(); // 🚨 關鍵：渲染空白或新歌詞
+                    renderLyrics(); 
                 }).catch(error => {
                     console.error(`歌詞文件加載失敗 (${track.lrcPath}):`, error);
                     setState({ currentLRC: null, currentLyricIndex: -1 });
@@ -934,15 +932,35 @@ function handlePlay() {
                  renderLyrics(); 
             }
             
-            // 3. 更新 UI (標題和高光)
-            DOM_ELEMENTS.playerTitle.textContent = `正在播放：${track.title}`;
+            // 4. 更新 UI (標題和高光)
+            DOM_ELEMENTS.playerTitle.textContent = `正在播放：${track.title} (緩衝中...)`; // 增加緩衝提示
             updatePlaylistHighlight();
             window.location.hash = `song-index-${track.originalIndex}`;
+            
+            // 🚨 修正核心：重播時，如果不是正在播放，則手動調用 audio.play() 
+            // 讓它在 load() 之前嘗試進入播放狀態，這樣可以確保瀏覽器知道我們的意圖是要播放。
+            // 這樣做可以確保在 canplaythrough 之後，音頻可以再次開始。
+            if (DOM_ELEMENTS.audio.paused) {
+                 // 這裡只調用，不依賴它的返回值，真正的播放邏輯延遲到 canplaythrough
+                 DOM_ELEMENTS.audio.play().catch(e => {
+                     // 忽略自動播放錯誤，等待 canplaythrough
+                 });
+            }
         }
     }
-    // --- 核心修正區結束 ---
     
-    // 這些邏輯必須在 play 事件發生後執行 (計時器啟動)
+    // 不論是否是 isStoppedAtEnd === true，都嘗試啟動計時器和數據庫記錄。
+    // 這樣可以確保在任何 play 事件（包括從 pause 恢復）時，計時器都是運行狀態。
+    startPlayerTimers();
+    saveSettings(); 
+}
+// --- handlePlay 修正結束 ---
+
+function startPlayerTimers() {
+    let { 
+        listenIntervalId, scoreTimerIntervalId, lyricsIntervalId, 
+        currentTrackIndex, currentPlaylist
+    } = getState(); 
 
     if (listenIntervalId === null) {
         listenIntervalId = setInterval(updateTotalListenTime, 1000);
@@ -964,10 +982,7 @@ function handlePlay() {
         const currentSongId = currentPlaylist[currentTrackIndex].id; 
         trackPlayToDatabase(currentSongId); 
     }
-
-    saveSettings(); 
 }
-
 
 function handlePause() {
     const { listenIntervalId, scoreTimerIntervalId, lyricsIntervalId } = getState(); // 🌟 修正：確保解構 lyricsIntervalId
@@ -1025,6 +1040,32 @@ function handleAudioError(e) {
             DOM_ELEMENTS.playerTitle.textContent = `播放失敗：未知錯誤。`;
             break;
     }
+}
+
+function handleCanPlayThrough() {
+    const { currentTrackIndex, currentPlaylist } = getState();
+    
+    // 只有在 audio 處於暫停狀態，並且當前有歌曲時才嘗試播放
+    if (DOM_ELEMENTS.audio.paused && currentTrackIndex >= 0) {
+        const track = currentPlaylist[currentTrackIndex];
+        
+        DOM_ELEMENTS.audio.play().then(() => {
+             // 播放成功後，更新 UI 顯示狀態
+             DOM_ELEMENTS.playerTitle.textContent = `正在播放：${track.title}`;
+        }).catch(error => {
+             // 如果此時仍然播放失敗 (如瀏覽器限制)，提示用戶手動點擊
+             DOM_ELEMENTS.playerTitle.textContent = `自動播放失敗，請點擊播放：${track.title}`;
+             console.error("CanPlayThrough 後嘗試播放失敗:", error);
+        });
+    } else if (!DOM_ELEMENTS.audio.paused && currentTrackIndex >= 0) {
+        // 如果已經在播放，只需更新標題（移除緩衝中...）
+        const track = currentPlaylist[currentTrackIndex];
+        if (DOM_ELEMENTS.playerTitle.textContent.includes("緩衝中...")) {
+             DOM_ELEMENTS.playerTitle.textContent = `正在播放：${track.title}`;
+        }
+    }
+    // 確保計時器啟動，防止 timeupdate 丟失
+    startPlayerTimers(); 
 }
 
 function handleUrlAnchor(isInitialLoad = false) {
@@ -1181,6 +1222,7 @@ function bindEventListeners() {
     DOM_ELEMENTS.audio.addEventListener('pause', handlePause);
     DOM_ELEMENTS.audio.addEventListener('ended', handleTrackEnd);
     DOM_ELEMENTS.audio.addEventListener('error', handleAudioError, true); 
+  DOM_ELEMENTS.audio.addEventListener('canplaythrough', handleCanPlayThrough); 
 
     // 搜索欄事件
     DOM_ELEMENTS.playlistSearchInput.addEventListener('input', debounce(filterPlaylist, 300));
