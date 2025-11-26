@@ -884,17 +884,19 @@ function handlePlay() {
             updatePlaylistHighlight();
             window.location.hash = `song-index-${track.originalIndex}`;
 
-            // 🚨 修正核心：嘗試播放，讓 canplaythrough 事件來接管播放成功後的流程。
             if (DOM_ELEMENTS.audio.paused) {
                 DOM_ELEMENTS.audio.play().catch(e => {
-                    // 忽略自動播放錯誤，等待 canplaythrough
+                     // 忽略自動播放錯誤，等待 canplaythrough
                 });
             }
+            */
+            // ⚠️ 修正：交由 handleCanPlayThrough 處理播放啟動
         } else {
             // 如果列表為空，則不做任何事情
             return;
         }
     }
+
 
     // 不論是否是 isStoppedAtEnd === true，都嘗試啟動計時器和數據庫記錄。
     startPlayerTimers();
