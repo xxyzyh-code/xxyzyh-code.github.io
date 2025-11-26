@@ -438,13 +438,31 @@ export function playTrack(index) {
         // 🌟 新增結束 🌟
 
         DOM_ELEMENTS.audio.load();
-        DOM_ELEMENTS.playerTitle.textContent = `正在播放：${track.title} (緩衝中...)`; // 🎯 修正：增加緩衝提示
-        
-        // 🎯 修正：只嘗試播放，如果瀏覽器限制，會在 canplaythrough 再次嘗試
-        DOM_ELEMENTS.audio.play().catch(error => {
-            console.error("PlayTrack: 自動播放失敗，等待 canplaythrough 或用戶點擊。", error);
-            // 不在這裡做任何標題更改，讓 handleCanPlayThrough 或用戶操作來解決
-        });
+                // 🎯 修正 B：根據模式決定是否自動播放
+        const { playMode } = getState();
+        // 自動播放模式 = 1 (單曲循環), 2 (隨機), 4 (順序循環)
+        const shouldAutoPlay = (playMode === 1 || playMode === 2 || playMode === 4);
+
+        if (shouldAutoPlay) {
+            DOM_ELEMENTS.playerTitle.textContent = `正在播放：${track.title} (緩衝中...)`;
+            
+            // 嘗試立即播放，如果失敗，則註冊一次性 canplaythrough 再次嘗試
+            DOM_ELEMENTS.audio.play().catch(() => {
+                console.warn("PlayTrack: 立即自動播放失敗，等待 canplaythrough...");
+                // 註冊一次性 canplaythrough，當資源準備好時再 play
+                const autoPlayWhenReady = () => {
+                    DOM_ELEMENTS.audio.play().catch(() => {
+                        // 如果依然無法自動播放，顯示提示
+                        DOM_ELEMENTS.playerTitle.textContent = `自動播放被阻止，請點擊 ▶ 開始：${track.title}`;
+                    });
+                };
+                // 🎯 修正：使用 { once: true }
+                DOM_ELEMENTS.audio.addEventListener('canplaythrough', autoPlayWhenReady, { once: true });
+            });
+        } else {
+            // 手動模式 (0, 3)：只載入資源，等待使用者點擊
+            DOM_ELEMENTS.playerTitle.textContent = `準備就緒：${track.title}（請點擊 ▶ 開始播放）`;
+        }
 
         updatePlaylistHighlight();
         window.location.hash = `song-index-${track.originalIndex}`;
@@ -879,17 +897,22 @@ function handlePlay() {
                 renderLyrics();
             }
 
-            // 4. 更新 UI (標題和高光)
+                        // 4. 更新 UI (標題和高光)
             DOM_ELEMENTS.playerTitle.textContent = `正在播放：${track.title} (緩衝中...)`; // 增加緩衝提示
             updatePlaylistHighlight();
             window.location.hash = `song-index-${track.originalIndex}`;
-            /*
-            if (DOM_ELEMENTS.audio.paused) {
-                DOM_ELEMENTS.audio.play().catch(e => {
-                    // 忽略自動播放錯誤，等待 canplaythrough
+
+            // 🎯 修正 A：使用一次性監聽器來處理重啟播放
+            const onceReadyToPlay = () => {
+                DOM_ELEMENTS.audio.play().catch(() => {
+                    // 自動播放被瀏覽器阻擋時忽略
+                    DOM_ELEMENTS.playerTitle.textContent = `準備播放：${track.title}（請點擊 ▶）`;
                 });
-            }
-            */
+            };
+
+            // 🌟 關鍵：只綁定一次，確保邏輯不會重複執行 🌟
+            DOM_ELEMENTS.audio.removeEventListener('canplaythrough', onceReadyToPlay); // 保險移除，防止同名殘留
+            DOM_ELEMENTS.audio.addEventListener('canplaythrough', onceReadyToPlay, { once: true });
             // ⚠️ 修正：交由 handleCanPlayThrough 處理播放啟動
         } else {
             // 如果列表為空，則不做任何事情
