@@ -1028,28 +1028,29 @@ function handleAudioError(e) {
 function handleCanPlayThrough() {
     const { currentTrackIndex, currentPlaylist } = getState();
 
-    // 只有在 audio 處於暫停狀態，並且當前有歌曲時才嘗試播放
-    if (DOM_ELEMENTS.audio.paused && currentTrackIndex >= 0) {
+    // 有有效歌曲才繼續
+    if (currentTrackIndex >= 0 && currentTrackIndex < currentPlaylist.length) {
         const track = currentPlaylist[currentTrackIndex];
-        DOM_ELEMENTS.audio.play().then(() => {
-            // 播放成功後，更新 UI 顯示狀態
-            DOM_ELEMENTS.playerTitle.textContent = `正在播放：${track.title}`;
-        }).catch(error => {
-            // 如果此時仍然播放失敗 (如瀏覽器限制)，提示用戶手動點擊
-            DOM_ELEMENTS.playerTitle.textContent = `自動播放失敗，請點擊播放：${track.title}`;
-            console.error("CanPlayThrough 後嘗試播放失敗:", error);
-        });
 
-    } else if (!DOM_ELEMENTS.audio.paused && currentTrackIndex >= 0) {
-        // 如果已經在播放，只需更新標題（移除緩衝中...）
-        const track = currentPlaylist[currentTrackIndex];
-        if (DOM_ELEMENTS.playerTitle.textContent.includes("緩衝中...")) {
-            DOM_ELEMENTS.playerTitle.textContent = `正在播放：${track.title}`;
+        // 如果正在顯示「緩衝中」，把它拿掉
+        // 🚨 修正：現在資源已準備就緒，可以將 UI 狀態轉為「準備播放」或「正在播放」
+        if (DOM_ELEMENTS.playerTitle.textContent.includes("緩衝中")) {
+            
+            // 💡 僅當音頻處於暫停狀態時，顯示「準備播放」
+            if (DOM_ELEMENTS.audio.paused) {
+                DOM_ELEMENTS.playerTitle.textContent = `準備播放：${track.title}`;
+            } else {
+                // 如果音頻已經在播放（被 onceReadyToPlay 成功啟動），則顯示「正在播放」
+                DOM_ELEMENTS.playerTitle.textContent = `正在播放：${track.title}`;
+            }
         }
     }
 
-    // 確保計時器啟動，防止 timeupdate 丟失
-    startPlayerTimers();
+    // ❌ 關鍵：徹底移除所有 audio.play() 嘗試！
+    // 讓播放邏輯完全由 playTrack() 內的一次性監聽器控制。
+
+    // 確保計時器啟動，防止 timeupdate 丟失 (這個邏輯保持不變)
+    startPlayerTimers(); 
 }
 
 function handleUrlAnchor(isInitialLoad = false) {
