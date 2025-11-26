@@ -811,14 +811,23 @@ function handleTrackEnd() {
         updatePlaylistHighlight(); 
         return; 
     } 
+
+    let nextIndex;
     
     if (playMode === 3) { 
-        DOM_ELEMENTS.audio.pause();
+                DOM_ELEMENTS.audio.pause();
         DOM_ELEMENTS.playerTitle.textContent = "自由模式下，歌曲播放完畢。";
-        // ✅ 修正：保留 currentTrackIndex，僅設置停止標記
         setState({ isStoppedAtEnd: true }); 
         updatePlaylistHighlight(); 
         window.location.hash = ''; 
+        
+        // 【🎯 內建 UI 終極修復點 1：延遲暫停】
+        // 確保內建 UI 在歌曲結束時，有一個明確的 PAUSE 狀態，以防下次 PLAY 時圖標卡住。
+        setTimeout(() => {
+            if (!DOM_ELEMENTS.audio.paused) {
+                 DOM_ELEMENTS.audio.pause(); // 再次確保暫停，讓內建 UI 顯示 ▶
+            }
+        }, 50); 
         return; 
     } 
     
@@ -837,14 +846,21 @@ function handleTrackEnd() {
     } else {
         // 模式 0 (順序停止) 的終止邏輯
         DOM_ELEMENTS.audio.pause();
-        DOM_ELEMENTS.playerTitle.textContent = "播放列表已結束";
-        // 🎯 最終決定：僅設置停止標記，讓 currentTrackIndex 保留最後一首歌的索引
-        setState({ isStoppedAtEnd: true }); 
-        updatePlaylistHighlight(); 
-        window.location.hash = ''; 
-        return; 
+            DOM_ELEMENTS.playerTitle.textContent = "播放列表已結束";
+            setState({ isStoppedAtEnd: true }); 
+            updatePlaylistHighlight(); 
+            window.location.hash = ''; 
+
+            // 【🎯 內建 UI 終極修復點 2：延遲暫停】
+            setTimeout(() => {
+                if (!DOM_ELEMENTS.audio.paused) {
+                    DOM_ELEMENTS.audio.pause(); // 再次確保暫停，讓內建 UI 顯示 ▶
+                }
+            }, 50);
+            
+            return; 
+        }
     }
-}
     if (nextIndex !== undefined && nextIndex !== -1) {
         playTrack(nextIndex);
     }
