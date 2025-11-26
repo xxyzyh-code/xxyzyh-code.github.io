@@ -48,8 +48,7 @@ const DOM_ELEMENTS = {
     playlistUl: document.getElementById('playlist'),
         // 🌟 新增：歌詞相關 DOM 元素 🌟
     lyricsContainer: document.getElementById('lyrics-container'),
-    lyricsContent: document.getElementById('lyrics-content'),
-    lyricsPlaceholder: document.getElementById('lyrics-placeholder')
+    lyricsContent: document.getElementById('lyrics-content')
 };
 
 const STORAGE_KEYS = {
