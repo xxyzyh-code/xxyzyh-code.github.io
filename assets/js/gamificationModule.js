@@ -150,7 +150,12 @@ ANNUAL_EVENTS: {
         dates: ['11-20'],
         score_multiplier: 1.3
     },
-
+    'AUTUMN_WINTER_SPRINT_WEEK': {
+        name: '秋冬冲刺周',
+        dates: ['11-24', '11-25', '11-26', '11-27', '11-28', '11-29', '11-30'],
+        score_multiplier: 1.3
+    },
+    
     // 🎄 十二月
     'WINTER_GRATITUDE': {
         name: '冬季感恩日',
