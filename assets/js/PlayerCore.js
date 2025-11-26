@@ -881,10 +881,10 @@ function incrementPlayCount() {
 function handlePlay() {
     let { 
         listenIntervalId, scoreTimerIntervalId, lyricsIntervalId, 
-        currentTrackIndex, currentPlaylist, isStoppedAtEnd // 🛠️ 修正點 3/5：解構新變量
+        currentTrackIndex, currentPlaylist, isStoppedAtEnd
     } = getState(); 
 
-    // --- 核心 Bug 修正邏輯：處理停止後點擊播放 ---
+    // --- 核心 Bug 修正邏輯：處理停止後點擊播放 (本次修正重點) ---
     if (isStoppedAtEnd === true) { 
         
         // 1. 清除停止標記
@@ -900,32 +900,39 @@ function handlePlay() {
         
         // 如果能找到索引
         if (indexToPlay !== -1) {
+            
             // 3. 重設狀態並重新播放
-            setState({ currentTrackIndex: indexToPlay, currentLyricIndex: -1 }); // 重置歌詞索引
+            // 🛠️ 修正點 5/5：重置歌詞索引，確保歌詞同步器從頭開始
+            setState({ currentTrackIndex: indexToPlay, currentLyricIndex: -1 }); 
             
             // 確保所有 UI 指標更新到正確的歌曲
             updatePlaylistHighlight(); // 重新高光
             
-            // 重新載入歌詞 (如果需要) - 避免調用 playTrack() 導致重新載入音頻
+            // 🌟 關鍵修復：重新載入歌詞（因為 playTrack 沒有被調用，所以需要手動處理）🌟
             const track = currentPlaylist[indexToPlay];
             if (track.lrcPath) {
                  fetchLRC(track.lrcPath).then(lrcText => {
                      const parsedLRC = parseLRC(lrcText);
                      setState({ currentLRC: parsedLRC, currentLyricIndex: -1 });
-                     renderLyrics();
+                     renderLyrics(); // 渲染新的歌詞行
                  }).catch(error => {
                      console.error("重新載入歌詞失敗:", error);
+                     setState({ currentLRC: null, currentLyricIndex: -1 });
+                     renderLyrics(); // 失敗也要清空
                  });
             } else {
                  setState({ currentLRC: null, currentLyricIndex: -1 });
                  renderLyrics(); 
             }
+            // 🌟 關鍵修復結束 🌟
             
             DOM_ELEMENTS.audio.currentTime = 0; // 從頭開始播放
             DOM_ELEMENTS.playerTitle.textContent = `重新播放：${currentPlaylist[indexToPlay].title}`;
             // 必須手動調用 play()，因為這是在 onplay 事件中執行的
             DOM_ELEMENTS.audio.play().catch(e => console.error("嘗試恢復播放失敗:", e)); 
         }
+        
+        if (indexToPlay === -1) return; // 如果列表為空，則跳過計時器啟動
     }
     // --- 核心 Bug 修正邏輯結束 ---
 
@@ -943,7 +950,7 @@ function handlePlay() {
     // 🌟 新增：啟動歌詞同步計時器 🌟
     if (lyricsIntervalId === null) {
         lyricsIntervalId = setInterval(syncLyrics, 100); // 100ms 頻率確保同步平滑
-        setState({ lyricsIntervalId }); // 🌟 修正：通過 setState 更新全局狀態
+        setState({ lyricsIntervalId }); 
     }
     // 🌟 新增結束 🌟
     
