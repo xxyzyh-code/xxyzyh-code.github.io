@@ -884,43 +884,65 @@ function handlePlay() {
         currentTrackIndex, currentPlaylist, isStoppedAtEnd
     } = getState(); 
 
-    // --- 核心 Bug 修正邏輯：處理停止後點擊播放 ---
+    // --- 核心修正區：處理列表結束後的重播點擊 ---
     if (isStoppedAtEnd === true) { 
     
         setState({ isStoppedAtEnd: false }); 
         
         let indexToPlay = currentTrackIndex; 
         
-        if (indexToPlay === -1 && currentPlaylist.length > 0) {
+        // 確保播放索引是有效的 (自由模式結束後，通常保留在最後一首)
+        if (indexToPlay === -1 || indexToPlay >= currentPlaylist.length) {
             indexToPlay = 0; 
-        } else if (indexToPlay >= currentPlaylist.length) {
-            indexToPlay = 0;
         }
-        
+
+        // 🎯 執行所有必要的更新和載入，但跳過 audio.play() 避免遞歸
         if (indexToPlay !== -1) {
-            // 🎯 關鍵修正：將 playTrack 替換為直接設置索引並加載，避免重複觸發 play 事件
-            // 注意：我們不需要在這裡調用 playTrack，因為 audio.play() 已經在觸發此函數了
+
+            setState({ 
+                currentTrackIndex: indexToPlay,
+                currentLyricIndex: -1 // 🚨 關鍵：重設歌詞索引
+            });
             
-            // 1. 確保音頻元素已經載入正確的音源（如果 playTrack 之前設置過）
-            // 如果您信任 `currentTrackIndex` 是正確的，則不需要重新 load。
-            // 為了簡潔和最小破壞，我們假設 `playTrack` 的邏輯是好的，但我們只需要移除 `return`。
+            const track = currentPlaylist[indexToPlay];
             
-            // 由於 `playTrack` 會調用 `audio.play()`，這會再次觸發 `handlePlay`，導致**無限遞歸**。
-            // 
-            // ⭐️ 真正修正：如果 isStoppedAtEnd 為 true，我們只需要確保音頻已經被載入到正確的位置，
-            // 並且讓外部的 `audio.play()` 執行，然後繼續執行計時器設置。
+            // 1. 載入新的音源 (來自 playTrack 的載入邏輯)
+            if (track.sources && Array.isArray(track.sources)) {
+                DOM_ELEMENTS.audio.innerHTML = ''; 
+                track.sources.forEach(src => {
+                    const sourceEl = document.createElement('source');
+                    sourceEl.src = src;
+                    sourceEl.type = getMimeType(src); 
+                    DOM_ELEMENTS.audio.appendChild(sourceEl);
+                });
+                DOM_ELEMENTS.audio.load();
+            } 
             
-            // 這裡不應調用 `playTrack`。我們只需更新狀態並讓流程繼續。
-            setState({ currentTrackIndex: indexToPlay });
+            // 2. 載入歌詞 (來自 playTrack 的歌詞載入邏輯)
+            if (track.lrcPath) {
+                fetchLRC(track.lrcPath).then(lrcText => {
+                    const parsedLRC = parseLRC(lrcText);
+                    setState({ currentLRC: parsedLRC, currentLyricIndex: -1 });
+                    renderLyrics(); // 🚨 關鍵：渲染空白或新歌詞
+                }).catch(error => {
+                    console.error(`歌詞文件加載失敗 (${track.lrcPath}):`, error);
+                    setState({ currentLRC: null, currentLyricIndex: -1 });
+                    renderLyrics();
+                });
+            } else {
+                 setState({ currentLRC: null, currentLyricIndex: -1 });
+                 renderLyrics(); 
+            }
             
-            // 由於用戶已經按下了播放，音頻已經在播放（或緩衝中），所以我們讓流程繼續執行下方的計時器啟動。
+            // 3. 更新 UI (標題和高光)
+            DOM_ELEMENTS.playerTitle.textContent = `正在播放：${track.title}`;
+            updatePlaylistHighlight();
+            window.location.hash = `song-index-${track.originalIndex}`;
         }
     }
-    // --- 核心 Bug 修正邏輯結束 (已調整) ---
-    // 之前在這裡有一個 `return;`，現在移除了它。
-
+    // --- 核心修正區結束 ---
     
-    // 這些邏輯必須在 play 事件發生後執行，它們不應該被上面的 isStoppedAtEnd 邏輯阻止！
+    // 這些邏輯必須在 play 事件發生後執行 (計時器啟動)
 
     if (listenIntervalId === null) {
         listenIntervalId = setInterval(updateTotalListenTime, 1000);
@@ -943,7 +965,6 @@ function handlePlay() {
         trackPlayToDatabase(currentSongId); 
     }
 
-    
     saveSettings(); 
 }
 
