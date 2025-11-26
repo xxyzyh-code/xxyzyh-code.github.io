@@ -813,21 +813,24 @@ function handleTrackEnd() {
     } 
     
     if (playMode === 3) { 
-                DOM_ELEMENTS.audio.pause();
+        DOM_ELEMENTS.audio.pause();
         DOM_ELEMENTS.playerTitle.textContent = "自由模式下，歌曲播放完畢。";
         setState({ isStoppedAtEnd: true }); 
         updatePlaylistHighlight(); 
         window.location.hash = ''; 
         
-        // 【🎯 內建 UI 終極修復點 1：延遲暫停】
-        // 確保內建 UI 在歌曲結束時，有一個明確的 PAUSE 狀態，以防下次 PLAY 時圖標卡住。
-        setTimeout(() => {
-            if (!DOM_ELEMENTS.audio.paused) {
-                 DOM_ELEMENTS.audio.pause(); // 再次確保暫停，讓內建 UI 顯示 ▶
-            }
-        }, 50); 
-        return; 
-    } 
+    // 【🎯 內建 UI 終極修復點 1：延遲暫停 + 刷新】
+    // 使用 setTimeout(0) 確保暫停動作在當前 call stack 結束後執行
+    setTimeout(() => {
+        if (!DOM_ELEMENTS.audio.paused) {
+             DOM_ELEMENTS.audio.pause(); // 再次確保暫停
+        }
+        // 額外添加 UI 刷新
+        window.requestAnimationFrame(() => {}); 
+    }, 0); 
+    
+    return; 
+} 
     
     let nextIndex;
     
@@ -849,15 +852,16 @@ function handleTrackEnd() {
             updatePlaylistHighlight(); 
             window.location.hash = ''; 
 
-            // 【🎯 內建 UI 終極修復點 2：延遲暫停】
-            setTimeout(() => {
-                if (!DOM_ELEMENTS.audio.paused) {
-                    DOM_ELEMENTS.audio.pause(); // 再次確保暫停，讓內建 UI 顯示 ▶
-                }
-            }, 50);
-            
-            return; 
+        // 【🎯 內建 UI 終極修復點 2：延遲暫停 + 刷新】
+    setTimeout(() => {
+        if (!DOM_ELEMENTS.audio.paused) {
+            DOM_ELEMENTS.audio.pause(); // 再次確保暫停
         }
+        // 額外添加 UI 刷新
+        window.requestAnimationFrame(() => {}); 
+    }, 0);
+    
+    return; 
     }
     if (nextIndex !== undefined && nextIndex !== -1) {
         playTrack(nextIndex);
@@ -1066,6 +1070,13 @@ function handleCanPlayThrough() {
         DOM_ELEMENTS.audio.play().then(() => {
              // 播放成功後，更新 UI 顯示狀態
              DOM_ELEMENTS.playerTitle.textContent = `正在播放：${track.title}`;
+             
+             // 🚨 新增：強制瀏覽器 UI 刷新
+             // 使用 requestAnimationFrame 來確保在下一個重繪週期強制瀏覽器同步內建圖標
+             window.requestAnimationFrame(() => {
+                 // 這裡不需要實際操作DOM，只要執行這個回調，就能確保瀏覽器在視覺上更新狀態
+             });
+             
         }).catch(error => {
              // 如果此時仍然播放失敗 (如瀏覽器限制)，提示用戶手動點擊
              DOM_ELEMENTS.playerTitle.textContent = `自動播放失敗，請點擊播放：${track.title}`;
@@ -1236,7 +1247,7 @@ function bindEventListeners() {
     DOM_ELEMENTS.audio.addEventListener('pause', handlePause);
     DOM_ELEMENTS.audio.addEventListener('ended', handleTrackEnd);
     DOM_ELEMENTS.audio.addEventListener('error', handleAudioError, true); 
-  DOM_ELEMENTS.audio.addEventListener('canplaythrough', handleCanPlayThrough); 
+    DOM_ELEMENTS.audio.addEventListener('canplaythrough', handleCanPlayThrough); 
 
     // 搜索欄事件
     DOM_ELEMENTS.playlistSearchInput.addEventListener('input', debounce(filterPlaylist, 300));
