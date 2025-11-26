@@ -811,8 +811,6 @@ function handleTrackEnd() {
         updatePlaylistHighlight(); 
         return; 
     } 
-
-    let nextIndex;
     
     if (playMode === 3) { 
                 DOM_ELEMENTS.audio.pause();
