@@ -146,3 +146,10 @@
     - "https://audio-gateway.vercel.app/api/I Will Walk With You.mp3"
   lrcPath:
     - "https://lyrics-proxy.ksbfkzbm.workers.dev/iwwwy.lrc"
+
+- title: Sweeter Than Honey
+  artist: ReavoWorship
+  sources:
+    - "https://audio-gateway.vercel.app/api/Sweeter Than Honey.mp3"
+  lrcPath:
+    - "https://lyrics-proxy.ksbfkzbm.workers.dev/sth.lrc"
