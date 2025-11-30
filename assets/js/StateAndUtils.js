@@ -190,15 +190,8 @@ export function resetCurrentPlaylist() {
 }
 
 // 導出計數器
-// 🎯 核心修復：移除變量導出，改為導出獲取函數 (Getter)
-export function getTotalListenMinutes() {
-    return totalListenMinutes;
-}
-
-export function getTotalListenSeconds() {
-    return totalListenSeconds;
-}
-
+export let totalListenMinutes = 0;
+export let totalListenSeconds = 0;
 export function incrementListenTime() {
     totalListenSeconds++;
     if (totalListenSeconds >= 60) {
