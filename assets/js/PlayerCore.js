@@ -1017,41 +1017,16 @@ function handleUrlAnchor(isInitialLoad = false) {
             
             const trackTitle = MASTER_TRACK_LIST[originalIndex].title;
             
-            // 🌟 修正點 3A：不強制設定 playMode，除非初始模式為未定義 🌟
-            // loadTrack(originalIndex); // 註釋掉，因為我們不想在這裡觸發 playTrack，只需載入歌曲
+            loadTrack(originalIndex); 
             
-            const { currentPlaylist } = getState();
-            const newIndex = currentPlaylist.findIndex(track => track.originalIndex === originalIndex);
-    
-            if (newIndex !== -1) {
-                // 找到歌曲後，設定為該索引，並載入，但不自動播放/改變模式
-                setState({ currentTrackIndex: newIndex });
-                // 為了避免重複觸發 play 事件，我們只在 initializePlayer 中處理載入
-                // 但這裡必須確保 mode 是自由模式 (3) 
-                if (getState().playMode !== 3) {
-                     setState({ playMode: 3 }); 
-                     updateModeUI();
-                     saveSettings(); 
-                }
+            if (isInitialLoad) {
+                // 從分享連結載入時，將模式設置為順序停止 (0)
+                setState({ playMode: 0 }); // 順序停止
+                updateModeUI();
+                saveSettings();
             }
-            
-            // 這裡不再調用 playTrack，因為 playTrack 會自動 play()
             
             DOM_ELEMENTS.playerTitle.textContent = `從分享連結載入：${trackTitle} (正在緩衝...)`;
-            
-            // 讓播放器自己決定是否播放
-            if (isInitialLoad) {
-                 // 這裡我們只執行 loadTrack 的部分邏輯，而不執行 play
-                 // 僅更新 URL 錨點
-                 window.location.hash = `song-index-${originalIndex}`; 
-            }
-            
-            // 由於 initializePlayer 會載入音源，這裡不再重複
-            // 這裡可以選擇不自動播放，而是等待用戶點擊
-            DOM_ELEMENTS.playerTitle.textContent = `從分享連結載入：${trackTitle} (需點擊播放)`;
-            
-            // 刪除這段代碼，因為它會自動播放，與用戶刷新頁面的預期不符
-            /*
             const handlePlaying = () => {
                  if (DOM_ELEMENTS.playerTitle.textContent.includes(trackTitle)) { 
                      DOM_ELEMENTS.playerTitle.textContent = `正在播放：${trackTitle}`;
@@ -1063,7 +1038,6 @@ function handleUrlAnchor(isInitialLoad = false) {
             DOM_ELEMENTS.audio.play().catch(error => {
                  DOM_ELEMENTS.playerTitle.textContent = `從分享載入：${trackTitle} (需點擊播放)`;
             });
-            */
         }
     }
 }
@@ -1074,9 +1048,6 @@ function handleUrlAnchor(isInitialLoad = false) {
 async function initializePlayer(isManualToggle = false) {
     
     loadSavedSettings(); 
-
-    // 🌟 修正點 3B：載入儲存的總時長並更新 UI 🌟
-    updateTotalListenTime(); 
 
     // 🛠️ 修正點 4/5：確保播放模式和停止狀態的預設值
     let { playMode, isStoppedAtEnd } = getState(); 
@@ -1152,7 +1123,7 @@ async function initializePlayer(isManualToggle = false) {
             DOM_ELEMENTS.audio.load();
         } 
         
-           // 4. 處理上次播放時間
+        // 4. 處理上次播放時間
         const savedTime = localStorage.getItem(STORAGE_KEYS.LAST_TIME);
         if (savedTime !== null) { 
             const time = parseFloat(savedTime);
@@ -1163,27 +1134,6 @@ async function initializePlayer(isManualToggle = false) {
         }
         
         updatePlaylistHighlight();
-        
-        // 🌟 修正點 2：在載入上次播放歌曲後，手動載入歌詞 🌟
-        if (track.lrcPath) {
-             console.log(`上次播放記錄：嘗試加載歌詞: ${track.lrcPath}`);
-             // 使用與 playTrack 相同的邏輯來載入和解析歌詞
-             fetchLRC(track.lrcPath).then(lrcText => {
-                 const parsedLRC = parseLRC(lrcText);
-                 setState({ 
-                     currentLRC: parsedLRC, 
-                     currentLyricIndex: -1 // 重置索引
-                 });
-                 renderLyrics();
-             }).catch(error => {
-                 console.error(`❌ 歌詞文件加載失敗 (${track.lrcPath}):`, error);
-             });
-        } else {
-             setState({ currentLRC: null, currentLyricIndex: -1 });
-             renderLyrics(); 
-        }
-        // 🌟 修正點 2 結束 🌟
-
     } else {
          setState({ currentTrackIndex: -1 }); 
          DOM_ELEMENTS.playerTitle.textContent = "我的音樂播放器 (無歌曲)";
@@ -1196,22 +1146,6 @@ async function initializePlayer(isManualToggle = false) {
         bindEventListeners();
         hasInitializedListeners = true;
     }
-    // 🌟 修正點 3C：恢復定時器計數 🌟
-    const { endTime, sleepTimerId, countdownIntervalId } = getState();
-    if (endTime > Date.now() && sleepTimerId === null && countdownIntervalId === null) {
-        // 如果有剩餘時間，但計時器 ID 丟失（因為刷新）
-        const remainingMs = endTime - Date.now();
-        const minutes = Math.ceil(remainingMs / 1000 / 60); 
-        // 重新設置定時器，使用剩餘的時間
-        setSleepTimer(minutes); 
-        // 🚨 注意：由於 setSleepTimer 會調用 toggleTimerMenu() 並會嘗試播放，
-        // 這裡需要確保 setSleepTimer 能正確處理已經暫停的音頻。
-        if (DOM_ELEMENTS.audio.paused) {
-             DOM_ELEMENTS.audio.pause(); // 強制暫停，因為 setSleepTimer 會嘗試播放
-             DOM_ELEMENTS.playerTitle.textContent = `定時器已恢復 (${minutes} 分鐘後自動關閉)`;
-        }
-    }
-    // 🌟 修正點 3C 結束 🌟
 }
 
 
