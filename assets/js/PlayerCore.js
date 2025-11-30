@@ -8,23 +8,22 @@ import {
 import { 
     getState, setState, saveSettings, loadSavedSettings, debounce, 
     getUserId, resetCurrentPlaylist, incrementListenTime, resetListenTime,
-    getTotalListenMinutes, getTotalListenSeconds 
+    totalListenMinutes, totalListenSeconds
 } from './StateAndUtils.js';
 
 // 🌟 新增：導入 LRC 模組 🌟
 import { fetchLRC, parseLRC } from './LrcParser.js'; 
 // 🌟 導入結束 🌟
 
-// 🎯 修正步驟 1：添加一個全局標記，確保事件監聽器只綁定一次
+// 🌟 修正步驟 1：添加一個全局標記，確保事件監聽器只綁定一次
 let hasInitializedListeners = false;
 
 // --- 數據模式相關函數 (API) ---
 
 function trackPlayToDatabase(song_id) {
-    // 🎯 修正：安全檢查 currentPlaylist 和 currentTrackIndex
     const { currentPlaylist, currentTrackIndex } = getState();
-    if (typeof song_id === 'undefined' || song_id === null || currentTrackIndex === -1 || currentPlaylist.length === 0) {
-        console.warn("trackPlayToDatabase: Song ID 或索引無效，跳過數據庫記錄。");
+    if (typeof song_id === 'undefined' || song_id === null) {
+        console.warn("trackPlayToDatabase: Song ID 無效，跳過數據庫記錄。");
         return;
     }
     
@@ -89,8 +88,7 @@ async function fetchGlobalPlayCounts() {
     } catch (error) {
         console.error('獲取全球播放次數失敗:', error);
         
-        // 🎯 修正：從 alert 改為 console.error，避免阻礙用戶體驗
-        console.error(`無法載入全球統計數據。錯誤: ${error.message}。已自動切換到本地模式。`);
+        alert(`無法載入全球統計數據。錯誤: ${error.message}。已自動切換到本地模式。`);
         
         setState({ dataMode: 'local' });
         updateDataModeUI(); 
@@ -124,7 +122,7 @@ function updateModeUI() {
     else if (playMode === 2) { modeText = "[ 模式: 隨機 ]"; } 
     else if (playMode === 3) { modeText = "[ 模式: 自由 ]"; } 
     else if (playMode === 4) { modeText = "[ 模式: 順序循環 ]"; } 
-    else { modeText = "[ 模式: 順序停止 ]"; } // 模式 0
+    else { modeText = "[ 模式: 順序停止 ]"; }
     
     DOM_ELEMENTS.modeButton.textContent = modeText;
 }
@@ -294,7 +292,7 @@ function initializeTheme() {
 function updateTotalListenTime() {
     incrementListenTime(); // 來自 StateAndUtils
     DOM_ELEMENTS.totalListenTimeSpan.textContent = 
-        `${getTotalListenMinutes()} 分鐘 ${getTotalListenSeconds()} 秒`;  // 🎯 修正：totalListenMinutes/Seconds 應為函數呼叫
+        `${totalListenMinutes} 分鐘 ${totalListenSeconds} 秒`;
 }
 
 function updateTimerCountdown() {
@@ -322,9 +320,9 @@ function updateTimerCountdown() {
 // --- 定時器函數 ---
 
 export function toggleTimerMenu(e) {
-    if (e && typeof e.stopPropagation === 'function') {
+        if (e && typeof e.stopPropagation === 'function') {
         e.stopPropagation(); // <--- 🚨 新增：防止點擊事件被干擾
-    }
+        }
     const isExpanded = DOM_ELEMENTS.timerMenu.classList.toggle('hidden-menu');
     // 🌟 A11Y 增強：設置 aria-expanded
     DOM_ELEMENTS.timerToggleButton.setAttribute('aria-expanded', !isExpanded);
@@ -411,36 +409,9 @@ function getMimeType(src) {
         case 'ogg':
         case 'oga': return 'audio/ogg';
         case 'wav': return 'audio/wav';
-        default: return 'audio/mpeg'; // 預設為最常見的 MP3 格式
+        default: return `audio/${ext}`; // 嘗試使用擴展名
     }
 }
-
-/**
- * 🌟 核心修正：統一歌詞載入邏輯 🌟
- * @param {object} track - 當前播放的歌曲物件
- */
-function loadAndRenderLyrics(track) {
-    if (track.lrcPath) {
-        fetchLRC(track.lrcPath).then(lrcText => {
-            const parsedLRC = lrcText ? parseLRC(lrcText) : [];
-            setState({ 
-                currentLRC: parsedLRC, 
-                currentLyricIndex: -1
-            });
-            renderLyrics();
-        }).catch(error => {
-            console.error(`❌ 歌詞文件加載失敗 (${track.lrcPath}):`, error);
-            // 載入失敗時，清空狀態
-            setState({ currentLRC: [], currentLyricIndex: -1 });
-            renderLyrics();
-        });
-    } else {
-         // 如果沒有 lrcPath，清空歌詞區域
-         setState({ currentLRC: [], currentLyricIndex: -1 });
-         renderLyrics(); 
-    }
-}
-
 
 /**
  * @param {number} index - 歌曲在當前播放列表 currentPlaylist 中的索引
@@ -448,9 +419,8 @@ function loadAndRenderLyrics(track) {
 export function playTrack(index) {
     const { currentPlaylist } = getState();
     if (index >= 0 && index < currentPlaylist.length) { 
-        
         // 播放新歌曲時，清除 isStoppedAtEnd 標記
-        setState({ currentTrackIndex: index, isStoppedAtEnd: false, currentLyricIndex: -1 }); 
+        setState({ currentTrackIndex: index, isStoppedAtEnd: false }); 
         const track = currentPlaylist[index]; 
         
         // --- 核心 CDN/格式備援邏輯：動態插入 <source> 標籤 ---
@@ -459,6 +429,8 @@ export function playTrack(index) {
             track.sources.forEach(src => {
                 const sourceEl = document.createElement('source');
                 sourceEl.src = src;
+                
+                // 🌟 使用輔助函數統一 MIME 類型邏輯 🌟
                 sourceEl.type = getMimeType(src); 
                 DOM_ELEMENTS.audio.appendChild(sourceEl);
             });
@@ -466,10 +438,40 @@ export function playTrack(index) {
              console.error(`歌曲 ${track.title} 缺少 sources 陣列!`);
              DOM_ELEMENTS.audio.src = ''; 
         }
+                        // 🌟 新增：歌詞載入與解析邏輯 🌟
+if (track.lrcPath) {
+    console.log(`嘗試加載歌詞: ${track.lrcPath}`); // 步驟 1: 輸出路徑
+    fetchLRC(track.lrcPath).then(lrcText => {
+        // 步驟 2: 檢查是否成功獲取文本
+        if (lrcText) {
+             console.log("歌詞文本獲取成功，長度:", lrcText.length);
+        } else {
+             console.error("❌ 錯誤：fetchLRC 返回空或無效文本。");
+        }
         
-        // 🌟 呼叫統一的歌詞載入邏輯 🌟
-        loadAndRenderLyrics(track);
-
+        const parsedLRC = parseLRC(lrcText);
+        
+        // 步驟 3: 檢查解析結果
+        if (parsedLRC && parsedLRC.length > 0) {
+            console.log("✅ 歌詞解析成功，找到行數:", parsedLRC.length);
+        } else {
+            console.error("❌ 錯誤：歌詞解析失敗或解析結果為空！");
+        }
+        
+        setState({ 
+            currentLRC: parsedLRC, 
+            currentLyricIndex: -1
+        });
+        renderLyrics();
+    }).catch(error => {
+        console.error(`❌ 歌詞文件加載失敗 (${track.lrcPath}):`, error); // 步驟 4: 捕獲網絡錯誤
+            });
+        } else {
+             // 如果沒有 lrcPath 或載入失敗，清空歌詞區域
+             setState({ currentLRC: null, currentLyricIndex: -1 });
+             renderLyrics(); 
+        }
+        // 🌟 新增結束 🌟
         DOM_ELEMENTS.audio.load();
 
         DOM_ELEMENTS.playerTitle.textContent = `正在播放：${track.title}`;
@@ -496,9 +498,13 @@ export function playNextTrack() {
     
     let nextIndex;
     
+    // ⭐️ 修正：不再檢查 playMode。手動切歌總是使用順序循環邏輯 ⭐️
+    
+    // 如果不是最後一首歌，則播放下一首
     if (currentTrackIndex < currentPlaylist.length - 1) {
         nextIndex = currentTrackIndex + 1;
     } else { 
+        // 已經到達列表末尾，循環到第一首
         nextIndex = 0; 
     }
     
@@ -512,9 +518,13 @@ export function playPreviousTrack() {
     
     let prevIndex;
     
+    // ⭐️ 修正：不再檢查 playMode。手動切歌總是使用順序循環邏輯 ⭐️
+    
+    // 如果不是第一首歌，則播放上一首
     if (currentTrackIndex > 0) {
         prevIndex = currentTrackIndex - 1;
     } else { 
+        // 已經到達列表開頭，循環到最後一首
         prevIndex = currentPlaylist.length - 1; 
     }
     
@@ -530,7 +540,7 @@ export function togglePlayMode() {
     playMode = (playMode + 1) % 5; 
     setState({ playMode });
     
-    updateModeUI(); // 🎯 修正：確保在 setState 後呼叫
+    updateModeUI();
     DOM_ELEMENTS.playerTitle.textContent = `已切換到 ${DOM_ELEMENTS.modeButton.textContent.replace('[ 模式: ', '').replace(' ]', '')}`;
     saveSettings(); 
 }
@@ -543,6 +553,8 @@ export async function toggleDataMode() {
     updateDataModeUI();
     saveSettings(); 
     
+    // 🌟 修正步驟：在重新載入播放器（初始化）之前，明確停止所有計時器
+    // 這樣可以確保在音頻狀態重置時，計時器不會意外繼續運行。
     handlePause(); 
     
     DOM_ELEMENTS.playerTitle.textContent = `數據模式已切換為：${(dataMode === 'global' ? '全球統計' : '本地統計')}`;
@@ -575,9 +587,10 @@ function renderPlaylist() {
 
     currentPlaylist.forEach((track, index) => {
         const li = document.createElement('li');
-        li.setAttribute('data-original-index', track.originalIndex); 
-        li.setAttribute('data-index', index); 
-        li.setAttribute('tabindex', '0'); 
+        // 修正：
+        li.setAttribute('data-original-index', track.originalIndex); // 🌟 關鍵修正：使用固定索引
+        li.setAttribute('data-index', index); // 保留 data-index 給 playTrack(index) 傳參用，但高光不用它
+        li.setAttribute('tabindex', '0'); // 🌟 A11Y 增強：允許聚焦
         
         const { originalText, playCount } = getTrackDisplayInfo(track);
         
@@ -594,11 +607,10 @@ function renderPlaylist() {
         
         const playTrackAction = () => {
              playTrack(index);
-             // 🎯 修正 Bug 1-A：點擊播放列表時 UI 模式顯示錯誤
-             // 確保在 setState 之後才更新 UI 顯示
-             if (getState().playMode !== 3) { 
+             // ⭐️ 核心修正：在 action 內部再次從狀態中獲取當前 playMode 的值 ⭐️
+                if (getState().playMode !== 3) { 
                  setState({ playMode: 3 }); 
-                 updateModeUI(); // 必須在 setState 之後
+                 updateModeUI();
                  saveSettings();
              }
         };
@@ -617,8 +629,8 @@ function renderPlaylist() {
     });
     
     DOM_ELEMENTS.playlistUl.appendChild(fragment);    
-    
     // 🌟 修正：將高光操作延遲到當前同步代碼塊完成之後執行
+    // 這樣可以確保瀏覽器有時間處理新的 DOM 結構，避免時序問題。
     setTimeout(() => {
         updatePlaylistHighlight(true);
     }, 0); 
@@ -710,13 +722,16 @@ function filterPlaylist() {
             }
         }
 
-        renderPlaylist(); 
+
+        // 🚨 修正：篩選完成後，必須重新渲染播放列表 UI
+        renderPlaylist(); // <--- 新增這行
 
     } else {
 
         // --- 退出篩選邏輯 ---
 
         let { currentTrackIndex, currentPlaylist } = getState();
+        // 🌟 修正：退出篩選時，我們應該找回上次播放的歌曲的 originalIndex，而不是當前篩選列表的索引。
         const currentlyPlayingOriginalIndex = currentTrackIndex >= 0 && currentTrackIndex < currentPlaylist.length
             ? currentPlaylist[currentTrackIndex].originalIndex 
             : -1; 
@@ -731,11 +746,13 @@ function filterPlaylist() {
         ({ currentTrackIndex, currentPlaylist } = getState()); 
 
         if (currentlyPlayingOriginalIndex !== -1) {
+            // 根據上次播放的 originalIndex 找到它在恢復後的總歌單中的新位置
             const newIndex = currentPlaylist.findIndex(track => track.originalIndex === currentlyPlayingOriginalIndex);
             
             if (newIndex !== -1) {
                 setState({ currentTrackIndex: newIndex });
             } else {
+                // 這不應該發生，但作為防護
                 setState({ currentTrackIndex: 0 }); 
             }
         } else if (currentTrackIndex === -1 || currentTrackIndex >= currentPlaylist.length) {
@@ -743,6 +760,7 @@ function filterPlaylist() {
         }
 
         DOM_ELEMENTS.audio.pause(); 
+        // renderPlaylist() 會在 sortPlaylistByPlayCount() 內部被調用，並帶有 setTimeout(0) 修正。
     }
 }
 
@@ -763,11 +781,9 @@ export function loadTrack(originalIndex) {
     const newIndex = currentPlaylist.findIndex(track => track.originalIndex === originalIndex);
     
     if (newIndex !== -1) {
-        // 🎯 修正 Bug 1-B：外部載入時 UI 模式顯示錯誤
-        // 確保在 playTrack 之前更新狀態和 UI
         if (getState().playMode !== 3) {
             setState({ playMode: 3 }); 
-            updateModeUI(); // 必須在 setState 之後
+            updateModeUI();
             saveSettings(); 
         }
         playTrack(newIndex);
@@ -788,6 +804,7 @@ function handleTrackEnd() {
     saveSettings(); 
     
     if (playMode === 1) { 
+        // ⭐️ 【核心修正】在單曲循環模式下，重置歌詞高亮索引 ⭐️
         setState({ currentLyricIndex: -1, isStoppedAtEnd: false }); 
         DOM_ELEMENTS.audio.currentTime = 0; 
         DOM_ELEMENTS.audio.play();
@@ -798,7 +815,8 @@ function handleTrackEnd() {
     if (playMode === 3) { 
         DOM_ELEMENTS.audio.pause();
         DOM_ELEMENTS.playerTitle.textContent = "自由模式下，歌曲播放完畢。";
-        setState({ isStoppedAtEnd: true, currentLyricIndex: -1 }); // 🌟 修正：重設歌詞索引
+        // ✅ 修正：保留 currentTrackIndex，僅設置停止標記
+        setState({ isStoppedAtEnd: true }); 
         updatePlaylistHighlight(); 
         window.location.hash = ''; 
         return; 
@@ -813,18 +831,20 @@ function handleTrackEnd() {
         setState({ isStoppedAtEnd: false }); 
         nextIndex = (currentTrackIndex + 1) % currentPlaylist.length;
     } else { // 模式 0 (順序停止)
-        if (currentTrackIndex < currentPlaylist.length - 1) { 
-            setState({ isStoppedAtEnd: false }); 
-            nextIndex = currentTrackIndex + 1;
-        } else {
-            DOM_ELEMENTS.audio.pause();
-            DOM_ELEMENTS.playerTitle.textContent = "播放列表已結束";
-            setState({ isStoppedAtEnd: true, currentLyricIndex: -1 }); // 🌟 修正：重設歌詞索引
-            updatePlaylistHighlight(); 
-            window.location.hash = ''; 
-            return; 
-        }
+    if (currentTrackIndex < currentPlaylist.length - 1) { 
+        setState({ isStoppedAtEnd: false }); 
+        nextIndex = currentTrackIndex + 1;
+    } else {
+        // 模式 0 (順序停止) 的終止邏輯
+        DOM_ELEMENTS.audio.pause();
+        DOM_ELEMENTS.playerTitle.textContent = "播放列表已結束";
+        // 🎯 最終決定：僅設置停止標記，讓 currentTrackIndex 保留最後一首歌的索引
+        setState({ isStoppedAtEnd: true }); 
+        updatePlaylistHighlight(); 
+        window.location.hash = ''; 
+        return; 
     }
+}
     if (nextIndex !== undefined && nextIndex !== -1) {
         playTrack(nextIndex);
     }
@@ -860,6 +880,7 @@ function incrementPlayCount() {
 
 function handlePlay() {
     let { 
+        listenIntervalId, scoreTimerIntervalId, lyricsIntervalId, 
         currentTrackIndex, currentPlaylist, isStoppedAtEnd
     } = getState(); 
 
@@ -877,53 +898,58 @@ function handlePlay() {
         }
         
         if (indexToPlay !== -1) {
-            setState({ currentTrackIndex: indexToPlay, currentLyricIndex: -1 }); // 🌟 修正：重設歌詞索引
+            // 🎯 關鍵修正：將 playTrack 替換為直接設置索引並加載，避免重複觸發 play 事件
+            // 注意：我們不需要在這裡調用 playTrack，因為 audio.play() 已經在觸發此函數了
+            
+            // 1. 確保音頻元素已經載入正確的音源（如果 playTrack 之前設置過）
+            // 如果您信任 `currentTrackIndex` 是正確的，則不需要重新 load。
+            // 為了簡潔和最小破壞，我們假設 `playTrack` 的邏輯是好的，但我們只需要移除 `return`。
+            
+            // 由於 `playTrack` 會調用 `audio.play()`，這會再次觸發 `handlePlay`，導致**無限遞歸**。
+            // 
+            // ⭐️ 真正修正：如果 isStoppedAtEnd 為 true，我們只需要確保音頻已經被載入到正確的位置，
+            // 並且讓外部的 `audio.play()` 執行，然後繼續執行計時器設置。
+            
+            // 這裡不應調用 `playTrack`。我們只需更新狀態並讓流程繼續。
+            setState({ currentTrackIndex: indexToPlay });
+            
             // 由於用戶已經按下了播放，音頻已經在播放（或緩衝中），所以我們讓流程繼續執行下方的計時器啟動。
         }
     }
+    // --- 核心 Bug 修正邏輯結束 (已調整) ---
+    // 之前在這裡有一個 `return;`，現在移除了它。
 
+    
     // 這些邏輯必須在 play 事件發生後執行，它們不應該被上面的 isStoppedAtEnd 邏輯阻止！
-    
-    // 確保計時器啟動，並更新狀態
-    startPlayerTimers();
-    
-    saveSettings(); 
-}
 
-function startPlayerTimers() {
-    let {
-        listenIntervalId, scoreTimerIntervalId, lyricsIntervalId,
-        currentTrackIndex, currentPlaylist
-    } = getState();
-
-    // 🎯 修正：確保計時器只啟動一次
     if (listenIntervalId === null) {
         listenIntervalId = setInterval(updateTotalListenTime, 1000);
         setState({ listenIntervalId });
     }
-
-    // 🎯 修正：確保計時器只啟動一次
+    
     if (scoreTimerIntervalId === null) {
-        scoreTimerIntervalId = setInterval(window.updateMusicScore || (() => console.warn('updateMusicScore not defined')), 1000);
-        setState({ scoreTimerIntervalId });
+        scoreTimerIntervalId = setInterval(window.updateMusicScore || (() => console.warn('updateMusicScore not defined')), 1000); 
+        setState({ scoreTimerIntervalId }); 
     }
 
-    // 🎯 修正：確保計時器只啟動一次
     if (lyricsIntervalId === null) {
-        lyricsIntervalId = setInterval(syncLyrics, 100);
-        setState({ lyricsIntervalId });
+        lyricsIntervalId = setInterval(syncLyrics, 100); 
+        setState({ lyricsIntervalId }); 
     }
-
+    
     // 確保只有在歌曲有效時才發送數據庫記錄
     if (currentTrackIndex >= 0 && currentTrackIndex < currentPlaylist.length) {
-        const currentSongId = currentPlaylist[currentTrackIndex].id;
-        trackPlayToDatabase(currentSongId);
+        const currentSongId = currentPlaylist[currentTrackIndex].id; 
+        trackPlayToDatabase(currentSongId); 
     }
+
+    
+    saveSettings(); 
 }
 
 
 function handlePause() {
-    const { listenIntervalId, scoreTimerIntervalId, lyricsIntervalId } = getState(); 
+    const { listenIntervalId, scoreTimerIntervalId, lyricsIntervalId } = getState(); // 🌟 修正：確保解構 lyricsIntervalId
 
     if (listenIntervalId !== null) {
         clearInterval(listenIntervalId);
@@ -935,10 +961,12 @@ function handlePause() {
         setState({ scoreTimerIntervalId: null });
     }
 
+    // 🌟 新增：停止歌詞同步計時器 🌟
     if (lyricsIntervalId !== null) {
         clearInterval(lyricsIntervalId);
-        setState({ lyricsIntervalId: null }); 
+        setState({ lyricsIntervalId: null }); // 🌟 修正：通過 setState 更新全局狀態
     }
+    // 🌟 新增結束 🌟
     
     saveSettings();
 }
@@ -978,11 +1006,6 @@ function handleAudioError(e) {
     }
 }
 
-/**
- * 處理 URL 錨點（分享連結）
- * @param {boolean} isInitialLoad - 是否是 DOMContentLoaded 觸發的第一次載入
- * @returns {boolean} - 如果處理了錨點並載入了歌曲，則返回 true。
- */
 function handleUrlAnchor(isInitialLoad = false) {
     const hash = window.location.hash;
     
@@ -994,38 +1017,69 @@ function handleUrlAnchor(isInitialLoad = false) {
             
             const trackTitle = MASTER_TRACK_LIST[originalIndex].title;
             
-            // 🎯 修正 Bug 3：錨點處理應在狀態載入後，並強制設定 UI 
+            // 🌟 修正點 3A：不強制設定 playMode，除非初始模式為未定義 🌟
+            // loadTrack(originalIndex); // 註釋掉，因為我們不想在這裡觸發 playTrack，只需載入歌曲
             
-            loadTrack(originalIndex); 
+            const { currentPlaylist } = getState();
+            const newIndex = currentPlaylist.findIndex(track => track.originalIndex === originalIndex);
+    
+            if (newIndex !== -1) {
+                // 找到歌曲後，設定為該索引，並載入，但不自動播放/改變模式
+                setState({ currentTrackIndex: newIndex });
+                // 為了避免重複觸發 play 事件，我們只在 initializePlayer 中處理載入
+                // 但這裡必須確保 mode 是自由模式 (3) 
+                if (getState().playMode !== 3) {
+                     setState({ playMode: 3 }); 
+                     updateModeUI();
+                     saveSettings(); 
+                }
+            }
             
-            // 錨點載入的歌曲，強制設定為順序停止模式 (0)，這是最安全且最符合用戶預期的行為
-            setState({ playMode: 0 }); 
-            updateModeUI();
-            saveSettings();
+            // 這裡不再調用 playTrack，因為 playTrack 會自動 play()
             
             DOM_ELEMENTS.playerTitle.textContent = `從分享連結載入：${trackTitle} (正在緩衝...)`;
             
-            // 修正：移除舊的 playing 監聽器，讓 playTrack 中的 play() 處理播放
+            // 讓播放器自己決定是否播放
+            if (isInitialLoad) {
+                 // 這裡我們只執行 loadTrack 的部分邏輯，而不執行 play
+                 // 僅更新 URL 錨點
+                 window.location.hash = `song-index-${originalIndex}`; 
+            }
             
-            return true; // 表示已處理錨點
+            // 由於 initializePlayer 會載入音源，這裡不再重複
+            // 這裡可以選擇不自動播放，而是等待用戶點擊
+            DOM_ELEMENTS.playerTitle.textContent = `從分享連結載入：${trackTitle} (需點擊播放)`;
+            
+            // 刪除這段代碼，因為它會自動播放，與用戶刷新頁面的預期不符
+            /*
+            const handlePlaying = () => {
+                 if (DOM_ELEMENTS.playerTitle.textContent.includes(trackTitle)) { 
+                     DOM_ELEMENTS.playerTitle.textContent = `正在播放：${trackTitle}`;
+                     DOM_ELEMENTS.audio.removeEventListener('playing', handlePlaying);
+                 }
+            };
+            DOM_ELEMENTS.audio.addEventListener('playing', handlePlaying);
+            
+            DOM_ELEMENTS.audio.play().catch(error => {
+                 DOM_ELEMENTS.playerTitle.textContent = `從分享載入：${trackTitle} (需點擊播放)`;
+            });
+            */
         }
     }
-    return false; // 沒有處理錨點
 }
 
 
 // --- 初始化與事件綁定 ---
 
-async function initializePlayer(isManualToggle = false, skipLoadSettings = false) {
+async function initializePlayer(isManualToggle = false) {
     
-    if (!skipLoadSettings) {
-        loadSavedSettings(); 
-    }
-    
-    // 🛠️ 修正：確保播放模式和停止狀態的預設值
-    let { playMode, isStoppedAtEnd } = getState(); 
-    updateModeUI(); // 🌟 確保 UI 顯示正確的模式
+    loadSavedSettings(); 
 
+    // 🌟 修正點 3B：載入儲存的總時長並更新 UI 🌟
+    updateTotalListenTime(); 
+
+    // 🛠️ 修正點 4/5：確保播放模式和停止狀態的預設值
+    let { playMode, isStoppedAtEnd } = getState(); 
     if (typeof playMode !== 'number' || playMode < 0 || playMode > 4) {
         setState({ playMode: 0 }); // 順序停止
     }
@@ -1066,6 +1120,7 @@ async function initializePlayer(isManualToggle = false, skipLoadSettings = false
         const newIndex = currentPlaylist.findIndex(track => track.originalIndex === lastPlayedOriginalIndex);
         setState({ currentTrackIndex: newIndex !== -1 ? newIndex : 0 });
     } else {
+        // 初次訪問，沒有上次播放記錄，設置為播放列表第一首，但不要加載它
         setState({ currentTrackIndex: 0 }); 
     }
     
@@ -1076,8 +1131,10 @@ async function initializePlayer(isManualToggle = false, skipLoadSettings = false
         
         // 2. 核心修正：根據是否有上次播放記錄來決定顯示的 UI 標題
         if (lastPlayedOriginalIndex !== -1) {
+            // 情況 A: 找到上次播放的歌曲
             DOM_ELEMENTS.playerTitle.textContent = `上次播放：${track.title}`;
         } else {
+            // 情況 B: 首次訪問/無記錄
             DOM_ELEMENTS.playerTitle.textContent = `我的音樂播放器`; // 修正為中性標題
         }
         
@@ -1087,13 +1144,15 @@ async function initializePlayer(isManualToggle = false, skipLoadSettings = false
             track.sources.forEach(src => {
                 const sourceEl = document.createElement('source');
                 sourceEl.src = src;
+                
+                // 🌟 使用輔助函數統一 MIME 類型邏輯 🌟
                 sourceEl.type = getMimeType(src); 
                 DOM_ELEMENTS.audio.appendChild(sourceEl);
             });
             DOM_ELEMENTS.audio.load();
         } 
         
-        // 4. 處理上次播放時間
+           // 4. 處理上次播放時間
         const savedTime = localStorage.getItem(STORAGE_KEYS.LAST_TIME);
         if (savedTime !== null) { 
             const time = parseFloat(savedTime);
@@ -1101,11 +1160,30 @@ async function initializePlayer(isManualToggle = false, skipLoadSettings = false
                 DOM_ELEMENTS.audio.currentTime = time;
                 localStorage.removeItem(STORAGE_KEYS.LAST_TIME); 
             }
-            // 🎯 修正 Bug 2：如果有上次播放時間，則載入對應歌曲的歌詞
-            loadAndRenderLyrics(track);
         }
         
         updatePlaylistHighlight();
+        
+        // 🌟 修正點 2：在載入上次播放歌曲後，手動載入歌詞 🌟
+        if (track.lrcPath) {
+             console.log(`上次播放記錄：嘗試加載歌詞: ${track.lrcPath}`);
+             // 使用與 playTrack 相同的邏輯來載入和解析歌詞
+             fetchLRC(track.lrcPath).then(lrcText => {
+                 const parsedLRC = parseLRC(lrcText);
+                 setState({ 
+                     currentLRC: parsedLRC, 
+                     currentLyricIndex: -1 // 重置索引
+                 });
+                 renderLyrics();
+             }).catch(error => {
+                 console.error(`❌ 歌詞文件加載失敗 (${track.lrcPath}):`, error);
+             });
+        } else {
+             setState({ currentLRC: null, currentLyricIndex: -1 });
+             renderLyrics(); 
+        }
+        // 🌟 修正點 2 結束 🌟
+
     } else {
          setState({ currentTrackIndex: -1 }); 
          DOM_ELEMENTS.playerTitle.textContent = "我的音樂播放器 (無歌曲)";
@@ -1113,10 +1191,27 @@ async function initializePlayer(isManualToggle = false, skipLoadSettings = false
     
     initializeTheme();
     
+    // 🌟 修正步驟 2：只有在第一次初始化時才綁定事件
     if (!hasInitializedListeners) {
         bindEventListeners();
         hasInitializedListeners = true;
     }
+    // 🌟 修正點 3C：恢復定時器計數 🌟
+    const { endTime, sleepTimerId, countdownIntervalId } = getState();
+    if (endTime > Date.now() && sleepTimerId === null && countdownIntervalId === null) {
+        // 如果有剩餘時間，但計時器 ID 丟失（因為刷新）
+        const remainingMs = endTime - Date.now();
+        const minutes = Math.ceil(remainingMs / 1000 / 60); 
+        // 重新設置定時器，使用剩餘的時間
+        setSleepTimer(minutes); 
+        // 🚨 注意：由於 setSleepTimer 會調用 toggleTimerMenu() 並會嘗試播放，
+        // 這裡需要確保 setSleepTimer 能正確處理已經暫停的音頻。
+        if (DOM_ELEMENTS.audio.paused) {
+             DOM_ELEMENTS.audio.pause(); // 強制暫停，因為 setSleepTimer 會嘗試播放
+             DOM_ELEMENTS.playerTitle.textContent = `定時器已恢復 (${minutes} 分鐘後自動關閉)`;
+        }
+    }
+    // 🌟 修正點 3C 結束 🌟
 }
 
 
@@ -1126,6 +1221,7 @@ function bindEventListeners() {
     DOM_ELEMENTS.audio.addEventListener('ratechange', saveSettings); 
     DOM_ELEMENTS.audio.addEventListener('loadedmetadata', saveSettings); 
     DOM_ELEMENTS.audio.addEventListener('timeupdate', handleTimeUpdate);
+    // 注意：handlePlay 和 handlePause 現在處理 isStoppedAtEnd 狀態
     DOM_ELEMENTS.audio.addEventListener('play', handlePlay);
     DOM_ELEMENTS.audio.addEventListener('pause', handlePause);
     DOM_ELEMENTS.audio.addEventListener('ended', handleTrackEnd);
@@ -1134,10 +1230,11 @@ function bindEventListeners() {
     // 搜索欄事件
     DOM_ELEMENTS.playlistSearchInput.addEventListener('input', debounce(filterPlaylist, 300));
     
-    // 主題切換事件 (保持不變)
+    // 主題切換事件
     DOM_ELEMENTS.themeToggleBtn.addEventListener('click', (e) => {
-       e.stopPropagation();
+       e.stopPropagation(); // <--- 🚨 新增：防止按鈕點擊時被全局點擊事件立即關閉
         const isExpanded = DOM_ELEMENTS.themeMenu.classList.toggle('hidden-menu');
+        // 🌟 A11Y 增強：設置 aria-expanded
         DOM_ELEMENTS.themeToggleBtn.setAttribute('aria-expanded', !isExpanded); 
         
         if (!DOM_ELEMENTS.timerMenu.classList.contains('hidden-menu')) {
@@ -1146,12 +1243,13 @@ function bindEventListeners() {
         }
     });
     
+    // 🌟 修正：直接將 toggleTimerMenu 函數作為事件處理器綁定
     DOM_ELEMENTS.timerToggleButton.addEventListener('click', toggleTimerMenu);
 
-    // 主題菜單項 (保持不變)
+    // 🌟 A11Y 增強：主題菜單項
     DOM_ELEMENTS.themeOptions.forEach(option => {
         const clickAction = (e) => {
-                    e.stopPropagation();
+                    e.stopPropagation(); // <--- 🚨 新增：防止點擊事件被干擾
              const selectedTheme = e.currentTarget.getAttribute('data-theme');
              applyTheme(selectedTheme, true); 
              DOM_ELEMENTS.themeMenu.classList.add('hidden-menu'); 
@@ -1160,25 +1258,30 @@ function bindEventListeners() {
         
         option.addEventListener('click', clickAction);
         
+        // 支持鍵盤 Enter/Space 觸發
         option.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault(); 
+                // 必須使用 clickAction，因為 e.currentTarget 可能已經被替換為內層元素
                 clickAction(e); 
             }
         });
     });
 
-    // 定時器菜單項 (保持不變)
+    // 🌟 A11Y 增強：定時器菜單項
+    // 注意：定時器的菜單項因為是內聯 `onclick`，我們需要用不同的方式處理鍵盤事件。
     DOM_ELEMENTS.timerMenu.querySelectorAll('.menu-item').forEach(item => {
         item.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault(); 
+                // 模擬點擊來觸發內聯 onclick
                 item.click(); 
             }
         });
     });
     
-// 全局點擊事件 (保持不變)
+// --- 舊的全局點擊事件 ---
+// 全局點擊事件 (用於關閉菜單)
 document.addEventListener('click', (e) => {
     const target = e.target;
     
@@ -1195,7 +1298,8 @@ document.addEventListener('click', (e) => {
 });
 
 
-    // 每小時自動檢查主題 (保持不變)
+
+    // 每小時自動檢查主題
     setInterval(() => {
         const storedTheme = localStorage.getItem(STORAGE_KEYS.THEME);
         if (storedTheme === THEMES.LIGHT) {
@@ -1207,21 +1311,8 @@ document.addEventListener('click', (e) => {
 
 // --- 初始啟動 (DOMContentLoaded) ---
 document.addEventListener('DOMContentLoaded', () => {
-    // 🎯 修正 Bug 3：優先檢查錨點。
-    const hasAnchor = handleUrlAnchor(true);
-    
-    if (hasAnchor) {
-        // 如果有錨點，handleUrlAnchor 已經調用了 loadTrack，
-        // loadTrack 會自動將模式設為「自由」，然後我們在 handleUrlAnchor 裡又設為「順序停止」。
-        // 此時，我們只需要調用 initializePlayer，但要告訴它跳過載入定時器/總時長等狀態。
-        initializePlayer(false, true); // skipLoadSettings = true
-    } else {
-        // 如果沒有錨點，正常載入所有設定和播放器。
-        initializePlayer();
-    }
-    
-    // 🌟 修正：確保 UI 顯示正確的模式（因為 initializePlayer 或 loadTrack 都可能已經改變它）
-    updateModeUI(); 
+    initializePlayer(); 
+    handleUrlAnchor(true);
 });
 
 
@@ -1231,6 +1322,7 @@ const globalExposedFunctions = {
     playPreviousTrack,
     togglePlayMode,
     toggleDataMode,
+    //toggleTimerMenu,
     setSleepTimer,
     clearSleepTimer,
     loadTrack 
