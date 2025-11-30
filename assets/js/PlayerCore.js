@@ -8,7 +8,7 @@ import {
 import { 
     getState, setState, saveSettings, loadSavedSettings, debounce, 
     getUserId, resetCurrentPlaylist, incrementListenTime, resetListenTime,
-    totalListenMinutes, totalListenSeconds
+    getTotalListenMinutes, getTotalListenSeconds 
 } from './StateAndUtils.js';
 
 // 🌟 新增：導入 LRC 模組 🌟
@@ -294,7 +294,7 @@ function initializeTheme() {
 function updateTotalListenTime() {
     incrementListenTime(); // 來自 StateAndUtils
     DOM_ELEMENTS.totalListenTimeSpan.textContent = 
-        `${totalListenMinutes()} 分鐘 ${totalListenSeconds()} 秒`; // 🎯 修正：totalListenMinutes/Seconds 應為函數呼叫
+        `${getTotalListenMinutes()} 分鐘 ${getTotalListenSeconds()} 秒`;  // 🎯 修正：totalListenMinutes/Seconds 應為函數呼叫
 }
 
 function updateTimerCountdown() {
